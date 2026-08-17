@@ -1,73 +1,160 @@
-# React + TypeScript + Vite
+# Trilha Formativa de Inovação — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+<p align="center">
 
-Currently, two official plugins are available:
+Interface web da plataforma **Trilha Formativa de Inovação**, desenvolvida para proporcionar uma experiência interativa e gamificada para acesso a conteúdos, atividades e funcionalidades da plataforma.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+</p>
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tecnologias utilizadas
 
-## Expanding the ESLint configuration
+Este projeto foi desenvolvido utilizando:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+* **React**
+* **TypeScript**
+* **Vite**
+* **Chakra UI**
+* **DnD Kit**
+* **ESLint**
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Pré-requisitos
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Antes de iniciar, é necessário possuir as seguintes ferramentas instaladas:
+
+* **Node.js**
+* **npm**
+
+Para verificar se estão instalados corretamente:
+
+```bash
+node -v
+npm -v
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Instalação
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Clone o repositório
+
+```bash
+git clone <URL_DO_REPOSITORIO>
 ```
+
+### Acesse a pasta do projeto
+
+```bash
+cd trilha-formativa-inovacao-frontend
+```
+
+### Instale as dependências
+
+```bash
+npm install
+```
+
+O comando utilizará o arquivo `package.json` para instalar automaticamente todas as dependências necessárias para o funcionamento da aplicação.
+
+Entre elas:
+
+* React
+* Chakra UI
+* DnD Kit
+
+> **Não é necessário instalar essas bibliotecas manualmente.**
+
+---
+
+## Executando o projeto
+
+Para iniciar o servidor de desenvolvimento:
+
+```bash
+npm run dev
+```
+
+Após a execução, o terminal exibirá o endereço onde a aplicação estará disponível.
+
+Normalmente:
+
+```text
+http://localhost:5173
+```
+
+---
+
+## Estrutura do projeto
+
+```text
+public/              → Arquivos públicos
+src/
+ ├── components/     → Componentes reutilizáveis
+ ├── pages/          → Telas da aplicação
+ ├── api/            → Comunicação com a API
+ ├── assets/         → Recursos estáticos
+ ├── types/          → Tipagens e interfaces
+ └── ...
+package.json         → Dependências e scripts
+vite.config.ts       → Configuração do Vite
+tsconfig.json        → Configuração do TypeScript
+```
+
+---
+
+## Scripts disponíveis
+
+### Executar em desenvolvimento
+
+```bash
+npm run dev
+```
+
+### Gerar versão de produção
+
+```bash
+npm run build
+```
+
+### Visualizar a versão de produção localmente
+
+```bash
+npm run preview
+```
+
+---
+
+## Dependências
+
+Todas as dependências necessárias estão definidas no arquivo:
+
+```text
+package.json
+```
+
+Portanto, ao configurar o projeto em uma nova máquina, basta executar:
+
+```bash
+npm install
+```
+
+A pasta `node_modules` não é versionada no repositório e será recriada automaticamente durante a instalação das dependências.
+
+---
+
+## Integração com o Backend
+
+A aplicação frontend pode depender da API responsável pelo fornecimento e gerenciamento dos dados da plataforma.
+
+Para utilizar todas as funcionalidades corretamente, verifique também as instruções de configuração e execução do backend no repositório correspondente.
+
+---
+
+<p align="center">
+
+**Desenvolvido para a plataforma Trilha Formativa de Inovação 🎓💡**
+
+</p>
