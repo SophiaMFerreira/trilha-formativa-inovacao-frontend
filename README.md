@@ -42,7 +42,7 @@ npm -v
 ### Clone o repositório
 
 ```bash
-git clone <URL_DO_REPOSITORIO>
+git clone https://github.com/SophiaMFerreira/trilha-formativa-inovacao-frontend.git
 ```
 
 ### Acesse a pasta do projeto
@@ -155,6 +155,6 @@ Para utilizar todas as funcionalidades corretamente, verifique também as instru
 
 <p align="center">
 
-**Desenvolvido para a plataforma Trilha Formativa de Inovação 🎓💡**
+**Desenvolvido para a plataforma Trilha Formativa de Inovação**
 
 </p>
