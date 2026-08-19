@@ -6,7 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { FaExclamationCircle, FaSearch } from "react-icons/fa";
 import CustomTooltip from "@/components/commons/customTooltip";
 import { obterNomeTematica, TematicaDTO } from "@/types_consts/tematica";
-import { Alternativa, AlternativaAssociacao, AlternativaAssociacaoPostDTO, AlternativaAssociacaoPutDTO, AlternativaAssociadaDTO, AlternativaDTO, AlternativaMultiplaEscolha, AlternativaMultiplaEscolhaDTO, AlternativaOrdenacao, AlternativaOrdenacaoDTO, SubtipoAlternativa, SubtipoAlternativaLabel, TipoAlternativa, TipoAlternativaLabel } from "@/types_consts/alternativa";
+import { Alternativa, AlternativaAssociacao, AlternativaAssociacaoDTO, AlternativaAssociadaDTO, AlternativaAssociadaPutDTO, AlternativaDTO, AlternativaMultiplaEscolha, AlternativaMultiplaEscolhaDTO, AlternativaOrdenacao, AlternativaOrdenacaoDTO, SubtipoAlternativa, SubtipoAlternativaLabel, TipoAlternativa, TipoAlternativaLabel } from "@/types_consts/alternativa";
 import { Missao, MissaoAtividade, TipoAtividade, TipoAtividadeLabel } from "@/types_consts/missao";
 import { TematicaAPI } from "../../api/tematica";
 import { QuestaoDTO, QuestaoProp } from "@/types_consts/questao";
@@ -143,29 +143,17 @@ export default function CadastroQuestoes() {
                         const idA = -(i * 2 + 1)
                         const idB = -(i * 2 + 2)
 
-                        return [
-                            {
-                                id: idA,
-                                texto: "Conteúdo da alternativa",
-                                tipoAlternativa: TipoAlternativa.ASSOCIACAO,
-                                alternativaAssociada: {
-                                    id: idB,
-                                    texto: "Conteúdo da alternativa associada",
-                                    tipoAlternativa: TipoAlternativa.ASSOCIACAO,
-                                },
-                            },
-                            {
+                        return {
+                            id: idA,
+                            texto: "Conteúdo da alternativa",
+                            tipoAlternativa: TipoAlternativa.ASSOCIACAO,
+                            alternativaAssociada: {
                                 id: idB,
                                 texto: "Conteúdo da alternativa associada",
-                                tipoAlternativa: TipoAlternativa.ASSOCIACAO,
-                                alternativaAssociada: {
-                                    id: idA,
-                                    texto: "Conteúdo da alternativa",
-                                    tipoAlternativa: TipoAlternativa.ASSOCIACAO,
-                                },
+                                correta: true
                             },
-                        ]
-                    }).flat() as AlternativaAssociacao[]
+                        }
+                    }) as AlternativaAssociacao[]
                 )
                 setMensagemPreenchimento(tipoAtividade === TipoAtividade.QUIZ ?
                     "Mensagem de Associacao Quiz" :
@@ -289,30 +277,19 @@ export default function CadastroQuestoes() {
                     switch (tipoAlt) {
                         case TipoAlternativa.ASSOCIACAO:
                             setAlternativas(
-                                (questao.alternativas as AlternativaAssociacao[]).flatMap(
-                                    (alternativa): AlternativaAssociacao[] => [
-                                        {
-                                            id: alternativa.id,
-                                            texto: alternativa.texto,
-                                            tipoAlternativa: TipoAlternativa.ASSOCIACAO,
-                                            alternativaAssociada: {
-                                                id: alternativa.alternativaAssociada.id,
-                                                texto: alternativa.alternativaAssociada.texto,
-                                                tipoAlternativa: TipoAlternativa.ASSOCIACAO,
-                                            }
-                                        }, {
+                                (questao.alternativas as AlternativaAssociacao[]).map(
+                                    (alternativa): AlternativaAssociacao => ({
+                                        id: alternativa.id,
+                                        texto: alternativa.texto,
+                                        tipoAlternativa: TipoAlternativa.ASSOCIACAO,
+                                        alternativaAssociada: {
                                             id: alternativa.alternativaAssociada.id,
                                             texto: alternativa.alternativaAssociada.texto,
                                             tipoAlternativa: TipoAlternativa.ASSOCIACAO,
-                                            alternativaAssociada: {
-                                                id: alternativa.id,
-                                                texto: alternativa.texto,
-                                                tipoAlternativa: TipoAlternativa.ASSOCIACAO,
-                                            }
                                         }
-                                    ]
-                                )
-                            )
+                                    }
+                                    )
+                                ))
 
                             setMensagemPreenchimento(tipoAtividade === TipoAtividade.QUIZ ?
                                 "Mensagem de Associacao Quiz" :
@@ -479,12 +456,16 @@ export default function CadastroQuestoes() {
                 let alternativasPayload: AlternativaDTO[] = [];
                 if (tipoAlternativa === TipoAlternativa.ASSOCIACAO) {
                     alternativasPayload = (alternativas as AlternativaAssociacao[]).map(
-                        (alternativa): AlternativaAssociacaoPutDTO => ({
+                        (alternativa): AlternativaAssociacaoDTO => ({
                             id: alternativa.id,
                             texto: alternativa.texto,
                             tipoAlternativa: alternativa.tipoAlternativa,
-                            alternativaAssociada: alternativa.alternativaAssociada as AlternativaAssociacao
-                        } as AlternativaAssociacaoPutDTO)
+                            alternativaAssociada: {
+                                idAlternativaAssociada: alternativa.alternativaAssociada.id,
+                                texto: alternativa.alternativaAssociada.texto,
+                                tipoAlternativa: alternativa.alternativaAssociada.tipoAlternativa,
+                            } as AlternativaAssociadaPutDTO
+                        })
                     )
                 }
                 if (tipoAlternativa === TipoAlternativa.ORDENACAO) {
@@ -521,6 +502,11 @@ export default function CadastroQuestoes() {
                 )
 
             } else {
+                /*const questaoResponse = await QuestaoAPI.salvar(idAtividade, questaoPayload)
+                
+                if (!questaoResponse.data) return // MENSAGEM DE ERRO
+                const questao = questaoResponse.data
+                */
                 await QuestaoAPI.salvar(idAtividade, questaoPayload)
 
                 const questaoResponse = await QuestaoAPI.listar()
@@ -537,7 +523,7 @@ export default function CadastroQuestoes() {
                 let alternativasPayload: AlternativaDTO[] = []
                 if (tipoAlternativa === TipoAlternativa.ASSOCIACAO) {
                     alternativasPayload = (alternativas as AlternativaAssociacao[]).map(
-                        (alternativa): AlternativaAssociacaoPostDTO => ({
+                        (alternativa): AlternativaAssociacaoDTO => ({
                             texto: alternativa.texto,
                             tipoAlternativa: TipoAlternativa.ASSOCIACAO,
                             alternativaAssociada: {
@@ -1090,7 +1076,13 @@ export default function CadastroQuestoes() {
                                     textStyle="inputPlaceholder"
                                     color="brand.secondaryRed"
                                 >
-                                    Preencha todas as alternativas e configure-as corretamente. Em atividades de associação ou ordenação, verifique também se os itens estão relacionados ou organizados na ordem correta.
+                                    {tipoAlternativa === TipoAlternativa.ASSOCIACAO
+                                        ? "Preencha corretamente todos os pares que devem ser associados."
+                                        : tipoAlternativa === TipoAlternativa.ORDENACAO
+                                            ? "Preencha todos os itens e verifique se estão na ordem correta."
+                                            : tipoAlternativa === SubtipoAlternativa.MULTIPLAS_CORRETAS
+                                                ? "Preencha todas as alternativas e defina ao menos 1 resposta correta."
+                                                : "Preencha todas as alternativas e defina 1 resposta correta."}
                                 </Text>
                             )}
                         </Stack>

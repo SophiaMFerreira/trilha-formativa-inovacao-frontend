@@ -1,4 +1,3 @@
-import { QuestaoProp } from "./questao";
 import { Usuario } from "./usuario";
 
 // -------------------= Enum e Labels =--------------------
@@ -30,10 +29,13 @@ export const SubtipoAlternativaLabel = {
 // -------------------= type de recebimento da API =--------------------
 
 export type AlternativaDTO =
-    | AlternativaAssociacaoPostDTO
-    | AlternativaAssociacaoPutDTO
+    | AlternativaAssociacaoDTO
     | AlternativaMultiplaEscolhaDTO
     | AlternativaOrdenacaoDTO
+
+export type AlternativaAssociadaDTO =
+    | AlternativaAssociadaPostDTO
+    | AlternativaAssociadaPutDTO
 
 type AlternativaBaseDTO = {
     id?: number;
@@ -46,19 +48,22 @@ export type AlternativaMultiplaEscolhaDTO = AlternativaBaseDTO & {
     subtipo: string
 }
 
-export type AlternativaAssociadaDTO = AlternativaBaseDTO & {
-    texto: string;
+export type AlternativaAssociadaPostDTO = {
+    idAlternativaAssociada: number
+    texto: string
     correta: true
 }
 
-export type AlternativaAssociacaoPostDTO = AlternativaBaseDTO & {
+export type AlternativaAssociadaPutDTO = {
+    idAlternativaAssociada: number
+    texto: string
     tipoAlternativa: TipoAlternativa.ASSOCIACAO
-    alternativaAssociada: AlternativaAssociadaDTO
+
 }
 
-export type AlternativaAssociacaoPutDTO = AlternativaBaseDTO & {
+export type AlternativaAssociacaoDTO = AlternativaBaseDTO & {
     tipoAlternativa: TipoAlternativa.ASSOCIACAO
-    alternativaAssociada: AlternativaAssociacao
+    alternativaAssociada: AlternativaAssociadaDTO
 }
 
 export type AlternativaOrdenacaoDTO = AlternativaBaseDTO & {
