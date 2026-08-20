@@ -8,11 +8,12 @@ import { useMemo, useState } from "react"
 import { DragDropProvider } from '@dnd-kit/react';
 import { useSortable } from '@dnd-kit/react/sortable';
 import { QuestaoProp } from "@/types_consts/questao"
-import { Alternativa, AlternativaAssociacao } from "@/types_consts/alternativa"
+import { Alternativa, AlternativaAssociacao, AlternativaAssocida } from "@/types_consts/alternativa"
 
 export type colunasAssociadas = {
     colunaA: Alternativa[]
-    colunaB: Alternativa[]
+    colunaB: AlternativaAssocida[]
+    index?: number
 }
 type AssociacaoProps = {
     questao: QuestaoProp;
@@ -160,25 +161,14 @@ type AssociacaoCadastroProps = {
 }
 export function AssociacaoCadastroQuiz({ alternativas, onChange }: AssociacaoCadastroProps) {
     const colunaA: Alternativa[] = [];
-    const colunaB: Alternativa[] = [];
-    const usadas = new Set<number>();
+    const colunaB: AlternativaAssocida[] = [];
 
-    for (const alternativa of alternativas) {
+    alternativas.map(alternativa => {
         if (!("alternativaAssociada" in alternativa)) return;
-        if (usadas.has(alternativa.id)) continue;
-
-        const associada = alternativas.find(
-            a => a.id === alternativa.alternativaAssociada.id
-        );
-
-        if (!associada) continue;
 
         colunaA.push(alternativa);
-        colunaB.push(associada);
-
-        usadas.add(alternativa.id);
-        usadas.add(associada.id);
-    }
+        colunaB.push(alternativa.alternativaAssociada);
+    })
 
     const estiloClaro = estilosAlternativa[0]
     const estiloEscuro = estilosAlternativa[1]
@@ -190,7 +180,7 @@ export function AssociacaoCadastroQuiz({ alternativas, onChange }: AssociacaoCad
             w="100%"
         >
             <Stack gap="5">
-                {colunaA.map(alternativa => (
+                {colunaA.map((alternativa, index) => (
                     <Box
                         key={alternativa.id}
 
@@ -227,6 +217,7 @@ export function AssociacaoCadastroQuiz({ alternativas, onChange }: AssociacaoCad
                                 onChange({
                                     colunaA: novasColA,
                                     colunaB,
+                                    index
                                 })
                             }}
                         >
@@ -245,7 +236,7 @@ export function AssociacaoCadastroQuiz({ alternativas, onChange }: AssociacaoCad
                 } as colunasAssociadas
                 )}
             >
-                {colunaB.map(alternativa => (
+                {colunaB.map((alternativa, index) => (
                     <Box
                         key={alternativa.id}
 
@@ -282,6 +273,7 @@ export function AssociacaoCadastroQuiz({ alternativas, onChange }: AssociacaoCad
                                 onChange({
                                     colunaA,
                                     colunaB: novasColB,
+                                    index
                                 })
                             }}
                         >
@@ -300,25 +292,14 @@ export function AssociacaoCadastroQuiz({ alternativas, onChange }: AssociacaoCad
 
 export function AssociacaoCadastroTarefa({ alternativas, onChange }: AssociacaoCadastroProps) {
     const colunaA: Alternativa[] = [];
-    const colunaB: Alternativa[] = [];
-    const usadas = new Set<number>();
-
-    for (const alternativa of alternativas) {
+    const colunaB: AlternativaAssocida[] = [];
+    
+    alternativas.map(alternativa => {
         if (!("alternativaAssociada" in alternativa)) return;
-        if (usadas.has(alternativa.id)) continue;
-
-        const associada = alternativas.find(
-            a => a.id === alternativa.alternativaAssociada.id
-        );
-
-        if (!associada) continue;
 
         colunaA.push(alternativa);
-        colunaB.push(associada);
-
-        usadas.add(alternativa.id);
-        usadas.add(associada.id);
-    }
+        colunaB.push(alternativa.alternativaAssociada);
+    })
 
     return (
         <SimpleGrid
@@ -341,7 +322,7 @@ export function AssociacaoCadastroTarefa({ alternativas, onChange }: AssociacaoC
                     color="brand.neutral"
                     textStyle="bodyTextLong"
                 >
-                    {colunaA.map(alternativa => (
+                    {colunaA.map((alternativa, index) => (
                         <List.Item
                             key={alternativa.id}
                             _marker={{
@@ -365,6 +346,7 @@ export function AssociacaoCadastroTarefa({ alternativas, onChange }: AssociacaoC
                                     onChange({
                                         colunaA: novasColA,
                                         colunaB,
+                                        index
                                     })
                                 }}
                             >
@@ -393,7 +375,7 @@ export function AssociacaoCadastroTarefa({ alternativas, onChange }: AssociacaoC
                     color="brand.neutral"
                     textStyle="bodyTextLong"
                 >
-                    {colunaB.map(alternativa => (
+                    {colunaB.map((alternativa, index) => (
                         <List.Item
                             key={alternativa.id}
                             _marker={{
@@ -417,6 +399,7 @@ export function AssociacaoCadastroTarefa({ alternativas, onChange }: AssociacaoC
                                     onChange({
                                         colunaA,
                                         colunaB: novasColB,
+                                        index
                                     })
                                 }}
                             >

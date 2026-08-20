@@ -90,7 +90,8 @@ export function validarAlternativas({ alternativas, edicao }: ValidarAlternativa
                     !("texto" in associada) ||
                     typeof associada.texto !== "string" ||
                     associada.texto.trim().length === 0 ||
-                    associada.texto.trim().length > 255
+                    associada.texto.trim().length > 255  ||
+                    associada.texto.trim() === "Conteúdo da alternativa associada"
                 ) {
                     return false;
                 }

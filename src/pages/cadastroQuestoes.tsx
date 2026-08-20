@@ -1304,30 +1304,25 @@ function ExibirTipoAlternativa({
         setAlternativas(novasAlternativas)
     }
 
-    function alterarRespostaAssociacao(alternativas: colunasAssociadas) {
-        const aAssociadas = alternativas.colunaA.flatMap((alternativa, i) => [
-            {
-                id: alternativa.id,
-                texto: alternativa.texto,
+    function alterarRespostaAssociacao(colunasAssociadas: colunasAssociadas) {
+        const novasAlternativas = [...alternativas] as AlternativaAssociacao[]
+
+        const itemA = colunasAssociadas.colunaA[colunasAssociadas.index!]
+        const itemB = colunasAssociadas.colunaB[colunasAssociadas.index!]
+
+        const alternativaAssociacaoNova = {
+            id: itemA.id,
+                texto: itemA.texto,
                 tipoAlternativa: TipoAlternativa.ASSOCIACAO,
                 alternativaAssociada: {
-                    id: alternativas.colunaB[i].id,
-                    texto: alternativas.colunaB[i].tipoAlternativa,
+                    id: itemB.id,
+                    texto: itemB.texto,
                     tipoAlternativa: TipoAlternativa.ASSOCIACAO,
                 }
-            }, {
-                id: alternativas.colunaB[i].id,
-                texto: alternativas.colunaB[i].texto,
-                tipoAlternativa: TipoAlternativa.ASSOCIACAO,
-                alternativaAssociada: {
-                    id: alternativa.id,
-                    texto: alternativa.texto,
-                    tipoAlternativa: TipoAlternativa.ASSOCIACAO,
-                }
-            }
-        ]) as unknown
-        const alternativaAssociacao = aAssociadas as AlternativaAssociacao[]
-        setAlternativas(alternativaAssociacao)
+        } as AlternativaAssociacao
+
+        novasAlternativas[colunasAssociadas.index!] = alternativaAssociacaoNova
+        setAlternativas(novasAlternativas)
     }
 
     function alterarRespostaOrdenacao(texto: string, index: number) {

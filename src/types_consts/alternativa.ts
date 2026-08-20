@@ -110,7 +110,7 @@ type AlternativaBase = {
     correta?: boolean
 };
 
-type AlternativaAssocida = AlternativaBase & {
+export type AlternativaAssocida = AlternativaBase & {
     tipoAlternativa: TipoAlternativa.ASSOCIACAO
 }
 
