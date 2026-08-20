@@ -440,9 +440,7 @@ export default function CadastroQuestoes() {
             setValidacaoTipoAtividade(resultado.tipoAtividade);
             setValidacaoTipoAtividadeMantido(resultado.tipoAtividadeMantido);
             setValidacaoAlternativas(resultado.alternativas);
-            console.log(resultado.alternativas)
 
-            console.log("oi")
             return //MENSAGEM DE ERRO
         }
 
@@ -556,12 +554,35 @@ export default function CadastroQuestoes() {
                     )
                 }
 
-                await Promise.all(
-                    alternativasPayload
-                        .map(alternativa =>
-                            AlternativaAPI.salvar(questao.id, alternativa as AlternativaDTO)
+                try {
+                    await Promise.all(
+                        alternativasPayload
+                            .map(alternativa =>
+                                AlternativaAPI.salvar(questao.id, alternativa as AlternativaDTO)
+                            )
+                    )
+                } catch (erroAlternativas) {
+                    console.error(
+                        //"Erro ao salvar alternativas:",
+                        erroAlternativas
+                    )
+                    //MENSAGEM DE ERRO
+
+                    try {
+                        await QuestaoAPI.deletar(
+                            questao.idMissao,
+                            questao.id
+                        );
+                    } catch (erroDeleteQuestao) {
+                        console.error(
+                            //"Erro ao remover questão sem alternativas:",
+                            erroDeleteQuestao
                         )
-                )
+                        //MENSAGEM DE ERRO
+                    }
+
+                    throw erroAlternativas;
+                }
             }
 
             navigate("/banco-questoes");
@@ -1312,13 +1333,13 @@ function ExibirTipoAlternativa({
 
         const alternativaAssociacaoNova = {
             id: itemA.id,
-                texto: itemA.texto,
+            texto: itemA.texto,
+            tipoAlternativa: TipoAlternativa.ASSOCIACAO,
+            alternativaAssociada: {
+                id: itemB.id,
+                texto: itemB.texto,
                 tipoAlternativa: TipoAlternativa.ASSOCIACAO,
-                alternativaAssociada: {
-                    id: itemB.id,
-                    texto: itemB.texto,
-                    tipoAlternativa: TipoAlternativa.ASSOCIACAO,
-                }
+            }
         } as AlternativaAssociacao
 
         novasAlternativas[colunasAssociadas.index!] = alternativaAssociacaoNova
