@@ -117,15 +117,6 @@ export default function ListagemMissaoAtividade(
             px="5"
             direction={{ base: "column", md: "row" }}
           >
-            <Text
-              w="100%"
-              textAlign="end"
-              textStyle="bodyTextLong"
-              color="brand.neutral"
-            >
-              {pontuacao}
-            </Text>
-            <br />
             <Stack>
               {questoes.map((q, index) =>
                 <HStack
@@ -150,6 +141,28 @@ export default function ListagemMissaoAtividade(
                   </Text>
                 </HStack>
               )}
+            </Stack>
+            <br />
+            <Stack  
+              w="100%"
+              gap="-0.5"
+            >
+              <Text
+                w="100%"
+                textAlign="end"
+                textStyle="bodyTextBold"
+                color="brand.neutral"
+              >
+                {pontuacao}
+              </Text>
+              <Text
+                w="100%"
+                textAlign="end"
+                textStyle="bodyTextLong"
+                color="brand.neutral"
+              >
+                pontos
+              </Text>
             </Stack>
           </Stack>
         </Collapsible.Content>
