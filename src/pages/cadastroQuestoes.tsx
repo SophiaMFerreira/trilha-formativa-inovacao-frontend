@@ -28,6 +28,9 @@ import ajudaVerdadeiroFalso from "@/assets/images/exemploQuestao/ajudaAlternativ
 import ajudaMultiplaEscolhaVarias from "@/assets/images/exemploQuestao/ajudaAlternativaMultiplaEscolhaVarias.png";
 import ajudaOrdenacao from "@/assets/images/exemploQuestao/ajudaAlternativaOrdenacao.png";
 import ajudaAssociacao from "@/assets/images/exemploQuestao/ajudaAlternativaAssociacao.png";
+import ajudaMultiplaEscolhaSelect from "@/assets/images/exemploQuestao/ajudaAlternativaMultiplaEscolhaSelect.png";
+import ajudaMultiplaEscolharRadio from "@/assets/images/exemploQuestao/ajudaAlternativaMultiplaEscolhaRadio.png";
+import ajudaMultiplaEscolhaVariasCheckbox from "@/assets/images/exemploQuestao/ajudaAlternativaMultiplaEscolhaVariasCheckbox.png";
 
 export default function CadastroQuestoes() {
     const { idQuestao, idMissao } = useParams();
@@ -47,6 +50,7 @@ export default function CadastroQuestoes() {
         [SubtipoAlternativa.VERDADEIRO_FALSO]: ajudaVerdadeiroFalso,
         [SubtipoAlternativa.MULTIPLAS_CORRETAS]: ajudaMultiplaEscolhaVarias,
     };
+    const [imagemMultiplaTarefa, setImagemMultiplaTarefa] = useState("select")
 
     const estiloTags = {
         h: "5",
@@ -1323,40 +1327,162 @@ export default function CadastroQuestoes() {
                                 >
                                     {mensagensAjudaQuestoesModal[tipoAlternativa as TipoAlternativa | SubtipoAlternativa]}
                                 </Text>
-                                <Box 
+                                {tipoAtividade === TipoAtividade.TAREFA &&
+                                    tipoAlternativa !== SubtipoAlternativa.MULTIPLAS_CORRETAS &&
+                                    <Text
+                                        textStyle="bodyTextLong"
+                                        color="brand.neutral"
+                                        textAlign="justify"
+                                    >
+                                        Atenção: este tipo de questão poderá ser apresentado aos participantes em qualquer um dos dois formatos exibidos abaixo.
+                                    </Text>}
+                                <Box
                                     mx="-2"
                                     my="-6"
                                     mb="-14"
                                 >
-                                     <CardCustomizado
-                                    titulo=""
-                                    mensagem=""
-                                    
-                                >
-                                    <Skeleton
-                                        loading={!loadedAjuda}
-                                        h="100%"
-                                        minH="200px"
-                                        maxH="450px"
-                                        w="100%"
+                                    <CardCustomizado
+                                        titulo=""
+                                        mensagem=""
                                     >
-                                        <Image
-                                            src={imagemAjuda[tipoAlternativa]}
-                                            alt={`Exemplo preenchimento de alternativa ${tipoAlternativa in Object.values(TipoAtividade) ?
-                                                TipoAlternativaLabel[tipoAlternativa as TipoAlternativa]
-                                                : SubtipoAlternativaLabel[tipoAlternativa as SubtipoAlternativa]
-                                                }`}
-                                            objectFit="cover"
-                                            overflow="hidden"
-                                            loading="lazy"
-                                            h="100%"
-                                            minH="200px"
-                                            maxH="450px"
-                                            w="100%"
-                                            onLoad={() => setLoadedAjuda(true)}
-                                        />
-                                    </Skeleton>
-                                </CardCustomizado>
+                                        {tipoAtividade === TipoAtividade.QUIZ &&
+                                            <Skeleton
+                                                loading={!loadedAjuda}
+                                                h="100%"
+                                                minH="200px"
+                                                maxH="450px"
+                                                w="100%"
+                                            >
+                                                <Image
+                                                    src={imagemAjuda[tipoAlternativa]}
+                                                    alt={`Exemplo preenchimento de alternativa ${tipoAlternativa in Object.values(TipoAlternativa) ?
+                                                        TipoAlternativaLabel[tipoAlternativa as TipoAlternativa]
+                                                        : SubtipoAlternativaLabel[tipoAlternativa as SubtipoAlternativa]
+                                                        }`}
+                                                    objectFit="cover"
+                                                    overflow="hidden"
+                                                    loading="lazy"
+                                                    h="100%"
+                                                    minH="200px"
+                                                    maxH="450px"
+                                                    w="100%"
+                                                    onLoad={() => setLoadedAjuda(true)}
+                                                />
+                                            </Skeleton>}
+                                        {tipoAtividade === TipoAtividade.TAREFA &&
+                                            tipoAlternativa === SubtipoAlternativa.MULTIPLAS_CORRETAS &&
+                                            <Skeleton
+                                                loading={!loadedAjuda}
+                                                h="100%"
+                                                minH="150px"
+                                                maxH="250px"
+                                                w="100%"
+                                            >
+                                                <Image
+                                                    src={ajudaMultiplaEscolhaVariasCheckbox}
+                                                    alt={`Exemplo preenchimento de alternativa ${SubtipoAlternativaLabel[SubtipoAlternativa.MULTIPLAS_CORRETAS]} em tarefas`}
+                                                    objectFit="cover"
+                                                    overflow="hidden"
+                                                    loading="lazy"
+                                                    h="100%"
+                                                    minH="150px"
+                                                    maxH="250px"
+                                                    w="100%"
+                                                    onLoad={() => setLoadedAjuda(true)}
+                                                />
+                                            </Skeleton>}
+                                        {tipoAtividade === TipoAtividade.TAREFA &&
+                                            tipoAlternativa !== SubtipoAlternativa.MULTIPLAS_CORRETAS &&
+                                            <>
+                                                <Skeleton
+                                                    loading={!loadedAjuda}
+                                                    h="100%"
+                                                    minH="200px"
+                                                    maxH="410px"
+                                                    w="100%"
+                                                >
+                                                    {imagemMultiplaTarefa === "select" ?
+                                                        <Image
+                                                            src={ajudaMultiplaEscolhaSelect}
+                                                            alt={`Exemplo preenchimento de alternativa ${TipoAlternativaLabel[TipoAlternativa.MULTIPLA_ESCOLHA]} como caixa de seleção em tarefas`}
+                                                            objectFit="cover"
+                                                            overflow="hidden"
+                                                            loading="lazy"
+                                                            h="100%"
+                                                            minH="200px"
+                                                            maxH="300px"
+                                                            w="100%"
+                                                            onLoad={() => setLoadedAjuda(true)}
+                                                        />
+                                                        : <Image
+                                                            src={ajudaMultiplaEscolharRadio}
+                                                            alt={`Exemplo preenchimento de alternativa ${TipoAlternativaLabel[TipoAlternativa.MULTIPLA_ESCOLHA]} como seleção em tarefas`}
+                                                            objectFit="cover"
+                                                            overflow="hidden"
+                                                            loading="lazy"
+                                                            h="100%"
+                                                            minH="200px"
+                                                            maxH="300px"
+                                                            w="100%"
+                                                            onLoad={() => setLoadedAjuda(true)}
+                                                        />}
+                                                </Skeleton>
+                                                <RadioCard.Root
+                                                    align="center"
+                                                >
+                                                    <RadioGroup.Root
+                                                        flex="1"
+                                                        value={imagemMultiplaTarefa}
+                                                        onValueChange={(details) => {
+                                                            if (details.value !== null) {
+                                                                setImagemMultiplaTarefa(details.value);
+                                                            }
+                                                        }}
+                                                    >
+                                                        <HStack
+                                                            mt="10"
+                                                            w="100%"
+                                                            align="center"
+                                                            gap="4"
+                                                            wrap="wrap"
+                                                        >
+                                                            <RadioCard.Item
+                                                                key={"select"}
+                                                                value={"select"}
+                                                            >
+                                                                <RadioCard.ItemHiddenInput />
+                                                                <RadioCard.ItemControl
+                                                                    {...estiloTags}
+                                                                    bg="brand.primaryDark"
+                                                                    color="brand.primaryLight"
+                                                                    borderColor="transparent"
+                                                                >
+                                                                    <RadioCard.ItemText>
+                                                                        Caixa de seleção
+                                                                    </RadioCard.ItemText>
+                                                                </RadioCard.ItemControl>
+                                                            </RadioCard.Item>
+                                                            <RadioCard.Item
+                                                                key={"radio"}
+                                                                value={"radio"}
+                                                            >
+                                                                <RadioCard.ItemHiddenInput />
+                                                                <RadioCard.ItemControl
+                                                                    {...estiloTags}
+                                                                    bg="brand.primaryDark"
+                                                                    color="brand.primaryLight"
+                                                                    borderColor="transparent"
+                                                                >
+                                                                    <RadioCard.ItemText>
+                                                                        Botões
+                                                                    </RadioCard.ItemText>
+                                                                </RadioCard.ItemControl>
+                                                            </RadioCard.Item>
+                                                        </HStack>
+                                                    </RadioGroup.Root>
+                                                </RadioCard.Root>
+                                            </>}
+                                    </CardCustomizado>
                                 </Box>
                             </Dialog.Body>
                             <Dialog.Footer justifyContent="center">
