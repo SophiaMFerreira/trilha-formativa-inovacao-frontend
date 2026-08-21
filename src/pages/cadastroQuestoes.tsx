@@ -21,6 +21,7 @@ import { DadosAtuaisProps, validarQuestao } from "@/utils/validations/questao";
 import { toaster } from "@/components/commons/toaster";
 import { mensagensToastErro, mensagensToastSucesso } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
+import { mensagensAjudaQuestoes } from "@/config/mensagemAjudaQuestoes";
 
 export default function CadastroQuestoes() {
     const { idQuestao, idMissao } = useParams();
@@ -29,7 +30,6 @@ export default function CadastroQuestoes() {
     const [acao, setAcao] = useState("Cadastro")
     const [mensagem, setMensagem] = useState("cadastro de novas")
     const [acaoBotao, setAcaoBotao] = useState("Cadastrar questão")
-    const [mensagemPreenchimento, setMensagemPreenchimento] = useState("OI :D")
     const estiloTags = {
         h: "5",
         borderWidth: "1px",
@@ -157,10 +157,6 @@ export default function CadastroQuestoes() {
                         }
                     }) as AlternativaAssociacao[]
                 )
-                setMensagemPreenchimento(tipoAtividade === TipoAtividade.QUIZ ?
-                    "Mensagem de Associacao Quiz" :
-                    "Mensagem de Associacao Tarefa"
-                )
                 setTipoAlternativaLabel(TipoAlternativaLabel[tipoAlternativa])
                 break;
             case TipoAlternativa.ORDENACAO:
@@ -172,10 +168,6 @@ export default function CadastroQuestoes() {
                         ...(i !== 0 && { numeroSequencia: i }),
                         numeroSequencia: i + 1
                     } as AlternativaOrdenacao))
-                )
-                setMensagemPreenchimento(tipoAtividade === TipoAtividade.QUIZ ?
-                    "Mensagem de Ordenacao Quiz" :
-                    "Mensagem de Ordenacao Tarefa"
                 )
                 setTipoAlternativaLabel(TipoAlternativaLabel[tipoAlternativa])
                 break;
@@ -189,10 +181,6 @@ export default function CadastroQuestoes() {
                         subtipo: SubtipoAlternativa.VERDADEIRO_FALSO,
                     }))
                 )
-                setMensagemPreenchimento(tipoAtividade === TipoAtividade.QUIZ ?
-                    "Mensagem de Verdadeiro ou Falso Quiz" :
-                    "Mensagem de Verdadeiro ou Falso Tarefa"
-                )
                 setTipoAlternativaLabel(SubtipoAlternativaLabel[tipoAlternativa])
                 break;
             case SubtipoAlternativa.MULTIPLAS_CORRETAS:
@@ -204,10 +192,6 @@ export default function CadastroQuestoes() {
                         correta: false,
                         subtipo: SubtipoAlternativa.MULTIPLAS_CORRETAS,
                     }))
-                )
-                setMensagemPreenchimento(tipoAtividade === TipoAtividade.QUIZ ?
-                    "Mensagem de Multipla escolha multiplas Quiz" :
-                    "Mensagem de Multipla escolha multiplas Tarefa"
                 )
                 setTipoAlternativaLabel(SubtipoAlternativaLabel[tipoAlternativa])
                 break;
@@ -222,10 +206,6 @@ export default function CadastroQuestoes() {
                         correta: false,
                         subtipo: SubtipoAlternativa.MULTIPLA_ESCOLHA,
                     }))
-                )
-                setMensagemPreenchimento(tipoAtividade === TipoAtividade.QUIZ ?
-                    "Mensagem de Multipla escolha Quiz" :
-                    "Mensagem de Multipla escolha Tarefa"
                 )
                 break;
         }
@@ -301,10 +281,6 @@ export default function CadastroQuestoes() {
                                     )
                                 ))
 
-                            setMensagemPreenchimento(tipoAtividade === TipoAtividade.QUIZ ?
-                                "Mensagem de Associacao Quiz" :
-                                "Mensagem de Associacao Tarefa"
-                            )
                             break;
                         case TipoAlternativa.ORDENACAO:
                             setAlternativas(
@@ -317,10 +293,6 @@ export default function CadastroQuestoes() {
                                     })
                                 ) as AlternativaOrdenacao[])
 
-                            setMensagemPreenchimento(tipoAtividade === TipoAtividade.QUIZ ?
-                                "Mensagem de Ordenacao Quiz" :
-                                "Mensagem de Ordenacao Tarefa"
-                            )
                             break;
                         case SubtipoAlternativa.VERDADEIRO_FALSO:
                             setAlternativas(
@@ -334,10 +306,6 @@ export default function CadastroQuestoes() {
                                     })
                                 ) as AlternativaMultiplaEscolha[])
 
-                            setMensagemPreenchimento(tipoAtividade === TipoAtividade.QUIZ ?
-                                "Mensagem de Verdadeiro ou Falso Quiz" :
-                                "Mensagem de Verdadeiro ou Falso Tarefa"
-                            )
                             break;
                         case SubtipoAlternativa.MULTIPLAS_CORRETAS:
                             setAlternativas(
@@ -351,10 +319,6 @@ export default function CadastroQuestoes() {
                                     })
                                 ) as AlternativaMultiplaEscolha[])
 
-                            setMensagemPreenchimento(tipoAtividade === TipoAtividade.QUIZ ?
-                                "Mensagem de Multipla escolha multiplas Quiz" :
-                                "Mensagem de Multipla escolha multiplas Tarefa"
-                            )
                             break;
                         case SubtipoAlternativa.MULTIPLA_ESCOLHA:
                         default:
@@ -368,11 +332,6 @@ export default function CadastroQuestoes() {
                                         subtipo: SubtipoAlternativa.MULTIPLA_ESCOLHA,
                                     })
                                 ) as AlternativaMultiplaEscolha[])
-
-                            setMensagemPreenchimento(tipoAtividade === TipoAtividade.QUIZ ?
-                                "Mensagem de Multipla escolha Quiz" :
-                                "Mensagem de Multipla escolha Tarefa"
-                            )
                             break;
                     }
 
@@ -1142,7 +1101,7 @@ export default function CadastroQuestoes() {
                             color="brand.secondaryRed"
                             textAlign="end"
                         >
-                                * {mensagemPreenchimento}
+                                * {mensagensAjudaQuestoes[tipoAlternativa as TipoAlternativa | SubtipoAlternativa]}
                             </Text>}
                     </Stack>
                     <Field.Root required invalid={validacaoMensagemCorrecao}>
