@@ -4,7 +4,7 @@ import { Box, Button, HStack, InputGroup, Stack, Heading, Flex } from "@chakra-u
 import ListagemMaterial from "@/components/listagemMaterial";
 import CardCustomizado from "@/components/commons/cardCustomizado";
 import { AppInput } from "@/components/commons/AppInput";
-import { toaster, Toaster } from "@/components/commons/toaster";
+import { toaster } from "@/components/commons/toaster";
 import { FaSearch } from "react-icons/fa";
 import { Missao, MissaoConteudo } from "@/types_consts/missao";
 import { Tematica, TematicaDTO, tematicaLabel } from "@/types_consts/tematica";
@@ -98,82 +98,79 @@ export default function BancoMateriais() {
     }, []);
 
     return (
-        <>
-            <CardCustomizado
-                titulo={"Banco de materiais de estudo"}
-                mensagem={"Faça cadastro, edição e exclusão de materiais de estudo para a trilha formativa."}
+        <CardCustomizado
+            titulo={"Banco de materiais de estudo"}
+            mensagem={"Faça cadastro, edição e exclusão de materiais de estudo para a trilha formativa."}
+        >
+            <Flex
+                direction="column"
+                justify="center"
+                gap="3"
+                mt={6}
             >
-                <Flex
-                    direction="column"
-                    justify="center"
-                    gap="3"
-                    mt={6}
+                <HStack
+                    justify="space-between"
+                    flex="1"
                 >
-                    <HStack
-                        justify="space-between"
-                        flex="1"
-                    >
-                        <InputGroup
-                            endElement={
-                                <Box color="brand.primaryDark">
-                                    <FaSearch />
-                                </Box>
-                            }
-                            maxW="md"
-                        >
-                            <AppInput
-                                placeholder="Pesquisar material de estudo"
-                                appVariant="filled"
-                                value={termoBusca}
-                                onChange={(e) => setTermoBusca(e.target.value)}
-
-                            />
-                        </InputGroup>
-                        <Button
-                            variant="solid"
-                            onClick={() => navigate("/cadastro-materiais")}
-                        >
-                            Adicionar material
-                        </Button>
-                    </HStack>
-                    <Stack>
-                        {materiaisFiltrados.map(groupoTematica => (
-                            <Box
-                                my={3}
-                                key={groupoTematica.tematica}
-                            >
-                                <Heading
-                                    textStyle="headingMD"
-                                    color="brand.primaryDark"
-                                    mb={1.5}
-                                >
-                                    {groupoTematica.tematica}
-                                </Heading>
-                                <Stack
-                                    gap={2}
-                                >
-                                    {groupoTematica.materiais.map(material => (
-                                        <ListagemMaterial
-                                            key={material.id}
-                                            {...material}
-                                            onExcluir={carregarDados}
-                                        />
-                                    ))}
-                                </Stack>
+                    <InputGroup
+                        endElement={
+                            <Box color="brand.primaryDark">
+                                <FaSearch />
                             </Box>
-                        ))}
-                    </Stack>
+                        }
+                        maxW="md"
+                    >
+                        <AppInput
+                            placeholder="Pesquisar material de estudo"
+                            appVariant="filled"
+                            value={termoBusca}
+                            onChange={(e) => setTermoBusca(e.target.value)}
+
+                        />
+                    </InputGroup>
                     <Button
-                        variant="outline"
-                        w="sm"
-                        alignSelf="center"
+                        variant="solid"
                         onClick={() => navigate("/cadastro-materiais")}
                     >
                         Adicionar material
                     </Button>
-                </Flex>
-            </CardCustomizado>
-            <Toaster />
-        </>
+                </HStack>
+                <Stack>
+                    {materiaisFiltrados.map(groupoTematica => (
+                        <Box
+                            my={3}
+                            key={groupoTematica.tematica}
+                        >
+                            <Heading
+                                textStyle="headingMD"
+                                color="brand.primaryDark"
+                                mb={1.5}
+                            >
+                                {groupoTematica.tematica}
+                            </Heading>
+                            <Stack
+                                gap={2}
+                            >
+                                {groupoTematica.materiais.map(material => (
+                                    <ListagemMaterial
+                                        key={material.id}
+                                        {...material}
+                                        onExcluir={carregarDados}
+                                    />
+                                ))}
+                            </Stack>
+                        </Box>
+                    ))}
+                </Stack>
+                <Button
+                    variant="outline"
+                    w="sm"
+                    alignSelf="center"
+                    onClick={() => navigate("/cadastro-materiais")}
+                >
+                    Adicionar material
+                </Button>
+            </Flex>
+        </CardCustomizado>
     );
 }

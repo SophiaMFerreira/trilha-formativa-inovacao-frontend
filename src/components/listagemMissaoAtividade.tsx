@@ -7,7 +7,7 @@ import CustomTooltip from "./commons/customTooltip.tsx"
 
 import { MissaoAtividade, TipoAtividadeLabel } from "@/types_consts/missao.ts"
 import { MissaoAPI } from "../../api/missao.ts"
-import { Toaster, toaster } from "./commons/toaster.tsx"
+import { toaster } from "./commons/toaster.tsx"
 import { mensagensToastErro, mensagensToastSucesso } from "@/config/mensagensToaster.ts"
 import { mensagensErroConsole } from "@/config/mensagensError.ts"
 
@@ -252,8 +252,6 @@ export default function ListagemMissaoAtividade(
           </Dialog.Positioner>
         </Portal>
       </Dialog.Root>
-
-      <Toaster />
     </>
   )
 }

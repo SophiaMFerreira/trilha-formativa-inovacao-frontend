@@ -1,6 +1,7 @@
 import { Outlet, useLocation } from "react-router-dom"
 import { Box } from "@chakra-ui/react"
 import Navbar from "@/components/commons/navbar"
+import { Toaster } from "@/components/commons/toaster"
 
 export default function GeneralLayout() {
   const location = useLocation()
@@ -15,6 +16,8 @@ export default function GeneralLayout() {
         py={semPadding ? 0 : { base: "5", md: "6", lg: "7" }}
       >
         <Outlet />
+
+        <Toaster />
       </Box>
     </Box>
   )

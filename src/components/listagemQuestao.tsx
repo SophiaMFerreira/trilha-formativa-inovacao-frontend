@@ -9,7 +9,7 @@ import { QuestaoAPI } from "../../api/questao.ts"
 import { QuestaoProp } from "@/types_consts/questao.ts"
 import { Alternativa, AlternativaAssociacao, AlternativaMultiplaEscolhaDTO, AlternativaOrdenacaoDTO, SubtipoAlternativaLabel, TipoAlternativa, TipoAlternativaLabel } from "@/types_consts/alternativa.ts"
 import { mensagensToastErro, mensagensToastSucesso } from "@/config/mensagensToaster.ts"
-import { Toaster, toaster } from "./commons/toaster.tsx"
+import { toaster } from "./commons/toaster.tsx"
 import { mensagensErroConsole } from "@/config/mensagensError.ts"
 
 function popularAlternativas(alternativas: Alternativa[]) {
@@ -359,8 +359,6 @@ export default function ListagemQuestao({
           </Dialog.Positioner>
         </Portal>
       </Dialog.Root>
-
-      <Toaster />
     </>
   )
 }

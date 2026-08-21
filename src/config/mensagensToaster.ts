@@ -9,6 +9,7 @@ export const mensagensToastErro = {
             "Não foi possível carregar as temáticas. Tente novamente mais tarde.",
         type: "error",
         closable: true,
+        duration: 7000,
     },
 
     carregarMissoesAtividade: {
@@ -17,6 +18,7 @@ export const mensagensToastErro = {
             "Não foi possível carregar as missões atividade. Tente novamente mais tarde.",
         type: "error",
         closable: true,
+        duration: 7000,
     },
 
     carregarMissoesConteudo: {
@@ -25,6 +27,7 @@ export const mensagensToastErro = {
             "Não foi possível carregar os conteúdos. Tente novamente mais tarde.",
         type: "error",
         closable: true,
+        duration: 7000,
     },
 
     carregarMissoesTipoIncompativel: {
@@ -33,6 +36,7 @@ export const mensagensToastErro = {
             "Não foi possível carregar a missão pois o tipo é incompatível.",
         type: "error",
         closable: true,
+        duration: 7000,
     },
 
     carregarMissoes: {
@@ -41,6 +45,7 @@ export const mensagensToastErro = {
             "Não foi possível carregar as missões desta trilha. Tente novamente mais tarde.",
         type: "error",
         closable: true,
+        duration: 7000,
     },
 
     carregarAtividades: {
@@ -49,6 +54,7 @@ export const mensagensToastErro = {
             "Não foi possível carregar as atividades desta missão. Tente novamente mais tarde.",
         type: "error",
         closable: true,
+        duration: 7000,
     },
 
     carregarAlternativas: {
@@ -57,6 +63,7 @@ export const mensagensToastErro = {
             "Não foi possível carregar as alternativas desta trilha. Tente novamente mais tarde.",
         type: "error",
         closable: true,
+        duration: 7000,
     },
 
     carregarDistintivos: {
@@ -65,6 +72,7 @@ export const mensagensToastErro = {
             "Não foi possível carregar os distintivos. Tente novamente mais tarde.",
         type: "error",
         closable: true,
+        duration: 7000,
     },
 
     carregarUsuarios: {
@@ -73,6 +81,7 @@ export const mensagensToastErro = {
             "Não foi possível carregar os usuários. Tente novamente mais tarde.",
         type: "error",
         closable: true,
+        duration: 7000,
     },
 
     carregarOcupacoes: {
@@ -81,6 +90,7 @@ export const mensagensToastErro = {
             "Não foi possível carregar as ocupações. Tente novamente mais tarde.",
         type: "error",
         closable: true,
+        duration: 7000,
     },
 
     carregarQuestoes: {
@@ -89,6 +99,7 @@ export const mensagensToastErro = {
             "Não foi possível carregar as questões. Tente novamente mais tarde.",
         type: "error",
         closable: true,
+        duration: 7000,
     },
 
 
@@ -102,6 +113,7 @@ export const mensagensToastErro = {
             "Esta trilha ainda não possui nenhuma missão cadastrada.",
         type: "info",
         closable: true,
+        duration: 7000,
     },
 
     nenhumaAtividade: {
@@ -110,6 +122,7 @@ export const mensagensToastErro = {
             "Esta missão ainda não possui nenhuma atividade cadastrada.",
         type: "info",
         closable: true,
+        duration: 7000,
     },
 
     nenhumaQuestao: {
@@ -118,6 +131,7 @@ export const mensagensToastErro = {
             "Ainda não há questões cadastradas para este conteúdo.",
         type: "info",
         closable: true,
+        duration: 7000,
     },
 
 
@@ -131,6 +145,7 @@ export const mensagensToastErro = {
             "Não foi possível salvar a temática. Tente novamente.",
         type: "error",
         closable: true,
+        duration: 7000,
     },
 
     salvarMissao: {
@@ -139,6 +154,7 @@ export const mensagensToastErro = {
             "Não foi possível salvar a missão. Tente novamente.",
         type: "error",
         closable: true,
+        duration: 7000,
     },
 
     salvarConteudo: {
@@ -147,6 +163,7 @@ export const mensagensToastErro = {
             "Não foi possível salvar o conteúdo. Verifique os dados e tente novamente.",
         type: "error",
         closable: true,
+        duration: 7000,
     },
 
     salvarQuestao: {
@@ -155,6 +172,7 @@ export const mensagensToastErro = {
             "Não foi possível salvar a questão. Tente novamente.",
         type: "error",
         closable: true,
+        duration: 7000,
     },
 
 
@@ -168,6 +186,7 @@ export const mensagensToastErro = {
             "Não foi possível salvar as alterações. Tente novamente.",
         type: "error",
         closable: true,
+        duration: 7000,
     },
 
     editarMissao: {
@@ -176,6 +195,7 @@ export const mensagensToastErro = {
             "Não foi possível salvar as alterações da missão. Tente novamente.",
         type: "error",
         closable: true,
+        duration: 7000,
     },
 
     editarConteudo: {
@@ -184,6 +204,7 @@ export const mensagensToastErro = {
             "Não foi possível salvar as alterações do conteúdo. Tente novamente.",
         type: "error",
         closable: true,
+        duration: 7000,
     },
 
     editarQuestao: {
@@ -192,6 +213,7 @@ export const mensagensToastErro = {
             "Não foi possível salvar as alterações da questão. Tente novamente.",
         type: "error",
         closable: true,
+        duration: 7000,
     },
 
 
@@ -205,6 +227,7 @@ export const mensagensToastErro = {
             "Não foi possível excluir a temática. Tente novamente.",
         type: "error",
         closable: true,
+        duration: 7000,
     },
 
     excluirMissao: {
@@ -213,6 +236,7 @@ export const mensagensToastErro = {
             "Não foi possível excluir a missão. Tente novamente.",
         type: "error",
         closable: true,
+        duration: 7000,
     },
 
     excluirConteudo: {
@@ -221,6 +245,7 @@ export const mensagensToastErro = {
             "Não foi possível excluir o conteúdo. Tente novamente.",
         type: "error",
         closable: true,
+        duration: 7000,
     },
 
     excluirQuestao: {
@@ -229,6 +254,7 @@ export const mensagensToastErro = {
             "Não foi possível excluir a questão. Tente novamente.",
         type: "error",
         closable: true,
+        duration: 7000,
     },
 
     excluirUsuario: {
@@ -237,6 +263,7 @@ export const mensagensToastErro = {
             "Não foi possível excluir a conta. Tente novamente.",
         type: "error",
         closable: true,
+        duration: 7000,
     },
 
     // =========================
@@ -248,6 +275,7 @@ export const mensagensToastErro = {
             "Verifique os campos destacados e corrija as informações antes de continuar.",
         type: "warning",
         closable: true,
+        duration: 7000,
     },
 
     validarMissaoAtividade: {
@@ -256,6 +284,7 @@ export const mensagensToastErro = {
             "Verifique os campos destacados e corrija as informações antes de continuar.",
         type: "warning",
         closable: true,
+        duration: 7000,
     },
 
     validarQuestao: {
@@ -264,6 +293,7 @@ export const mensagensToastErro = {
             "Verifique os campos destacados e corrija as informações antes de continuar.",
         type: "warning",
         closable: true,
+        duration: 7000,
     },
 } as const;
 
@@ -278,6 +308,7 @@ export const mensagensToastSucesso = {
             "A temática foi cadastrada e já está disponível na plataforma.",
         type: "success",
         closable: true,
+        duration: 7000,
     },
 
     salvarMissao: {
@@ -286,6 +317,7 @@ export const mensagensToastSucesso = {
             "A missão foi cadastrada com sucesso.",
         type: "success",
         closable: true,
+        duration: 7000,
     },
 
     salvarConteudo: {
@@ -294,6 +326,7 @@ export const mensagensToastSucesso = {
             "O conteúdo foi cadastrado com sucesso.",
         type: "success",
         closable: true,
+        duration: 7000,
     },
 
     salvarQuestao: {
@@ -302,6 +335,7 @@ export const mensagensToastSucesso = {
             "A questão foi cadastrada com sucesso.",
         type: "success",
         closable: true,
+        duration: 7000,
     },
 
 
@@ -315,6 +349,7 @@ export const mensagensToastSucesso = {
             "As alterações foram salvas.",
         type: "success",
         closable: true,
+        duration: 7000,
     },
 
     editarMissao: {
@@ -323,6 +358,7 @@ export const mensagensToastSucesso = {
             "As alterações da missão foram salvas.",
         type: "success",
         closable: true,
+        duration: 7000,
     },
 
     editarConteudo: {
@@ -331,6 +367,7 @@ export const mensagensToastSucesso = {
             "As alterações do conteúdo foram salvas.",
         type: "success",
         closable: true,
+        duration: 7000,
     },
 
     editarQuestao: {
@@ -339,6 +376,7 @@ export const mensagensToastSucesso = {
             "As alterações da questão foram salvas.",
         type: "success",
         closable: true,
+        duration: 7000,
     },
 
 
@@ -352,6 +390,7 @@ export const mensagensToastSucesso = {
             "A temática foi removida da plataforma.",
         type: "success",
         closable: true,
+        duration: 7000,
     },
 
     excluirMissao: {
@@ -360,6 +399,7 @@ export const mensagensToastSucesso = {
             "A missão foi removida da plataforma.",
         type: "success",
         closable: true,
+        duration: 7000,
     },
 
     excluirConteudo: {
@@ -368,6 +408,7 @@ export const mensagensToastSucesso = {
             "O conteúdo foi removido com sucesso.",
         type: "success",
         closable: true,
+        duration: 7000,
     },
 
     excluirQuestao: {
@@ -376,6 +417,7 @@ export const mensagensToastSucesso = {
             "A questão foi removida com sucesso.",
         type: "success",
         closable: true,
+        duration: 7000,
     },
 
     excluirUsuario: {
@@ -384,5 +426,6 @@ export const mensagensToastSucesso = {
             "A conta e as informações associadas foram removidas.",
         type: "success",
         closable: true,
+        duration: 7000,
     },
 } as const;

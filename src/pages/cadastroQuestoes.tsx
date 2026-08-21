@@ -18,7 +18,7 @@ import { OrdenacaoCadastroQuiz, OrdenacaoCadastroTarefa } from "@/components/com
 import { QuestaoAPI } from "../../api/questao";
 import { AlternativaAPI } from "../../api/alternativa";
 import { DadosAtuaisProps, validarQuestao } from "@/utils/validations/questao";
-import { toaster, Toaster } from "@/components/commons/toaster";
+import { toaster } from "@/components/commons/toaster";
 import { mensagensToastErro, mensagensToastSucesso } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
 
@@ -599,7 +599,7 @@ export default function CadastroQuestoes() {
                 } catch (erroAlternativas) {
                     toaster.create(mensagensToastErro.editarQuestao)
                     console.error(mensagensErroConsole.editarQuestao, erroAlternativas)
-                    
+
                     try {
                         await QuestaoAPI.deletar(questao.idMissao, questao.id)
                     } catch (erroDeleteQuestao) {
@@ -631,694 +631,690 @@ export default function CadastroQuestoes() {
     }
 
     return (
-        <>
-            <CardCustomizado
-                titulo={`${acao} de questões`}
-                mensagem={`Faça ${mensagem} de questões para a trilha formativa.`}
-            >
-                <form onSubmit={(e) => {
-                    e.preventDefault();
-                    onSubmit();
-                }}>
-                    <Stack
-                        gap="4"
-                        mt={6}
+        <CardCustomizado
+            titulo={`${acao} de questões`}
+            mensagem={`Faça ${mensagem} de questões para a trilha formativa.`}
+        >
+            <form onSubmit={(e) => {
+                e.preventDefault();
+                onSubmit();
+            }}>
+                <Stack
+                    gap="4"
+                    mt={6}
+                >
+                    <Grid
+                        templateColumns={{
+                            base: "1fr",
+                            md: "repeat(2, 1fr)",
+                        }}
+                        gap="8"
                     >
-                        <Grid
-                            templateColumns={{
-                                base: "1fr",
-                                md: "repeat(2, 1fr)",
-                            }}
-                            gap="8"
-                        >
-                            <Stack
-                                gap="5">
-                                <RadioCard.Root
-                                    align="center"
-                                    maxW="lg"
-                                    required
-                                    invalid={validacaoTematica || validacaoTrilhaMantida}
-                                    disabled={idQuestao ? true : false}
-                                    w="100%"
-                                >
-                                    <RadioCard.Label
-                                        textStyle="bodyTextBold"
-                                        color="brand.primaryDark"
-                                    >
-                                        Trilha
-                                        <Em color="brand.secondaryRed">*</Em>
-                                    </RadioCard.Label>
-                                    <RadioGroup.Root
-                                        value={tematica}
-                                        onValueChange={(details) => {
-                                            if (details.value !== null) {
-                                                setTematica(details.value);
-                                            }
-                                        }}
-                                        disabled={idQuestao ? true : false}
-                                    >
-                                        <Grid
-                                            templateColumns={{
-                                                base: "1fr",
-                                                md: "repeat(2, 1fr)",
-                                            }}
-                                            gap="2"
-                                            w="100%"
-                                        >
-                                            {tematicas.map((t) => (
-                                                <RadioCard.Item
-                                                    key={t.titulo}
-                                                    value={t.titulo}
-                                                    minH="14"
-                                                >
-                                                    <RadioCard.ItemHiddenInput />
-                                                    <RadioCard.ItemControl
-                                                        {...estiloTags}
-                                                        bg="brand.primaryLight"
-                                                        color="brand.neutral"
-                                                        borderColor="brand.neutral"
-                                                    >
-                                                        <RadioCard.ItemText>
-                                                            {obterNomeTematica(t.titulo)}
-                                                        </RadioCard.ItemText>
-                                                    </RadioCard.ItemControl>
-                                                </RadioCard.Item>
-                                            ))}
-                                        </Grid>
-                                    </RadioGroup.Root>
-                                    {validacaoTematica && (
-                                        <Text
-                                            key="validacaoTematica"
-                                            textStyle="inputPlaceholder"
-                                            color="brand.secondaryRed"
-                                            textAlign="end"
-                                        >
-                                            Selecione uma temática válida.
-                                        </Text>
-                                    )}
-                                    {validacaoTrilhaMantida && (
-                                        <Text
-                                            key="validacaoTrilhaMantida"
-                                            textStyle="inputPlaceholder"
-                                            color="brand.secondaryRed"
-                                            textAlign="end"
-                                        >
-                                            A temática não pode ser alterada durante a edição.
-                                        </Text>
-                                    )}
-                                </RadioCard.Root>
-                                <RadioCard.Root
-                                    align="center"
-                                    maxW="md"
-                                    required
-                                    invalid={validacaoTipoAtividade || validacaoTipoAtividadeMantido}
-                                    disabled={idQuestao ? true : false}
-                                >
-                                    <RadioCard.Label
-                                        textStyle="bodyTextBold"
-                                        color="brand.primaryDark"
-                                    >
-                                        Tipo de missão atividade
-                                        <Em color="brand.secondaryRed">*</Em>
-                                    </RadioCard.Label>
-                                    <RadioGroup.Root
-                                        flex="1"
-                                        value={tipoAtividade}
-                                        onValueChange={(details) => {
-                                            if (details.value !== null) {
-                                                setTipoAtividade(details.value as TipoAtividade);
-                                            }
-                                        }}
-                                        disabled={idQuestao ? true : false}
-                                    >
-                                        <HStack
-                                            w="100%"
-                                            gap="2"
-                                            wrap="wrap"
-                                        >
-                                            {tiposAtividade.map((ta) => (
-                                                <RadioCard.Item
-                                                    key={ta.titulo}
-                                                    value={ta.value}
-                                                >
-                                                    <RadioCard.ItemHiddenInput />
-                                                    <RadioCard.ItemControl
-                                                        {...estiloTags}
-                                                        bg="brand.primaryDark"
-                                                        color="brand.primaryLight"
-                                                        borderColor="transparent"
-                                                    >
-                                                        <RadioCard.ItemText
-
-                                                        >
-                                                            {ta.titulo}
-                                                        </RadioCard.ItemText>
-                                                    </RadioCard.ItemControl>
-                                                </RadioCard.Item>
-                                            ))}
-                                        </HStack>
-                                    </RadioGroup.Root>
-                                    {validacaoTipoAtividade && (
-                                        <Text
-                                            textStyle="inputPlaceholder"
-                                            color="brand.secondaryRed"
-                                            textAlign="end"
-                                        >
-                                            Selecione um missão atividade válido.
-                                        </Text>
-                                    )}
-                                    {validacaoTipoAtividadeMantido && (
-                                        <Text
-                                            textStyle="inputPlaceholder"
-                                            color="brand.secondaryRed"
-                                        >
-                                            O tipo de missão atividade não pode ser alterado durante a edição.
-                                        </Text>
-                                    )}
-                                </RadioCard.Root>
-                                <Field.Root
-                                    required
-                                    invalid={validacaoTipoAlternativa || validacaoTipoAlternativaMantida}
-                                    disabled={idQuestao ? true : false}
-                                >
-                                    <Select.Root
-                                        collection={tiposAlternativaCollection}
-                                        disabled={Object.values(TipoAlternativa).length === 0 ||
-                                            idQuestao ? true : false
-                                        }
-                                        name="tipoAlternativa"
-                                        value={tipoAlternativa ? [tipoAlternativa] : []}
-                                        onValueChange={(details) => {
-                                            setTipoAlternativa(details.value[0]);
-                                        }}
-
-                                        size="md"
-                                        maxW="md"
-                                    >
-                                        <Select.HiddenSelect />
-                                        <Select.Label
-                                            textStyle="bodyTextBold"
-                                            color="brand.primaryDark"
-                                        >
-                                            Tipo de questão
-                                            <Field.RequiredIndicator color="brand.secondaryRed" />
-                                        </Select.Label>
-                                        <Select.Control>
-                                            <Select.Trigger
-                                                borderWidth="1px"
-                                                borderColor="brand.neutral"
-                                                borderRadius="sm"
-                                                bg="brand.white"
-                                            >
-                                                <Select.ValueText
-                                                    placeholder="Selecione o tipo de questão"
-                                                    textStyle="inputPlaceholder"
-                                                    color="brand.neutral"
-
-                                                    _hover={{
-                                                        bg: "rgba(47,158,65,.05)",
-                                                        borderColor: "brand.secondary"
-                                                    }}
-                                                    _focusVisible={{
-                                                        borderColor: "brand.secondary",
-                                                        boxShadow: "0 0 0 2px rgba(47,158,65,.18)",
-                                                        color: "brand.primaryDark"
-                                                    }}
-                                                />
-                                            </Select.Trigger>
-                                            <Select.IndicatorGroup>
-                                                <Select.Indicator
-                                                    color="brand.neutral"
-                                                />
-                                            </Select.IndicatorGroup >
-                                        </Select.Control>
-                                        <Portal>
-                                            <Select.Positioner>
-                                                <Select.Content
-                                                    textStyle="inputPlaceholder"
-                                                    color="brand.neutral"
-                                                >
-                                                    {tiposAlternativaCollection.items.map((tipoA) => (
-                                                        <Select.Item
-                                                            _hover={{
-                                                                bg: "rgba(47,158,65,.08)"
-                                                            }}
-                                                            _highlighted={{
-                                                                bg: "rgba(47,158,65,.12)",
-                                                                color: "brand.primaryDark"
-                                                            }}
-                                                            _checked={{
-                                                                color: "brand.primaryDark"
-                                                            }}
-
-                                                            item={tipoA}
-                                                            key={tipoA.value}
-                                                            hidden={(tipoA.value === TipoAlternativa.ORDENACAO ||
-                                                                tipoA.value === TipoAlternativa.ASSOCIACAO) && tipoAtividade === TipoAtividade.TAREFA
-                                                            }
-                                                        >
-                                                            {tipoA.label}
-                                                            <Select.ItemIndicator />
-                                                        </Select.Item>
-                                                    ))}
-                                                </Select.Content>
-                                            </Select.Positioner>
-                                        </Portal>
-                                    </Select.Root>
-                                    {validacaoTipoAlternativa && (
-                                        <Field.ErrorText
-                                            textStyle="inputPlaceholder"
-                                            color="brand.secondaryRed"
-                                        >
-                                            Selecione um tipo de questão válido.
-                                        </Field.ErrorText>
-                                    )}
-                                    {validacaoIdAtividadeMantido && (
-                                        <Field.ErrorText
-                                            textStyle="inputPlaceholder"
-                                            color="brand.secondaryRed"
-                                        >
-                                            O tipo de questão não pode ser alterado durante a edição.
-                                        </Field.ErrorText>
-                                    )}
-                                </Field.Root>
-                            </Stack>
-                            <Stack
-                                gap="1"
-                                h="100%"
-                                minH={0}
-                                overflow="hidden"
-
-                                opacity={idQuestao ? 0.5 : 1}
-                                pointerEvents={idQuestao ? "none" : "auto"}
-                                cursor={idQuestao ? "not-allowed" : "pointer"}
-                                filter={idQuestao ? "grayscale(40%)" : "none"}
+                        <Stack
+                            gap="5">
+                            <RadioCard.Root
+                                align="center"
+                                maxW="lg"
+                                required
+                                invalid={validacaoTematica || validacaoTrilhaMantida}
+                                disabled={idQuestao ? true : false}
+                                w="100%"
                             >
-                                <Text
+                                <RadioCard.Label
                                     textStyle="bodyTextBold"
                                     color="brand.primaryDark"
                                 >
-                                    Missão atividade associada
+                                    Trilha
                                     <Em color="brand.secondaryRed">*</Em>
-                                </Text>
-                                <Box
-                                    borderRadius="sm"
-                                    borderWidth="1px"
-                                    bg="transparent"
-                                    color="brand.neutral"
-                                    borderColor="brand.neutral"
-                                    h="100%"
-                                    overflow="hidden"
-                                    display="flex"
-                                    flexDirection="column"
+                                </RadioCard.Label>
+                                <RadioGroup.Root
+                                    value={tematica}
+                                    onValueChange={(details) => {
+                                        if (details.value !== null) {
+                                            setTematica(details.value);
+                                        }
+                                    }}
+                                    disabled={idQuestao ? true : false}
                                 >
-
-                                    <Listbox.Root
-                                        collection={missoesFiltradasCollection}
-                                        value={idAtividade !== -1 ? [idAtividade.toString()] : []}
-                                        onValueChange={({ value }) => {
-                                            setIdAtividade(Number(value[0]));
+                                    <Grid
+                                        templateColumns={{
+                                            base: "1fr",
+                                            md: "repeat(2, 1fr)",
                                         }}
-                                        disabled={idQuestao ? true : false}
+                                        gap="2"
+                                        w="100%"
                                     >
-                                        <InputGroup
-                                            endElement={
-                                                <Box color="brand.primaryDark">
-                                                    <FaSearch />
-                                                </Box>
-                                            }
-                                            maxW="sm"
-                                        >
-                                            <AppInput
-                                                border="none"
-                                                outline="none"
-                                                boxShadow="none"
-                                                _focus={{
-                                                    border: "none",
-                                                    boxShadow: "none",
-                                                }}
-                                                _focusVisible={{
-                                                    border: "none",
-                                                    boxShadow: "none",
-                                                }}
-
-                                                borderBottom="1px solid"
-                                                borderColor="brand.neutral"
-
-                                                placeholder="Pesquisar missão"
-                                                appVariant="outline"
-                                                value={termoBusca}
-                                                onChange={(e) => setTermoBusca(e.target.value)}
-                                            />
-                                        </InputGroup>
-                                        <Box
-                                            maxH="60"
-                                            overflowY="auto"
-                                        >
-                                            <Listbox.Content>
-
-                                                {missoesFiltradasCollection.items.map((missao) => (
-                                                    <Listbox.Item
-                                                        item={missao}
-                                                        key={missao.value}
-                                                    >
-                                                        <Box
-                                                            px="3"
-                                                            py="2"
-                                                            rounded="sm"
-
-                                                            _hover={{
-                                                                bg: "#2f9e411f",
-                                                                color: "brand.primaryDark",
-                                                            }}
-                                                            _highlighted={{
-                                                                bg: "#2f9e411f",
-                                                                color: "brand.primaryDark",
-                                                            }}
-                                                            {...idAtividade === Number(missao.value) &&
-                                                            {
-                                                                bg: "brand.secondary",
-                                                                color: "brand.primaryLight",
-                                                                fontWeight: "600",
-                                                            }
-                                                            }
-                                                        >
-                                                            <Listbox.ItemText>
-                                                                {missao.label}
-                                                            </Listbox.ItemText>
-                                                        </Box>
-                                                        <Listbox.ItemIndicator />
-                                                    </Listbox.Item>
-                                                ))}
-
-                                                <Listbox.Empty
+                                        {tematicas.map((t) => (
+                                            <RadioCard.Item
+                                                key={t.titulo}
+                                                value={t.titulo}
+                                                minH="14"
+                                            >
+                                                <RadioCard.ItemHiddenInput />
+                                                <RadioCard.ItemControl
+                                                    {...estiloTags}
+                                                    bg="brand.primaryLight"
+                                                    color="brand.neutral"
+                                                    borderColor="brand.neutral"
                                                 >
-                                                    <Box
-                                                        px="3"
-                                                        py="2"
-                                                        rounded="sm"
-                                                    >
-                                                        Nenhuma missão atividade cadastrada
-                                                    </Box>
-                                                </Listbox.Empty>
-                                            </Listbox.Content>
-                                        </Box>
-                                    </Listbox.Root>
-                                </Box>
-                                {validacaoIdAtividade && (
+                                                    <RadioCard.ItemText>
+                                                        {obterNomeTematica(t.titulo)}
+                                                    </RadioCard.ItemText>
+                                                </RadioCard.ItemControl>
+                                            </RadioCard.Item>
+                                        ))}
+                                    </Grid>
+                                </RadioGroup.Root>
+                                {validacaoTematica && (
                                     <Text
+                                        key="validacaoTematica"
                                         textStyle="inputPlaceholder"
                                         color="brand.secondaryRed"
                                         textAlign="end"
                                     >
-                                        Selecione uma atividade válida.
+                                        Selecione uma temática válida.
                                     </Text>
                                 )}
                                 {validacaoTrilhaMantida && (
                                     <Text
+                                        key="validacaoTrilhaMantida"
                                         textStyle="inputPlaceholder"
                                         color="brand.secondaryRed"
                                         textAlign="end"
                                     >
-                                        A atividade não pode ser alterada durante a edição.
+                                        A temática não pode ser alterada durante a edição.
                                     </Text>
                                 )}
-                            </Stack>
-                        </Grid>
-                        <Stack>
-                            <Stack
-                                direction={{ base: "column", md: "row" }}
-                                justifyContent="space-between"
-                                mt="5"
-                                w="100%"
+                            </RadioCard.Root>
+                            <RadioCard.Root
+                                align="center"
+                                maxW="md"
+                                required
+                                invalid={validacaoTipoAtividade || validacaoTipoAtividadeMantido}
+                                disabled={idQuestao ? true : false}
                             >
-                                <Text
+                                <RadioCard.Label
                                     textStyle="bodyTextBold"
                                     color="brand.primaryDark"
                                 >
-                                    Questão
-                                </Text>
-                                <CustomTooltip
-                                    content="Exemplo de questão"
+                                    Tipo de missão atividade
+                                    <Em color="brand.secondaryRed">*</Em>
+                                </RadioCard.Label>
+                                <RadioGroup.Root
+                                    flex="1"
+                                    value={tipoAtividade}
+                                    onValueChange={(details) => {
+                                        if (details.value !== null) {
+                                            setTipoAtividade(details.value as TipoAtividade);
+                                        }
+                                    }}
+                                    disabled={idQuestao ? true : false}
                                 >
-                                    <IconButton
-                                        aria-label="Exemplo de questão"
-                                        variant="ghost"
-                                        size="md"
-                                        color="brand.primaryDark"
-                                        p="3"
-                                    //onClick={() => navigate("/cadastro-questoes")}
-                                    //onClick={() => editar(questao.idQuestao)}
-                                    >
-                                        <FaExclamationCircle />
-                                    </IconButton>
-                                </CustomTooltip>
-                            </Stack>
-                            <Stack
-                                mx="5"
-                                mt="-1"
-                                gap="2"
-                            >
-                                {(
-                                    Object.values(TipoAlternativa).includes(tipoAlternativa as TipoAlternativa) ||
-                                    Object.values(SubtipoAlternativa).includes(tipoAlternativa as SubtipoAlternativa)
-                                ) &&
-                                    <Box
+                                    <HStack
                                         w="100%"
-                                        textAlign="justify"
-                                        color="brand.neutral"
-                                        textStyle="bodyTextLong"
+                                        gap="2"
+                                        wrap="wrap"
                                     >
-                                        <Editable.Root
-                                            name="enunciado"
-                                            value={enunciado}
-                                            placeholder="Enunciado da questão"
-                                            onValueChange={(e) => setEnunciado(e.value)}
-                                        >
-                                            <Editable.Preview />
-                                            <Editable.Input
-                                                size={75}
-                                                maxLength={254}
-                                            //required
-                                            />
-                                        </Editable.Root>
-                                        {validacaoEnunciado && (
-                                            <Text
-                                                textAlign="end"
-                                                textStyle="inputPlaceholder"
-                                                color="brand.secondaryRed"
+                                        {tiposAtividade.map((ta) => (
+                                            <RadioCard.Item
+                                                key={ta.titulo}
+                                                value={ta.value}
                                             >
-                                                O enunciado é obrigatório e deve ter no máximo 255 caracteres.
-                                            </Text>
-                                        )}
-                                    </Box>
-                                }
-                                <ExibirTipoAlternativa
-                                    alternativas={alternativas}
-                                    tipoAlternativa={tipoAlternativa}
-                                    tipoAtividade={tipoAtividade}
-                                    setAlternativas={setAlternativas}
-                                />
-                                {validacaoAlternativas && (
+                                                <RadioCard.ItemHiddenInput />
+                                                <RadioCard.ItemControl
+                                                    {...estiloTags}
+                                                    bg="brand.primaryDark"
+                                                    color="brand.primaryLight"
+                                                    borderColor="transparent"
+                                                >
+                                                    <RadioCard.ItemText
+
+                                                    >
+                                                        {ta.titulo}
+                                                    </RadioCard.ItemText>
+                                                </RadioCard.ItemControl>
+                                            </RadioCard.Item>
+                                        ))}
+                                    </HStack>
+                                </RadioGroup.Root>
+                                {validacaoTipoAtividade && (
                                     <Text
+                                        textStyle="inputPlaceholder"
+                                        color="brand.secondaryRed"
                                         textAlign="end"
+                                    >
+                                        Selecione um missão atividade válido.
+                                    </Text>
+                                )}
+                                {validacaoTipoAtividadeMantido && (
+                                    <Text
                                         textStyle="inputPlaceholder"
                                         color="brand.secondaryRed"
                                     >
-                                        {tipoAlternativa === TipoAlternativa.ASSOCIACAO
-                                            ? "Preencha corretamente todos os pares que devem ser associados."
-                                            : tipoAlternativa === TipoAlternativa.ORDENACAO
-                                                ? "Preencha todos os itens e verifique se estão na ordem correta."
-                                                : tipoAlternativa === SubtipoAlternativa.MULTIPLAS_CORRETAS
-                                                    ? "Preencha todas as alternativas e defina ao menos 1 resposta correta."
-                                                    : "Preencha todas as alternativas e defina 1 resposta correta."}
+                                        O tipo de missão atividade não pode ser alterado durante a edição.
                                     </Text>
                                 )}
-                            </Stack>
-                            {(
-                                Object.values(TipoAlternativa).includes(tipoAlternativa as TipoAlternativa) ||
-                                Object.values(SubtipoAlternativa).includes(tipoAlternativa as SubtipoAlternativa)
-                            ) && <Text
-                                textStyle="inputPlaceholder"
-                                color="brand.secondaryRed"
-                                textAlign="end"
+                            </RadioCard.Root>
+                            <Field.Root
+                                required
+                                invalid={validacaoTipoAlternativa || validacaoTipoAlternativaMantida}
+                                disabled={idQuestao ? true : false}
                             >
-                                    * {mensagemPreenchimento}
-                                </Text>}
+                                <Select.Root
+                                    collection={tiposAlternativaCollection}
+                                    disabled={Object.values(TipoAlternativa).length === 0 ||
+                                        idQuestao ? true : false
+                                    }
+                                    name="tipoAlternativa"
+                                    value={tipoAlternativa ? [tipoAlternativa] : []}
+                                    onValueChange={(details) => {
+                                        setTipoAlternativa(details.value[0]);
+                                    }}
+
+                                    size="md"
+                                    maxW="md"
+                                >
+                                    <Select.HiddenSelect />
+                                    <Select.Label
+                                        textStyle="bodyTextBold"
+                                        color="brand.primaryDark"
+                                    >
+                                        Tipo de questão
+                                        <Field.RequiredIndicator color="brand.secondaryRed" />
+                                    </Select.Label>
+                                    <Select.Control>
+                                        <Select.Trigger
+                                            borderWidth="1px"
+                                            borderColor="brand.neutral"
+                                            borderRadius="sm"
+                                            bg="brand.white"
+                                        >
+                                            <Select.ValueText
+                                                placeholder="Selecione o tipo de questão"
+                                                textStyle="inputPlaceholder"
+                                                color="brand.neutral"
+
+                                                _hover={{
+                                                    bg: "rgba(47,158,65,.05)",
+                                                    borderColor: "brand.secondary"
+                                                }}
+                                                _focusVisible={{
+                                                    borderColor: "brand.secondary",
+                                                    boxShadow: "0 0 0 2px rgba(47,158,65,.18)",
+                                                    color: "brand.primaryDark"
+                                                }}
+                                            />
+                                        </Select.Trigger>
+                                        <Select.IndicatorGroup>
+                                            <Select.Indicator
+                                                color="brand.neutral"
+                                            />
+                                        </Select.IndicatorGroup >
+                                    </Select.Control>
+                                    <Portal>
+                                        <Select.Positioner>
+                                            <Select.Content
+                                                textStyle="inputPlaceholder"
+                                                color="brand.neutral"
+                                            >
+                                                {tiposAlternativaCollection.items.map((tipoA) => (
+                                                    <Select.Item
+                                                        _hover={{
+                                                            bg: "rgba(47,158,65,.08)"
+                                                        }}
+                                                        _highlighted={{
+                                                            bg: "rgba(47,158,65,.12)",
+                                                            color: "brand.primaryDark"
+                                                        }}
+                                                        _checked={{
+                                                            color: "brand.primaryDark"
+                                                        }}
+
+                                                        item={tipoA}
+                                                        key={tipoA.value}
+                                                        hidden={(tipoA.value === TipoAlternativa.ORDENACAO ||
+                                                            tipoA.value === TipoAlternativa.ASSOCIACAO) && tipoAtividade === TipoAtividade.TAREFA
+                                                        }
+                                                    >
+                                                        {tipoA.label}
+                                                        <Select.ItemIndicator />
+                                                    </Select.Item>
+                                                ))}
+                                            </Select.Content>
+                                        </Select.Positioner>
+                                    </Portal>
+                                </Select.Root>
+                                {validacaoTipoAlternativa && (
+                                    <Field.ErrorText
+                                        textStyle="inputPlaceholder"
+                                        color="brand.secondaryRed"
+                                    >
+                                        Selecione um tipo de questão válido.
+                                    </Field.ErrorText>
+                                )}
+                                {validacaoIdAtividadeMantido && (
+                                    <Field.ErrorText
+                                        textStyle="inputPlaceholder"
+                                        color="brand.secondaryRed"
+                                    >
+                                        O tipo de questão não pode ser alterado durante a edição.
+                                    </Field.ErrorText>
+                                )}
+                            </Field.Root>
                         </Stack>
-                        <Field.Root required invalid={validacaoMensagemCorrecao}>
-                            <Field.Label
-                                textStyle="emphasis"
+                        <Stack
+                            gap="1"
+                            h="100%"
+                            minH={0}
+                            overflow="hidden"
+
+                            opacity={idQuestao ? 0.5 : 1}
+                            pointerEvents={idQuestao ? "none" : "auto"}
+                            cursor={idQuestao ? "not-allowed" : "pointer"}
+                            filter={idQuestao ? "grayscale(40%)" : "none"}
+                        >
+                            <Text
+                                textStyle="bodyTextBold"
                                 color="brand.primaryDark"
                             >
-                                Mensagem de correção
-                                <Field.RequiredIndicator color="brand.secondaryRed" />
-                            </Field.Label>
-                            <Textarea
-                                name="mensagemCorrecao"
-                                value={mensagemCorrecao}
-                                placeholder="Deixe uma mensagem com a correção desta questão"
-                                variant="outline"
-                                size="md"
-                                h="56"
-
-                                fontStyle="bodyText"
+                                Missão atividade associada
+                                <Em color="brand.secondaryRed">*</Em>
+                            </Text>
+                            <Box
                                 borderRadius="sm"
                                 borderWidth="1px"
                                 bg="transparent"
                                 color="brand.neutral"
                                 borderColor="brand.neutral"
+                                h="100%"
+                                overflow="hidden"
+                                display="flex"
+                                flexDirection="column"
+                            >
 
-                                _hover={{
-                                    borderColor: "brand.primaryDark",
-                                    color: "brand.primaryDark",
-                                    bg: "#2f9e411f",
-                                }}
-                                _focusVisible={{
-                                    borderColor: "brand.primaryDark",
-                                    boxShadow: "0 0 0 1px var(--chakra-colors-brand-primaryDark)",
-                                }}
-                                _invalid={{
-                                    borderColor: "brand.error",
-                                    boxShadow: "0 0 0 2px rgba(26, 9, 8, 0.25)",
-                                }}
-                                onChange={(e) => setMensagemCorrecao(e.target.value)}
+                                <Listbox.Root
+                                    collection={missoesFiltradasCollection}
+                                    value={idAtividade !== -1 ? [idAtividade.toString()] : []}
+                                    onValueChange={({ value }) => {
+                                        setIdAtividade(Number(value[0]));
+                                    }}
+                                    disabled={idQuestao ? true : false}
+                                >
+                                    <InputGroup
+                                        endElement={
+                                            <Box color="brand.primaryDark">
+                                                <FaSearch />
+                                            </Box>
+                                        }
+                                        maxW="sm"
+                                    >
+                                        <AppInput
+                                            border="none"
+                                            outline="none"
+                                            boxShadow="none"
+                                            _focus={{
+                                                border: "none",
+                                                boxShadow: "none",
+                                            }}
+                                            _focusVisible={{
+                                                border: "none",
+                                                boxShadow: "none",
+                                            }}
+
+                                            borderBottom="1px solid"
+                                            borderColor="brand.neutral"
+
+                                            placeholder="Pesquisar missão"
+                                            appVariant="outline"
+                                            value={termoBusca}
+                                            onChange={(e) => setTermoBusca(e.target.value)}
+                                        />
+                                    </InputGroup>
+                                    <Box
+                                        maxH="60"
+                                        overflowY="auto"
+                                    >
+                                        <Listbox.Content>
+
+                                            {missoesFiltradasCollection.items.map((missao) => (
+                                                <Listbox.Item
+                                                    item={missao}
+                                                    key={missao.value}
+                                                >
+                                                    <Box
+                                                        px="3"
+                                                        py="2"
+                                                        rounded="sm"
+
+                                                        _hover={{
+                                                            bg: "#2f9e411f",
+                                                            color: "brand.primaryDark",
+                                                        }}
+                                                        _highlighted={{
+                                                            bg: "#2f9e411f",
+                                                            color: "brand.primaryDark",
+                                                        }}
+                                                        {...idAtividade === Number(missao.value) &&
+                                                        {
+                                                            bg: "brand.secondary",
+                                                            color: "brand.primaryLight",
+                                                            fontWeight: "600",
+                                                        }
+                                                        }
+                                                    >
+                                                        <Listbox.ItemText>
+                                                            {missao.label}
+                                                        </Listbox.ItemText>
+                                                    </Box>
+                                                    <Listbox.ItemIndicator />
+                                                </Listbox.Item>
+                                            ))}
+
+                                            <Listbox.Empty
+                                            >
+                                                <Box
+                                                    px="3"
+                                                    py="2"
+                                                    rounded="sm"
+                                                >
+                                                    Nenhuma missão atividade cadastrada
+                                                </Box>
+                                            </Listbox.Empty>
+                                        </Listbox.Content>
+                                    </Box>
+                                </Listbox.Root>
+                            </Box>
+                            {validacaoIdAtividade && (
+                                <Text
+                                    textStyle="inputPlaceholder"
+                                    color="brand.secondaryRed"
+                                    textAlign="end"
+                                >
+                                    Selecione uma atividade válida.
+                                </Text>
+                            )}
+                            {validacaoTrilhaMantida && (
+                                <Text
+                                    textStyle="inputPlaceholder"
+                                    color="brand.secondaryRed"
+                                    textAlign="end"
+                                >
+                                    A atividade não pode ser alterada durante a edição.
+                                </Text>
+                            )}
+                        </Stack>
+                    </Grid>
+                    <Stack>
+                        <Stack
+                            direction={{ base: "column", md: "row" }}
+                            justifyContent="space-between"
+                            mt="5"
+                            w="100%"
+                        >
+                            <Text
+                                textStyle="bodyTextBold"
+                                color="brand.primaryDark"
+                            >
+                                Questão
+                            </Text>
+                            <CustomTooltip
+                                content="Exemplo de questão"
+                            >
+                                <IconButton
+                                    aria-label="Exemplo de questão"
+                                    variant="ghost"
+                                    size="md"
+                                    color="brand.primaryDark"
+                                    p="3"
+                                //onClick={() => navigate("/cadastro-questoes")}
+                                //onClick={() => editar(questao.idQuestao)}
+                                >
+                                    <FaExclamationCircle />
+                                </IconButton>
+                            </CustomTooltip>
+                        </Stack>
+                        <Stack
+                            mx="5"
+                            mt="-1"
+                            gap="2"
+                        >
+                            {(
+                                Object.values(TipoAlternativa).includes(tipoAlternativa as TipoAlternativa) ||
+                                Object.values(SubtipoAlternativa).includes(tipoAlternativa as SubtipoAlternativa)
+                            ) &&
+                                <Box
+                                    w="100%"
+                                    textAlign="justify"
+                                    color="brand.neutral"
+                                    textStyle="bodyTextLong"
+                                >
+                                    <Editable.Root
+                                        name="enunciado"
+                                        value={enunciado}
+                                        placeholder="Enunciado da questão"
+                                        onValueChange={(e) => setEnunciado(e.value)}
+                                    >
+                                        <Editable.Preview />
+                                        <Editable.Input
+                                            size={75}
+                                            maxLength={254}
+                                        //required
+                                        />
+                                    </Editable.Root>
+                                    {validacaoEnunciado && (
+                                        <Text
+                                            textAlign="end"
+                                            textStyle="inputPlaceholder"
+                                            color="brand.secondaryRed"
+                                        >
+                                            O enunciado é obrigatório e deve ter no máximo 255 caracteres.
+                                        </Text>
+                                    )}
+                                </Box>
+                            }
+                            <ExibirTipoAlternativa
+                                alternativas={alternativas}
+                                tipoAlternativa={tipoAlternativa}
+                                tipoAtividade={tipoAtividade}
+                                setAlternativas={setAlternativas}
                             />
-                            {validacaoMensagemCorrecao && (
-                                <Field.ErrorText
+                            {validacaoAlternativas && (
+                                <Text
+                                    textAlign="end"
                                     textStyle="inputPlaceholder"
                                     color="brand.secondaryRed"
                                 >
-                                    A mensagem de correção é obrigatória e deve ter no máximo 255 caracteres.
-                                </Field.ErrorText>
+                                    {tipoAlternativa === TipoAlternativa.ASSOCIACAO
+                                        ? "Preencha corretamente todos os pares que devem ser associados."
+                                        : tipoAlternativa === TipoAlternativa.ORDENACAO
+                                            ? "Preencha todos os itens e verifique se estão na ordem correta."
+                                            : tipoAlternativa === SubtipoAlternativa.MULTIPLAS_CORRETAS
+                                                ? "Preencha todas as alternativas e defina ao menos 1 resposta correta."
+                                                : "Preencha todas as alternativas e defina 1 resposta correta."}
+                                </Text>
                             )}
-                        </Field.Root>
-                        <Stack
-                            direction={{ base: "column", md: "row" }}
-                            w="100%"
-                            gap="4"
+                        </Stack>
+                        {(
+                            Object.values(TipoAlternativa).includes(tipoAlternativa as TipoAlternativa) ||
+                            Object.values(SubtipoAlternativa).includes(tipoAlternativa as SubtipoAlternativa)
+                        ) && <Text
+                            textStyle="inputPlaceholder"
+                            color="brand.secondaryRed"
+                            textAlign="end"
                         >
-                            {idQuestao &&
-                                <Button
-                                    flex={1}
-                                    w="100%"
-                                    variant="outline"
-                                    onClick={() => navigate("/banco-questoes")}
-                                >
-                                    Voltar
-                                </Button>}
-                            {idQuestao &&
-                                <Button
-                                    flex={1}
-                                    w="100%"
-                                    variant="danger"
-                                    onClick={() => setOpenModalExclusao(true)}
-                                    size="md"
-                                >
-                                    Excluir questão
-                                </Button>}
+                                * {mensagemPreenchimento}
+                            </Text>}
+                    </Stack>
+                    <Field.Root required invalid={validacaoMensagemCorrecao}>
+                        <Field.Label
+                            textStyle="emphasis"
+                            color="brand.primaryDark"
+                        >
+                            Mensagem de correção
+                            <Field.RequiredIndicator color="brand.secondaryRed" />
+                        </Field.Label>
+                        <Textarea
+                            name="mensagemCorrecao"
+                            value={mensagemCorrecao}
+                            placeholder="Deixe uma mensagem com a correção desta questão"
+                            variant="outline"
+                            size="md"
+                            h="56"
+
+                            fontStyle="bodyText"
+                            borderRadius="sm"
+                            borderWidth="1px"
+                            bg="transparent"
+                            color="brand.neutral"
+                            borderColor="brand.neutral"
+
+                            _hover={{
+                                borderColor: "brand.primaryDark",
+                                color: "brand.primaryDark",
+                                bg: "#2f9e411f",
+                            }}
+                            _focusVisible={{
+                                borderColor: "brand.primaryDark",
+                                boxShadow: "0 0 0 1px var(--chakra-colors-brand-primaryDark)",
+                            }}
+                            _invalid={{
+                                borderColor: "brand.error",
+                                boxShadow: "0 0 0 2px rgba(26, 9, 8, 0.25)",
+                            }}
+                            onChange={(e) => setMensagemCorrecao(e.target.value)}
+                        />
+                        {validacaoMensagemCorrecao && (
+                            <Field.ErrorText
+                                textStyle="inputPlaceholder"
+                                color="brand.secondaryRed"
+                            >
+                                A mensagem de correção é obrigatória e deve ter no máximo 255 caracteres.
+                            </Field.ErrorText>
+                        )}
+                    </Field.Root>
+                    <Stack
+                        direction={{ base: "column", md: "row" }}
+                        w="100%"
+                        gap="4"
+                    >
+                        {idQuestao &&
                             <Button
                                 flex={1}
                                 w="100%"
-                                variant="solid"
-                                type="submit"
+                                variant="outline"
+                                onClick={() => navigate("/banco-questoes")}
                             >
-                                {acaoBotao}
-                            </Button>
-                        </Stack>
+                                Voltar
+                            </Button>}
+                        {idQuestao &&
+                            <Button
+                                flex={1}
+                                w="100%"
+                                variant="danger"
+                                onClick={() => setOpenModalExclusao(true)}
+                                size="md"
+                            >
+                                Excluir questão
+                            </Button>}
+                        <Button
+                            flex={1}
+                            w="100%"
+                            variant="solid"
+                            type="submit"
+                        >
+                            {acaoBotao}
+                        </Button>
                     </Stack>
-                </form>
+                </Stack>
+            </form>
 
-                <Dialog.Root
-                    size="md"
-                    lazyMount
-                    placement="center"
-                    open={openModalExclusao}
-                    onOpenChange={(e) => setOpenModalExclusao(e.open)}
-                >
-                    <Portal>
-                        <Dialog.Backdrop />
-                        <Dialog.Positioner>
-                            <Dialog.Content>
-                                <Dialog.Header>
-                                    <Dialog.Title
-                                        textStyle="headingMD"
-                                        color="brand.secondaryRed"
-                                    >
-                                        Excluir questão
-                                    </Dialog.Title>
-                                </Dialog.Header>
-                                <Dialog.Body>
+            <Dialog.Root
+                size="md"
+                lazyMount
+                placement="center"
+                open={openModalExclusao}
+                onOpenChange={(e) => setOpenModalExclusao(e.open)}
+            >
+                <Portal>
+                    <Dialog.Backdrop />
+                    <Dialog.Positioner>
+                        <Dialog.Content>
+                            <Dialog.Header>
+                                <Dialog.Title
+                                    textStyle="headingMD"
+                                    color="brand.secondaryRed"
+                                >
+                                    Excluir questão
+                                </Dialog.Title>
+                            </Dialog.Header>
+                            <Dialog.Body>
+                                <Text
+                                    textStyle="bodyText"
+                                    color="brand.neutral"
+                                    textAlign="justify"
+                                    pb="4"
+                                >
+                                    Você está prestes a excluir esta questão. Após a confirmação, ela será removida permanentemente e não poderá ser recuperada.
+                                </Text>
+                                <Stack
+                                    direction={{ base: "column", md: "row" }}
+                                    w="fit-content"
+                                    mx="auto"
+                                    gap="5"
+                                    align="center"
+                                >
+                                    <Heading textStyle="emphasis" color="brand.primaryDark">
+                                        {tipoAlternativaLabel}
+                                    </Heading>
                                     <Text
                                         textStyle="bodyText"
                                         color="brand.neutral"
-                                        textAlign="justify"
-                                        pb="4"
+                                        maxW="320px"
+                                        overflow="hidden"
+                                        textOverflow="ellipsis"
+                                        whiteSpace="nowrap"
+                                        boxSizing="border-box"
                                     >
-                                        Você está prestes a excluir esta questão. Após a confirmação, ela será removida permanentemente e não poderá ser recuperada.
+                                        {enunciado}
                                     </Text>
-                                    <Stack
-                                        direction={{ base: "column", md: "row" }}
-                                        w="fit-content"
-                                        mx="auto"
-                                        gap="5"
-                                        align="center"
-                                    >
-                                        <Heading textStyle="emphasis" color="brand.primaryDark">
-                                            {tipoAlternativaLabel}
-                                        </Heading>
-                                        <Text
-                                            textStyle="bodyText"
-                                            color="brand.neutral"
-                                            maxW="320px"
-                                            overflow="hidden"
-                                            textOverflow="ellipsis"
-                                            whiteSpace="nowrap"
-                                            boxSizing="border-box"
-                                        >
-                                            {enunciado}
-                                        </Text>
-                                    </Stack>
-                                </Dialog.Body>
-                                <Dialog.Footer justifyContent="center">
-                                    <Stack
-                                        direction={{ base: "column", md: "row" }}
+                                </Stack>
+                            </Dialog.Body>
+                            <Dialog.Footer justifyContent="center">
+                                <Stack
+                                    direction={{ base: "column", md: "row" }}
+                                    w="100%"
+                                    gap="2"
+                                >
+                                    <Button
+                                        flex={1}
                                         w="100%"
-                                        gap="2"
+                                        variant="outline"
+                                        onClick={() => {
+                                            setOpenModalExclusao(false)
+                                        }}
                                     >
-                                        <Button
-                                            flex={1}
-                                            w="100%"
-                                            variant="outline"
-                                            onClick={() => {
-                                                setOpenModalExclusao(false)
-                                            }}
-                                        >
-                                            Voltar
-                                        </Button>
-                                        <Button
-                                            flex={1}
-                                            w="100%"
-                                            variant="danger"
-                                            onClick={() => {
-                                                setOpenModalExclusao(false)
-                                                onExclude()
-                                            }}
-                                        >
-                                            Excluir
-                                        </Button>
-                                    </Stack>
-                                </Dialog.Footer>
-                                <Dialog.CloseTrigger asChild>
-                                </Dialog.CloseTrigger>
-                            </Dialog.Content>
-                        </Dialog.Positioner>
-                    </Portal>
-                </Dialog.Root>
-            </CardCustomizado >
-
-            <Toaster />
-        </>
+                                        Voltar
+                                    </Button>
+                                    <Button
+                                        flex={1}
+                                        w="100%"
+                                        variant="danger"
+                                        onClick={() => {
+                                            setOpenModalExclusao(false)
+                                            onExclude()
+                                        }}
+                                    >
+                                        Excluir
+                                    </Button>
+                                </Stack>
+                            </Dialog.Footer>
+                            <Dialog.CloseTrigger asChild>
+                            </Dialog.CloseTrigger>
+                        </Dialog.Content>
+                    </Dialog.Positioner>
+                </Portal>
+            </Dialog.Root>
+        </CardCustomizado >
     );
 }
 

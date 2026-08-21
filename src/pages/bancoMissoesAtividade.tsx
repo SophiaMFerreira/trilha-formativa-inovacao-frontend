@@ -9,7 +9,7 @@ import { Tematica, TematicaDTO, tematicaLabel } from "@/types_consts/tematica";
 import { MissaoAPI } from "../../api/missao";
 import { TematicaAPI } from "../../api/tematica";
 import ListagemMissaoAtividade from "@/components/listagemMissaoAtividade";
-import { Toaster, toaster } from "@/components/commons/toaster";
+import { toaster } from "@/components/commons/toaster";
 import { mensagensToastErro } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
 
@@ -100,7 +100,6 @@ export default function BancoMissoesAtividade() {
     }, []);
 
     return (
-        <>
             <CardCustomizado
                 titulo={"Banco de missões atividade"}
                 mensagem={"Faça cadastro, edição e exclusão de missões atividade para a trilha formativa."}
@@ -175,8 +174,5 @@ export default function BancoMissoesAtividade() {
                     </Button>
                 </Flex>
             </CardCustomizado>
-
-            <Toaster />
-        </>
     );
 }

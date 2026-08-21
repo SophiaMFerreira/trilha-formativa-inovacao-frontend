@@ -13,6 +13,7 @@ export const toaster = createToaster({
   placement: "top-end",
   max: 3,
   pauseOnPageIdle: true,
+  overlap: false,
 })
 
 export const Toaster = () => {

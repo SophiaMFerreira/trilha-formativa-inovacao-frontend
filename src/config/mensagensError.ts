@@ -1,6 +1,6 @@
 export const mensagensErroConsole = {
     buscarGenerico:
-        "Falha ao buscar itensa. ",
+        "Falha ao buscar itens. ",
 
     buscarTematica:
         "Falha ao buscar a temática. ",
