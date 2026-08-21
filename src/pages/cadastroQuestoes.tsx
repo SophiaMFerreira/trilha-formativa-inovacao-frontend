@@ -357,9 +357,10 @@ export default function CadastroQuestoes() {
 
                     setDadosAtuais({
                         tematica: missao.tematica.titulo,
-                        idAtividade,
-                        tipoAtividade,
-                        tipoAlternativa
+                        idAtividade: missao.id,
+                        tipoAtividade: missao.tipoAtividade,
+                        tipoAlternativa: questao.alternativas[0].tipoAlternativa === TipoAlternativa.MULTIPLA_ESCOLHA ? 
+                            questao.alternativas[0].subtipo : questao.alternativas[0].tipoAlternativa 
                     })
 
                 } else {
