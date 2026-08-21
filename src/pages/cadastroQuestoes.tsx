@@ -3,8 +3,8 @@ import { Editable, Listbox } from "@ark-ui/react";
 import { useNavigate, useParams } from "react-router-dom";
 import CardCustomizado from "@/components/commons/cardCustomizado";
 import { AppInput } from "@/components/commons/AppInput";
-import { Box, Button, createListCollection, Dialog, Em, Field, Grid, Heading, HStack, IconButton, InputGroup, Portal, RadioCard, RadioGroup, Select, Stack, Text, Textarea } from "@chakra-ui/react";
-import { FaExclamationCircle, FaSearch } from "react-icons/fa";
+import { Box, Button, createListCollection, Dialog, Em, Field, Grid, Heading, HStack, IconButton, Image, InputGroup, Portal, RadioCard, RadioGroup, Select, Skeleton, Stack, Text, Textarea } from "@chakra-ui/react";
+import { FaExclamationCircle, FaSearch, FaTimes } from "react-icons/fa";
 import CustomTooltip from "@/components/commons/customTooltip";
 import { obterNomeTematica, TematicaDTO } from "@/types_consts/tematica";
 import { Alternativa, AlternativaAssociacao, AlternativaAssociacaoDTO, AlternativaAssociadaDTO, AlternativaAssociadaPutDTO, AlternativaDTO, AlternativaMultiplaEscolha, AlternativaMultiplaEscolhaDTO, AlternativaOrdenacao, AlternativaOrdenacaoDTO, SubtipoAlternativa, SubtipoAlternativaLabel, TipoAlternativa, TipoAlternativaLabel } from "@/types_consts/alternativa";
@@ -21,7 +21,13 @@ import { DadosAtuaisProps, validarQuestao } from "@/utils/validations/questao";
 import { toaster } from "@/components/commons/toaster";
 import { mensagensToastErro, mensagensToastSucesso } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
-import { mensagensAjudaQuestoes } from "@/config/mensagemAjudaQuestoes";
+import { mensagensAjudaQuestoes, mensagensAjudaQuestoesModal } from "@/config/mensagemAjudaQuestoes";
+
+import ajudaMultiplaEscolha from "@/assets/images/exemploQuestao/ajudaAlternativaMultiplaEscolha.png";
+import ajudaVerdadeiroFalso from "@/assets/images/exemploQuestao/ajudaAlternativaVerdadeiroFalso.png";
+import ajudaMultiplaEscolhaVarias from "@/assets/images/exemploQuestao/ajudaAlternativaMultiplaEscolhaVarias.png";
+import ajudaOrdenacao from "@/assets/images/exemploQuestao/ajudaAlternativaOrdenacao.png";
+import ajudaAssociacao from "@/assets/images/exemploQuestao/ajudaAlternativaAssociacao.png";
 
 export default function CadastroQuestoes() {
     const { idQuestao, idMissao } = useParams();
@@ -30,6 +36,18 @@ export default function CadastroQuestoes() {
     const [acao, setAcao] = useState("Cadastro")
     const [mensagem, setMensagem] = useState("cadastro de novas")
     const [acaoBotao, setAcaoBotao] = useState("Cadastrar questão")
+
+    const [openModalExclusao, setOpenModalExclusao] = useState(false)
+    const [openModalAjuda, setOpenModalAjuda] = useState(false)
+    const [loadedAjuda, setLoadedAjuda] = useState(false)
+    const imagemAjuda: Record<string, string> = {
+        [TipoAlternativa.ASSOCIACAO]: ajudaAssociacao,
+        [TipoAlternativa.ORDENACAO]: ajudaOrdenacao,
+        [SubtipoAlternativa.MULTIPLA_ESCOLHA]: ajudaMultiplaEscolha,
+        [SubtipoAlternativa.VERDADEIRO_FALSO]: ajudaVerdadeiroFalso,
+        [SubtipoAlternativa.MULTIPLAS_CORRETAS]: ajudaMultiplaEscolhaVarias,
+    };
+
     const estiloTags = {
         h: "5",
         borderWidth: "1px",
@@ -132,8 +150,6 @@ export default function CadastroQuestoes() {
             }))
         })
     }, [missoesFiltradas]);
-
-    const [openModalExclusao, setOpenModalExclusao] = useState(false)
 
     useEffect(() => {
         if (idQuestao) return
@@ -1025,8 +1041,8 @@ export default function CadastroQuestoes() {
                                     size="md"
                                     color="brand.primaryDark"
                                     p="3"
-                                //onClick={() => navigate("/cadastro-questoes")}
-                                //onClick={() => editar(questao.idQuestao)}
+                                    onClick={() => setOpenModalAjuda(true)}
+                                    disabled={!tipoAlternativa}
                                 >
                                     <FaExclamationCircle />
                                 </IconButton>
@@ -1267,7 +1283,100 @@ export default function CadastroQuestoes() {
                                     </Button>
                                 </Stack>
                             </Dialog.Footer>
-                            <Dialog.CloseTrigger asChild>
+                            <Dialog.CloseTrigger
+                                asChild
+                                color="brand.neutral"
+                                m="5"
+                            >
+                                <FaTimes size={20} />
+                            </Dialog.CloseTrigger>
+                        </Dialog.Content>
+                    </Dialog.Positioner>
+                </Portal>
+            </Dialog.Root>
+
+            <Dialog.Root
+                size="xl"
+                lazyMount
+                placement="center"
+                open={openModalAjuda}
+                onOpenChange={(e) => setOpenModalAjuda(e.open)}
+            >
+                <Portal>
+                    <Dialog.Backdrop />
+                    <Dialog.Positioner>
+                        <Dialog.Content>
+                            <Dialog.Header>
+                                <Dialog.Title
+                                    textStyle="headingMD"
+                                    color="brand.primaryDark"
+                                    mt="8"
+                                >
+                                    Exemplo preenchimento de alternativa
+                                </Dialog.Title>
+                            </Dialog.Header>
+                            <Dialog.Body>
+                                <Text
+                                    textStyle="bodyTextLong"
+                                    color="brand.neutral"
+                                    textAlign="justify"
+                                >
+                                    {mensagensAjudaQuestoesModal[tipoAlternativa as TipoAlternativa | SubtipoAlternativa]}
+                                </Text>
+                                <Box 
+                                    mx="-2"
+                                    my="-6"
+                                    mb="-14"
+                                >
+                                     <CardCustomizado
+                                    titulo=""
+                                    mensagem=""
+                                    
+                                >
+                                    <Skeleton
+                                        loading={!loadedAjuda}
+                                        h="100%"
+                                        minH="200px"
+                                        maxH="450px"
+                                        w="100%"
+                                    >
+                                        <Image
+                                            src={imagemAjuda[tipoAlternativa]}
+                                            alt={`Exemplo preenchimento de alternativa ${tipoAlternativa in Object.values(TipoAtividade) ?
+                                                TipoAlternativaLabel[tipoAlternativa as TipoAlternativa]
+                                                : SubtipoAlternativaLabel[tipoAlternativa as SubtipoAlternativa]
+                                                }`}
+                                            objectFit="cover"
+                                            overflow="hidden"
+                                            loading="lazy"
+                                            h="100%"
+                                            minH="200px"
+                                            maxH="450px"
+                                            w="100%"
+                                            onLoad={() => setLoadedAjuda(true)}
+                                        />
+                                    </Skeleton>
+                                </CardCustomizado>
+                                </Box>
+                            </Dialog.Body>
+                            <Dialog.Footer justifyContent="center">
+                                <Button
+                                    flex={1}
+                                    w="100%"
+                                    variant="outline"
+                                    onClick={() => {
+                                        setOpenModalAjuda(false)
+                                    }}
+                                >
+                                    Voltar
+                                </Button>
+                            </Dialog.Footer>
+                            <Dialog.CloseTrigger
+                                asChild
+                                color="brand.neutral"
+                                m="5"
+                            >
+                                <FaTimes size={20} />
                             </Dialog.CloseTrigger>
                         </Dialog.Content>
                     </Dialog.Positioner>
