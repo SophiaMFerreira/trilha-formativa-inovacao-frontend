@@ -3,7 +3,7 @@ import { AppInput } from "@/components/commons/AppInput";
 import { Box, Button, createListCollection, Dialog, Em, Field, Grid, GridItem, Heading, InputGroup, Listbox, ListCollection, Portal, Select, Stack, Text } from "@chakra-ui/react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { TematicaDTO } from "@/types_consts/tematica";
+import { obterNomeTematica, TematicaDTO } from "@/types_consts/tematica";
 import { Missao, MissaoAtividade, MissaoDTO, MissaoTarefa, TipoAtividade, TipoAtividadeLabel } from "@/types_consts/missao";
 import { TematicaAPI } from "../../api/tematica";
 import { QuestaoProp } from "@/types_consts/questao";
@@ -351,7 +351,7 @@ export default function CadastroMissoesAtividade() {
                                                         item={trilha}
                                                         key={trilha.value}
                                                     >
-                                                        {trilha.label}
+                                                        {obterNomeTematica(trilha.label) || trilha.label}
                                                         <Select.ItemIndicator />
                                                     </Select.Item>
                                                 ))}

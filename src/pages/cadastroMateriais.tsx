@@ -5,7 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import CardCustomizado from "@/components/commons/cardCustomizado";
 import { MissaoAPI } from "../../api/missao";
 import { TematicaAPI } from "../../api/tematica";
-import { TematicaDTO } from "@/types_consts/tematica";
+import { obterNomeTematica, TematicaDTO } from "@/types_consts/tematica";
 import { Missao, MissaoConteudo, MissaoDTO, tipoMaterialLabel } from "@/types_consts/missao";
 import { validarConteudo } from "@/utils/validations/missaoConteudo";
 import { toaster } from "@/components/commons/toaster";
@@ -273,7 +273,7 @@ export default function CadastroMateriais() {
                                                     item={trilha}
                                                     key={trilha.value}
                                                 >
-                                                    {trilha.label}
+                                                    {obterNomeTematica(trilha.label) || trilha.label}
                                                     <Select.ItemIndicator />
                                                 </Select.Item>
                                             ))}

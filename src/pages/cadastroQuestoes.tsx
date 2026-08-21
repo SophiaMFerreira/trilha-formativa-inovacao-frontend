@@ -1,8 +1,9 @@
+import { useEffect, useMemo, useState } from "react";
+import { Editable, Listbox } from "@ark-ui/react";
+import { useNavigate, useParams } from "react-router-dom";
 import CardCustomizado from "@/components/commons/cardCustomizado";
 import { AppInput } from "@/components/commons/AppInput";
 import { Box, Button, createListCollection, Dialog, Em, Field, Grid, Heading, HStack, IconButton, InputGroup, Portal, RadioCard, RadioGroup, Select, Stack, Text, Textarea } from "@chakra-ui/react";
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
 import { FaExclamationCircle, FaSearch } from "react-icons/fa";
 import CustomTooltip from "@/components/commons/customTooltip";
 import { obterNomeTematica, TematicaDTO } from "@/types_consts/tematica";
@@ -11,12 +12,11 @@ import { Missao, MissaoAtividade, TipoAtividade, TipoAtividadeLabel } from "@/ty
 import { TematicaAPI } from "../../api/tematica";
 import { QuestaoDTO, QuestaoProp } from "@/types_consts/questao";
 import { MissaoAPI } from "../../api/missao";
-import { Editable, Listbox } from "@ark-ui/react";
+import { AlternativaAPI } from "../../api/alternativa";
 import { MultiplaEscolhaCadastroQuiz, MultiplaEscolhaCadastroTarefa } from "@/components/commons/TarefaQuestao/multiplaEscolha";
 import { AssociacaoCadastroQuiz, AssociacaoCadastroTarefa, colunasAssociadas } from "@/components/commons/TarefaQuestao/associacao";
 import { OrdenacaoCadastroQuiz, OrdenacaoCadastroTarefa } from "@/components/commons/TarefaQuestao/ordenacao";
 import { QuestaoAPI } from "../../api/questao";
-import { AlternativaAPI } from "../../api/alternativa";
 import { DadosAtuaisProps, validarQuestao } from "@/utils/validations/questao";
 import { toaster } from "@/components/commons/toaster";
 import { mensagensToastErro, mensagensToastSucesso } from "@/config/mensagensToaster";
@@ -698,7 +698,7 @@ export default function CadastroQuestoes() {
                                                     borderColor="brand.neutral"
                                                 >
                                                     <RadioCard.ItemText>
-                                                        {obterNomeTematica(t.titulo)}
+                                                        {obterNomeTematica(t.titulo) || t.titulo}
                                                     </RadioCard.ItemText>
                                                 </RadioCard.ItemControl>
                                             </RadioCard.Item>
