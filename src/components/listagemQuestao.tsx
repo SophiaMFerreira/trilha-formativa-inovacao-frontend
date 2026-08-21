@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 import { Box, Collapsible, Heading, Text, HStack, IconButton, List, Dialog, Portal, Stack, Button } from "@chakra-ui/react"
 import { FaEdit, FaRegTrashAlt, FaCheckCircle, FaRegCircle } from "react-icons/fa"
@@ -8,7 +8,9 @@ import CustomTooltip from "./commons/customTooltip.tsx"
 import { QuestaoAPI } from "../../api/questao.ts"
 import { QuestaoProp } from "@/types_consts/questao.ts"
 import { Alternativa, AlternativaAssociacao, AlternativaMultiplaEscolhaDTO, AlternativaOrdenacaoDTO, SubtipoAlternativaLabel, TipoAlternativa, TipoAlternativaLabel } from "@/types_consts/alternativa.ts"
-import { MissaoAtividade } from "@/types_consts/missao.ts"
+import { mensagensToastErro, mensagensToastSucesso } from "@/config/mensagensToaster.ts"
+import { Toaster, toaster } from "./commons/toaster.tsx"
+import { mensagensErroConsole } from "@/config/mensagensError.ts"
 
 function popularAlternativas(alternativas: Alternativa[]) {
   const tipoAlternativas = alternativas[0].tipoAlternativa
@@ -144,8 +146,8 @@ export default function ListagemQuestao({
   const [open, setOpen] = useState(false)
   const [openModalExclusao, setOpenModalExclusao] = useState(false)
 
-  if (!alternativas) return // MENSAGEM DE ERRO
-  if (alternativas.length === 0) return // MENSAGEM DE ERRO
+  if (!alternativas) return
+  if (alternativas.length === 0) return
 
   let tipoQuestao = "Tipo desconhecido";
   switch (alternativas[0].tipoAlternativa) {
@@ -169,10 +171,12 @@ export default function ListagemQuestao({
     try {
       if (!idMissao || !idQuestao) return
       QuestaoAPI.deletar(idMissao, idQuestao)
+      toaster.create(mensagensToastSucesso.excluirQuestao)
       await onExcluir();
 
     } catch (erro) {
-      console.error(erro);
+      toaster.create(mensagensToastErro.excluirQuestao)
+      console.error(mensagensErroConsole.excluirQuestao, erro)
     }
   }
 
@@ -355,6 +359,8 @@ export default function ListagemQuestao({
           </Dialog.Positioner>
         </Portal>
       </Dialog.Root>
+
+      <Toaster />
     </>
   )
 }

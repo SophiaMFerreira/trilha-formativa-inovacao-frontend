@@ -7,6 +7,9 @@ import CustomTooltip from "./commons/customTooltip.tsx"
 
 import { MissaoConteudo, tipoMaterialLabel } from "@/types_consts/missao.ts"
 import { MissaoAPI } from "../../api/missao.ts"
+import { Toaster, toaster } from "./commons/toaster.tsx"
+import { mensagensToastErro, mensagensToastSucesso } from "@/config/mensagensToaster.ts"
+import { mensagensErroConsole } from "@/config/mensagensError.ts"
 
 type ListagemMaterial = MissaoConteudo & {
   onExcluir: () => Promise<void>
@@ -33,10 +36,12 @@ export default function ListagemMaterial(
     try {
       if (!idParam) return
       MissaoAPI.deletar(idParam)
+      toaster.create(mensagensToastSucesso.excluirConteudo)
       await onExcluir();
 
     } catch (erro) {
-      console.error(erro);
+      toaster.create(mensagensToastErro.excluirConteudo)
+      console.error(mensagensErroConsole.excluirMissaoConteudo, erro)
     }
   }
 
@@ -219,6 +224,8 @@ export default function ListagemMaterial(
           </Dialog.Positioner>
         </Portal>
       </Dialog.Root>
+
+      <Toaster />
     </>
   )
 }

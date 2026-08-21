@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
 import { Box, Button, HStack, InputGroup, Stack, Heading, Flex } from "@chakra-ui/react"
 import ListagemMaterial from "@/components/listagemMaterial";
 import CardCustomizado from "@/components/commons/cardCustomizado";
 import { AppInput } from "@/components/commons/AppInput";
+import { toaster, Toaster } from "@/components/commons/toaster";
 import { FaSearch } from "react-icons/fa";
 import { Missao, MissaoConteudo } from "@/types_consts/missao";
 import { Tematica, TematicaDTO, tematicaLabel } from "@/types_consts/tematica";
-
 import { MissaoAPI } from "../../api/missao";
 import { TematicaAPI } from "../../api/tematica";
+import { mensagensErroConsole } from "@/config/mensagensError";
+import { mensagensToastErro } from "@/config/mensagensToaster";
 
 type GrupoTematica = {
     tematica: string;
@@ -54,10 +55,16 @@ export default function BancoMateriais() {
                 MissaoAPI.listar(),
             ]);
 
-            if (!tematicasResponse.data) return // MENSAGEM DE ERRO
+            if (!tematicasResponse.data) {
+                toaster.create(mensagensToastErro.carregarTematicas)
+                return
+            }
             const tematicas = tematicasResponse.data as TematicaDTO[]
 
-            if (!missoesResponse.data) return // MENSAGEM DE ERRO
+            if (!missoesResponse.data) {
+                toaster.create(mensagensToastErro.carregarMissoesConteudo)
+                return
+            }
             const missoes = missoesResponse.data as Missao[]
             const missoesMateriais = missoes.filter((m): m is MissaoConteudo => "tipoMaterial" in m)
 
@@ -82,7 +89,7 @@ export default function BancoMateriais() {
             setMissoesPorTematica(missoesFiltradas)
 
         } catch (erro) {
-            console.error(erro);
+            console.error(mensagensErroConsole.buscarGenerico, erro)
         }
     }
 
@@ -91,79 +98,82 @@ export default function BancoMateriais() {
     }, []);
 
     return (
-        <CardCustomizado
-            titulo={"Banco de materiais de estudo"}
-            mensagem={"Faça cadastro, edição e exclusão de materiais de estudo para a trilha formativa."}
-        >
-            <Flex
-                direction="column"
-                justify="center"
-                gap="3"
-                mt={6}
+        <>
+            <CardCustomizado
+                titulo={"Banco de materiais de estudo"}
+                mensagem={"Faça cadastro, edição e exclusão de materiais de estudo para a trilha formativa."}
             >
-                <HStack
-                    justify="space-between"
-                    flex="1"
+                <Flex
+                    direction="column"
+                    justify="center"
+                    gap="3"
+                    mt={6}
                 >
-                    <InputGroup
-                        endElement={
-                            <Box color="brand.primaryDark">
-                                <FaSearch />
-                            </Box>
-                        }
-                        maxW="md"
+                    <HStack
+                        justify="space-between"
+                        flex="1"
                     >
-                        <AppInput
-                            placeholder="Pesquisar material de estudo"
-                            appVariant="filled"
-                            value={termoBusca}
-                            onChange={(e) => setTermoBusca(e.target.value)}
+                        <InputGroup
+                            endElement={
+                                <Box color="brand.primaryDark">
+                                    <FaSearch />
+                                </Box>
+                            }
+                            maxW="md"
+                        >
+                            <AppInput
+                                placeholder="Pesquisar material de estudo"
+                                appVariant="filled"
+                                value={termoBusca}
+                                onChange={(e) => setTermoBusca(e.target.value)}
 
-                        />
-                    </InputGroup>
+                            />
+                        </InputGroup>
+                        <Button
+                            variant="solid"
+                            onClick={() => navigate("/cadastro-materiais")}
+                        >
+                            Adicionar material
+                        </Button>
+                    </HStack>
+                    <Stack>
+                        {materiaisFiltrados.map(groupoTematica => (
+                            <Box
+                                my={3}
+                                key={groupoTematica.tematica}
+                            >
+                                <Heading
+                                    textStyle="headingMD"
+                                    color="brand.primaryDark"
+                                    mb={1.5}
+                                >
+                                    {groupoTematica.tematica}
+                                </Heading>
+                                <Stack
+                                    gap={2}
+                                >
+                                    {groupoTematica.materiais.map(material => (
+                                        <ListagemMaterial
+                                            key={material.id}
+                                            {...material}
+                                            onExcluir={carregarDados}
+                                        />
+                                    ))}
+                                </Stack>
+                            </Box>
+                        ))}
+                    </Stack>
                     <Button
-                        variant="solid"
+                        variant="outline"
+                        w="sm"
+                        alignSelf="center"
                         onClick={() => navigate("/cadastro-materiais")}
                     >
                         Adicionar material
                     </Button>
-                </HStack>
-                <Stack>
-                    {materiaisFiltrados.map(groupoTematica => (
-                        <Box
-                            my={3}
-                            key={groupoTematica.tematica}
-                        >
-                            <Heading
-                                textStyle="headingMD"
-                                color="brand.primaryDark"
-                                mb={1.5}
-                            >
-                                {groupoTematica.tematica}
-                            </Heading>
-                            <Stack
-                                gap={2}
-                            >
-                                {groupoTematica.materiais.map(material => (
-                                    <ListagemMaterial
-                                        key={material.id}
-                                        {...material}
-                                        onExcluir={carregarDados}
-                                    />
-                                ))}
-                            </Stack>
-                        </Box>
-                    ))}
-                </Stack>
-                <Button
-                    variant="outline"
-                    w="sm"
-                    alignSelf="center"
-                    onClick={() => navigate("/cadastro-materiais")}
-                >
-                    Adicionar material
-                </Button>
-            </Flex>
-        </CardCustomizado>
+                </Flex>
+            </CardCustomizado>
+            <Toaster />
+        </>
     );
 }

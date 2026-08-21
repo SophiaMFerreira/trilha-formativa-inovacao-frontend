@@ -1,17 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
 import { Box, Button, HStack, InputGroup, Stack, Heading, Flex } from "@chakra-ui/react"
-import ListagemMaterial from "@/components/listagemMaterial";
 import CardCustomizado from "@/components/commons/cardCustomizado";
 import { AppInput } from "@/components/commons/AppInput";
 import { FaSearch } from "react-icons/fa";
-import { Missao, MissaoAtividade, MissaoConteudo } from "@/types_consts/missao";
+import { Missao, MissaoAtividade } from "@/types_consts/missao";
 import { Tematica, TematicaDTO, tematicaLabel } from "@/types_consts/tematica";
-
 import { MissaoAPI } from "../../api/missao";
 import { TematicaAPI } from "../../api/tematica";
 import ListagemMissaoAtividade from "@/components/listagemMissaoAtividade";
+import { Toaster, toaster } from "@/components/commons/toaster";
+import { mensagensToastErro } from "@/config/mensagensToaster";
+import { mensagensErroConsole } from "@/config/mensagensError";
 
 type GrupoTematica = {
     tematica: string;
@@ -39,9 +39,9 @@ export default function BancoMissoesAtividade() {
                         material.titulo.toLowerCase().includes(busca) ||
                         material.pontuacao.toString().includes(busca) ||
                         material.tipoAtividade.toLowerCase().includes(busca) ||
-                        material.questoes.some(q => q.enunciado.toLowerCase().includes(busca) || 
-                                                    q.mensagemCorrecao.toLowerCase().includes(busca)
-                                            )
+                        material.questoes.some(q => q.enunciado.toLowerCase().includes(busca) ||
+                            q.mensagemCorrecao.toLowerCase().includes(busca)
+                        )
                     )
                 }))
     }, [termoBusca, missoesPorTematica]);
@@ -56,10 +56,17 @@ export default function BancoMissoesAtividade() {
                 MissaoAPI.listar(),
             ]);
 
-            if (!tematicasResponse.data) return // MENSAGEM DE ERRO
+            if (!tematicasResponse.data) {
+                toaster.create(mensagensToastErro.carregarTematicas)
+                return
+            }
             const tematicas = tematicasResponse.data as TematicaDTO[]
 
-            if (!missoesResponse.data) return // MENSAGEM DE ERRO
+            if (!missoesResponse.data) {
+                toaster.create(mensagensToastErro.carregarMissoesAtividade)
+                return
+            }
+
             const missoes = missoesResponse.data as Missao[]
             const missoesAtividade = missoes.filter((m): m is MissaoAtividade => "tipoAtividade" in m)
 
@@ -84,7 +91,7 @@ export default function BancoMissoesAtividade() {
             setMissoesPorTematica(missoesFiltradas)
 
         } catch (erro) {
-            console.error(erro);
+            console.error(mensagensErroConsole.buscarGenerico, erro)
         }
     }
 
@@ -93,79 +100,83 @@ export default function BancoMissoesAtividade() {
     }, []);
 
     return (
-        <CardCustomizado
-            titulo={"Banco de missões atividade"}
-            mensagem={"Faça cadastro, edição e exclusão de missões atividade para a trilha formativa."}
-        >
-            <Flex
-                direction="column"
-                justify="center"
-                gap="3"
-                mt={6}
+        <>
+            <CardCustomizado
+                titulo={"Banco de missões atividade"}
+                mensagem={"Faça cadastro, edição e exclusão de missões atividade para a trilha formativa."}
             >
-                <HStack
-                    justify="space-between"
-                    flex="1"
+                <Flex
+                    direction="column"
+                    justify="center"
+                    gap="3"
+                    mt={6}
                 >
-                    <InputGroup
-                        endElement={
-                            <Box color="brand.primaryDark">
-                                <FaSearch />
-                            </Box>
-                        }
-                        maxW="md"
+                    <HStack
+                        justify="space-between"
+                        flex="1"
                     >
-                        <AppInput
-                            placeholder="Pesquisar missão atividade"
-                            appVariant="filled"
-                            value={termoBusca}
-                            onChange={(e) => setTermoBusca(e.target.value)}
+                        <InputGroup
+                            endElement={
+                                <Box color="brand.primaryDark">
+                                    <FaSearch />
+                                </Box>
+                            }
+                            maxW="md"
+                        >
+                            <AppInput
+                                placeholder="Pesquisar missão atividade"
+                                appVariant="filled"
+                                value={termoBusca}
+                                onChange={(e) => setTermoBusca(e.target.value)}
 
-                        />
-                    </InputGroup>
+                            />
+                        </InputGroup>
+                        <Button
+                            variant="solid"
+                            onClick={() => navigate("/cadastro-missao-atividade")}
+                        >
+                            Adicionar missão
+                        </Button>
+                    </HStack>
+                    <Stack>
+                        {materiaisFiltrados.map(groupoTematica => (
+                            <Box
+                                my={3}
+                                key={groupoTematica.tematica}
+                            >
+                                <Heading
+                                    textStyle="headingMD"
+                                    color="brand.primaryDark"
+                                    mb={1.5}
+                                >
+                                    {groupoTematica.tematica}
+                                </Heading>
+                                <Stack
+                                    gap={2}
+                                >
+                                    {groupoTematica.atividades.map(material => (
+                                        <ListagemMissaoAtividade
+                                            key={material.id}
+                                            {...material}
+                                            onExcluir={carregarDados}
+                                        />
+                                    ))}
+                                </Stack>
+                            </Box>
+                        ))}
+                    </Stack>
                     <Button
-                        variant="solid"
+                        variant="outline"
+                        w="sm"
+                        alignSelf="center"
                         onClick={() => navigate("/cadastro-missao-atividade")}
                     >
                         Adicionar missão
                     </Button>
-                </HStack>
-                <Stack>
-                    {materiaisFiltrados.map(groupoTematica => (
-                        <Box
-                            my={3}
-                            key={groupoTematica.tematica}
-                        >
-                            <Heading
-                                textStyle="headingMD"
-                                color="brand.primaryDark"
-                                mb={1.5}
-                            >
-                                {groupoTematica.tematica}
-                            </Heading>
-                            <Stack
-                                gap={2}
-                            >
-                                {groupoTematica.atividades.map(material => (
-                                    <ListagemMissaoAtividade
-                                        key={material.id}
-                                        {...material}
-                                        onExcluir={carregarDados}
-                                    />
-                                ))}
-                            </Stack>
-                        </Box>
-                    ))}
-                </Stack>
-                <Button
-                    variant="outline"
-                    w="sm"
-                    alignSelf="center"
-                    onClick={() => navigate("/cadastro-missao-atividade")}
-                >
-                    Adicionar missão
-                </Button>
-            </Flex>
-        </CardCustomizado>
+                </Flex>
+            </CardCustomizado>
+
+            <Toaster />
+        </>
     );
 }

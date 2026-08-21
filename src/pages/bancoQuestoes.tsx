@@ -1,18 +1,19 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
-
-import { Box, Button, HStack, InputGroup, Stack, Heading, Flex } from "@chakra-ui/react"
+import { Box, Button, HStack, InputGroup, Stack, Heading, Flex, } from "@chakra-ui/react"
 import CardCustomizado from "@/components/commons/cardCustomizado";
 import ListagemQuestao from "@/components/listagemQuestao";
+import { Toaster, toaster } from "@/components/commons/toaster";
 import { FaSearch } from "react-icons/fa";
-
-import { TematicaAPI } from "../../api/tematica";
 import { Tematica, TematicaDTO, tematicaLabel } from "@/types_consts/tematica";
 import { QuestaoProp } from "@/types_consts/questao";
 import { SubtipoAlternativaLabel, TipoAlternativa, TipoAlternativaLabel } from "@/types_consts/alternativa";
 import { Missao, MissaoAtividade } from "@/types_consts/missao";
+import { TematicaAPI } from "../../api/tematica";
 import { MissaoAPI } from "../../api/missao";
 import { AppInput } from "@/components/commons/AppInput";
+import { mensagensToastErro } from "@/config/mensagensToaster";
+import { mensagensErroConsole } from "@/config/mensagensError";
 
 type GrupoTematica = {
     tematica: string;
@@ -40,8 +41,7 @@ export default function BancoQuestoes() {
 
                 tematica: grupoTematica.tematica,
                 questoes: grupoTematica.questoes.filter(questao => {
-                    if (!questao.alternativas) return // MENSAGEM DE ERRO
-                    if (questao.alternativas.length === 0) return // MENSAGEM DE ERRO
+                    if (!questao.alternativas?.length) return;
 
                     let tipoQuestao = "Tipo desconhecido";
                     switch (questao.alternativas[0].tipoAlternativa) {
@@ -81,10 +81,16 @@ export default function BancoQuestoes() {
                 MissaoAPI.listar(),
             ]);
 
-            if (!tematicasResponse.data) return // MENSAGEM DE ERRO
+            if (!tematicasResponse.data) {
+                toaster.create(mensagensToastErro.carregarTematicas)
+                return
+            }
             const tematicas = tematicasResponse.data as TematicaDTO[]
 
-            if (!missoesResponse.data) return // MENSAGEM DE ERRO
+            if (!missoesResponse.data) {
+                toaster.create(mensagensToastErro.carregarMissoesAtividade)
+                return
+            }
             const missoes = missoesResponse.data as Missao[]
             const missoesAtividades = missoes.filter((m): m is MissaoAtividade => "tipoAtividade" in m)
 
@@ -116,7 +122,7 @@ export default function BancoQuestoes() {
 
             setQuestoesPorTematica(missoesFiltradas)
         } catch (erro) {
-            console.error(erro);
+            console.error(mensagensErroConsole.buscarGenerico, erro);
         }
     }
 
@@ -125,78 +131,82 @@ export default function BancoQuestoes() {
     }, []);
 
     return (
-        <CardCustomizado
-            titulo={"Banco de questões"}
-            mensagem={"Faça cadastro, edição e exclusão de questões para a trilha formativa."}
-        >
-            <Flex
-                direction="column"
-                justify="center"
-                gap="3"
-                mt={6}
+        <>
+            <CardCustomizado
+                titulo={"Banco de questões"}
+                mensagem={"Faça cadastro, edição e exclusão de questões para a trilha formativa."}
             >
-                <HStack
-                    justify="space-between"
-                    flex="1"
+                <Flex
+                    direction="column"
+                    justify="center"
+                    gap="3"
+                    mt={6}
                 >
-                    <InputGroup
-                        endElement={
-                            <Box color="brand.primaryDark">
-                                <FaSearch />
-                            </Box>
-                        }
-                        maxW="md"
+                    <HStack
+                        justify="space-between"
+                        flex="1"
                     >
-                        <AppInput
-                            placeholder="Pesquisar questão"
-                            appVariant="filled"
-                            value={termoBusca}
-                            onChange={(e) => setTermoBusca(e.target.value)}
-                        />
-                    </InputGroup>
+                        <InputGroup
+                            endElement={
+                                <Box color="brand.primaryDark">
+                                    <FaSearch />
+                                </Box>
+                            }
+                            maxW="md"
+                        >
+                            <AppInput
+                                placeholder="Pesquisar questão"
+                                appVariant="filled"
+                                value={termoBusca}
+                                onChange={(e) => setTermoBusca(e.target.value)}
+                            />
+                        </InputGroup>
+                        <Button
+                            variant="solid"
+                            onClick={() => navigate("/cadastro-questoes")}
+                        >
+                            Adcionar questão
+                        </Button>
+                    </HStack>
+                    <Stack>
+                        {questoesFiltradas.map(groupoTematica => (
+                            <Box
+                                my={3}
+                                key={groupoTematica.tematica}
+                            >
+                                <Heading
+                                    textStyle="headingMD"
+                                    color="brand.primaryDark"
+                                    mb={1.5}
+                                >
+                                    {groupoTematica.tematica}
+                                </Heading>
+                                <Stack
+                                    gap={2}
+                                >
+                                    {groupoTematica.questoes.map(questao => (
+                                        <ListagemQuestao
+                                            key={questao.id}
+                                            {...questao}
+                                            onExcluir={carregarDados}
+                                        />
+                                    ))}
+                                </Stack>
+                            </Box>
+                        ))}
+                    </Stack>
                     <Button
-                        variant="solid"
+                        variant="outline"
+                        w="sm"
+                        alignSelf="center"
                         onClick={() => navigate("/cadastro-questoes")}
                     >
                         Adcionar questão
                     </Button>
-                </HStack>
-                <Stack>
-                    {questoesFiltradas.map(groupoTematica => (
-                        <Box
-                            my={3}
-                            key={groupoTematica.tematica}
-                        >
-                            <Heading
-                                textStyle="headingMD"
-                                color="brand.primaryDark"
-                                mb={1.5}
-                            >
-                                {groupoTematica.tematica}
-                            </Heading>
-                            <Stack
-                                gap={2}
-                            >
-                                {groupoTematica.questoes.map(questao => (
-                                    <ListagemQuestao
-                                        key={questao.id}
-                                        {...questao}
-                                        onExcluir={carregarDados}
-                                    />
-                                ))}
-                            </Stack>
-                        </Box>
-                    ))}
-                </Stack>
-                <Button
-                    variant="outline"
-                    w="sm"
-                    alignSelf="center"
-                    onClick={() => navigate("/cadastro-questoes")}
-                >
-                    Adcionar questão
-                </Button>
-            </Flex>
-        </CardCustomizado>
+                </Flex>
+            </CardCustomizado>
+
+            <Toaster />
+        </>
     );
 }

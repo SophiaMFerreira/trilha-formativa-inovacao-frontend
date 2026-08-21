@@ -7,6 +7,9 @@ import CustomTooltip from "./commons/customTooltip.tsx"
 
 import { MissaoAtividade, TipoAtividadeLabel } from "@/types_consts/missao.ts"
 import { MissaoAPI } from "../../api/missao.ts"
+import { Toaster, toaster } from "./commons/toaster.tsx"
+import { mensagensToastErro, mensagensToastSucesso } from "@/config/mensagensToaster.ts"
+import { mensagensErroConsole } from "@/config/mensagensError.ts"
 
 type ListagemMaterial = MissaoAtividade & {
   onExcluir: () => Promise<void>
@@ -33,10 +36,12 @@ export default function ListagemMissaoAtividade(
     try {
       if (!idParam) return
       MissaoAPI.deletar(idParam)
+      toaster.create(mensagensToastSucesso.excluirMissao)
       await onExcluir();
 
     } catch (erro) {
-      console.error(erro);
+      console.error(mensagensErroConsole.excluirMissaoAtividade, erro)
+      toaster.create(mensagensToastErro.excluirMissao)
     }
   }
 
@@ -123,7 +128,7 @@ export default function ListagemMissaoAtividade(
             <br />
             <Stack>
               {questoes.map((q, index) =>
-                <HStack 
+                <HStack
                   gap="4"
                   minW="0"
                   key={q.id}
@@ -247,6 +252,8 @@ export default function ListagemMissaoAtividade(
           </Dialog.Positioner>
         </Portal>
       </Dialog.Root>
+
+      <Toaster />
     </>
   )
 }
