@@ -92,6 +92,7 @@ export default function BancoMissoesAtividade() {
 
         } catch (erro) {
             console.error(mensagensErroConsole.buscarGenerico, erro)
+            toaster.create(mensagensToastErro.carregarGenerico)
         }
     }
 

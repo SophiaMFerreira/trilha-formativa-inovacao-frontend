@@ -90,6 +90,7 @@ export default function BancoMateriais() {
 
         } catch (erro) {
             console.error(mensagensErroConsole.buscarGenerico, erro)
+            toaster.create(mensagensToastErro.carregarGenerico)
         }
     }
 

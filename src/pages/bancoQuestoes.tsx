@@ -122,7 +122,8 @@ export default function BancoQuestoes() {
 
             setQuestoesPorTematica(missoesFiltradas)
         } catch (erro) {
-            console.error(mensagensErroConsole.buscarGenerico, erro);
+            console.error(mensagensErroConsole.buscarGenerico, erro)
+            toaster.create(mensagensToastErro.carregarGenerico)
         }
     }
 

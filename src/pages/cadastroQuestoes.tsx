@@ -576,6 +576,9 @@ export default function CadastroQuestoes() {
                                 AlternativaAPI.salvar(questao.id, alternativa as AlternativaDTO)
                             )
                     )
+
+                    toaster.create(mensagensToastSucesso.salvarQuestao)
+                    
                 } catch (erroAlternativas) {
                     toaster.create(mensagensToastErro.editarQuestao)
                     console.error(mensagensErroConsole.editarQuestao, erroAlternativas)

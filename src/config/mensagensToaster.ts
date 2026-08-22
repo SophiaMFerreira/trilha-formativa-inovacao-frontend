@@ -3,6 +3,15 @@ export const mensagensToastErro = {
     // CARREGAMENTO
     // =========================
 
+    carregarGenerico: {
+        title: "Falha ao carregar",
+        description:
+            "Não foi possível carregar o conteúdo. Tente novamente mais tarde.",
+        type: "error",
+        closable: true,
+        duration: 7000,
+    },
+
     carregarTematicas: {
         title: "Falha ao carregar as temáticas",
         description:
