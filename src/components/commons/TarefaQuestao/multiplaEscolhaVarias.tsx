@@ -58,14 +58,14 @@ export function MultiplaEscolhaVarias({ questao, value, onChange }: QuestaoProps
 type QuestaoCheckboxProps = {
   questao: QuestaoProp;
   index: number;
-  value: string[];
-  onChange: (value: string[]) => void;
+  //value: string[];
+  //onChange: (value: string[]) => void;
 };
 export function QuestaoCheckbox({
   questao,
   index,
-  value,
-  onChange,
+  //value,
+  //onChange,
 }: QuestaoCheckboxProps) {
   const alternativas = useMemo(
     () => shuffleArray([...questao.alternativas]),
@@ -84,8 +84,8 @@ export function QuestaoCheckbox({
         {questao.enunciado}
       </Text>
       <CheckboxGroup
-        value={value}
-        onValueChange={(values) => onChange(values)}
+        //value={value}
+        //onValueChange={(values) => onChange(values)}
       >
         <Fieldset.Content
           mt="-2"

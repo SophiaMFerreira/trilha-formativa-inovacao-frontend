@@ -102,6 +102,7 @@ export type AlternativaProps = {
 export type Alternativa =
     | AlternativaAssociacao
     | AlternativaMultiplaEscolha
+    | AlternativaAssocida
     | AlternativaOrdenacao
 
 type AlternativaBase = {

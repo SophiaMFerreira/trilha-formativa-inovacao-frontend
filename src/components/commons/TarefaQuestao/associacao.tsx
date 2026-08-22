@@ -17,29 +17,17 @@ export type colunasAssociadas = {
 }
 type AssociacaoProps = {
     questao: QuestaoProp;
-    onChange: (value: colunasAssociadas) => void;
+    onChange: (alternativasAssociadasresposta: colunasAssociadas) => void;
 };
 export default function Associacao({ questao, onChange }: AssociacaoProps) {
     const { colunaA, colunaB } = useMemo(() => {
+        const alternativas = questao.alternativas as AlternativaAssociacao[]
         const colunaA = [];
         const colunaB = [];
-        const usadas = new Set<number>();
-        const alternativas = questao.alternativas as AlternativaAssociacao[]
-
+        
         for (const alternativa of alternativas) {
-            if (usadas.has(alternativa.id)) continue;
-
-            const associada = questao.alternativas.find(
-                a => a.id === alternativa.alternativaAssociada.id
-            );
-
-            if (!associada) continue;
-
             colunaA.push(alternativa);
-            colunaB.push(associada);
-
-            usadas.add(alternativa.id);
-            usadas.add(associada.id);
+            colunaB.push(alternativa.alternativaAssociada);
         }
 
         return {
@@ -82,7 +70,7 @@ export default function Associacao({ questao, onChange }: AssociacaoProps) {
                 <Stack gap="5"
                     onChange={() => onChange({
                         colunaA: colA,
-                        colunaB: colB
+                        colunaB: colB,
                     } as colunasAssociadas
                     )}
                 >

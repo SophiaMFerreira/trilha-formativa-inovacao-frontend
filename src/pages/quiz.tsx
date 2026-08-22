@@ -13,7 +13,7 @@ import Ordenacao from "@/components/commons/TarefaQuestao/ordenacao";
 import { shuffleArray } from "@/utils/shuffle";
 import { Missao, MissaoQuiz, ProgressoMissaoAtividade, TipoAtividade } from "@/types_consts/missao";
 import { QuestaoProp } from "@/types_consts/questao";
-import { Alternativa, AlternativaMarcadaDTO, SubtipoAlternativa, TipoAlternativa } from "@/types_consts/alternativa";
+import { Alternativa, AlternativaMarcadaAssociacaoDTO, AlternativaMarcadaDTO, SubtipoAlternativa, TipoAlternativa } from "@/types_consts/alternativa";
 
 import { MissaoAPI } from "../../api/missao";
 import { useAuth } from "@/hooks/useAuth";
@@ -226,7 +226,7 @@ export default function Quiz() {
                             color="brand.neutral"
                             textStyle="emphasis"
                         >
-                            {questao.enunciado || "enunciado"}
+                            {questao.enunciado}
                         </Text>
                         <ExibirQuestao
                             questao={questao}
@@ -336,52 +336,19 @@ function ExibirQuestao({
         setRespostas(novasRespostas);
     }
 
-    /*
-    function alterarRespostaAssociacao(indice: number, resposta: colunasAssociadas) {
-        setRespostas((anterior) => {
-            const novo = [...anterior];
-            novo[indice] = resposta.colunaA.map((alternativa, i) => {
-                return {
-                    idUsuario: user!.id,
-                    idAlternativa: Number(resposta.colunaA[i].id),
-                    idAlternativaAssociadaRespondida: Number(resposta.colunaB[i].id)
-                }
-            })
-            return novo;
-        });
+    function alterarRespostaAssociacao(alternativasAssociadasresposta: colunasAssociadas) {
+        const novasRespostas = [...respostas];
+        const idUsuario = respostas[idQuestao]?.[0]?.idUsuario ?? user!.id;
+
+        novasRespostas[idQuestao] = alternativasAssociadasresposta.colunaA
+            .map((alternativaA, i) => ({
+                idUsuario,
+                idAlternativa: alternativaA.id,
+                idAlternativaAssociadaRespondida: alternativasAssociadasresposta.colunaB[i].id
+            }))
+
+        setRespostas(novasRespostas);
     }
-    
-
-    
-
-    function alterarRespostaAssociacao(alternativas: colunasAssociadas) {
-        const aAssociadas = alternativas.colunaA.flatMap((alternativa, i) => [
-            {
-                id: alternativa.id,
-                texto: alternativa.texto,
-                tipoAlternativa: TipoAlternativa.ASSOCIACAO,
-                alternativaAssociada: {
-                    id: alternativas.colunaB[i].id,
-                    texto: alternativas.colunaB[i].tipoAlternativa,
-                    tipoAlternativa: TipoAlternativa.ASSOCIACAO,
-                }
-            }, {
-                id: alternativas.colunaB[i].id,
-                texto: alternativas.colunaB[i].texto,
-                tipoAlternativa: TipoAlternativa.ASSOCIACAO,
-                alternativaAssociada: {
-                    id: alternativa.id,
-                    texto: alternativa.texto,
-                    tipoAlternativa: TipoAlternativa.ASSOCIACAO,
-                }
-            }
-        ]) as unknown
-        const alternativaAssociacao = aAssociadas as AlternativaAssociacao[]
-        setAlternativas(alternativaAssociacao)
-    }
-
-    
-        */
 
     switch (questao.alternativas[0].tipoAlternativa) {
 
@@ -408,14 +375,14 @@ function ExibirQuestao({
             }
 
         case TipoAlternativa.ASSOCIACAO:
-            {/*
-                            <Associacao
-                            key={questao.id}
-                                questao={questao}
-                                //value={respostas[iQuestao]}
-                                onChange={(valor) => alterarRespostaAssociacao(idQuestao, valor)}
-                            />
-                        */}
+            return (
+                <Associacao
+                    key={questao.id}
+                    questao={questao}
+                    //value={respostas[iQuestao]}
+                    onChange={alterarRespostaAssociacao}
+                />
+            )
         case TipoAlternativa.ORDENACAO:
             const respostasIds = respostas[idQuestao].map(r => {
                 r.idAlternativa !== -1

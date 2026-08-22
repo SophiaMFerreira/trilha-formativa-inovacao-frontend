@@ -12,6 +12,8 @@ export default function CaixaAlternativa({texto, estilo, minH}: AlternativaProps
       rounded="sm"
       cursor="pointer"
       minH={minH ? "16" : "110px"}
+      maxH={minH ? "16" : "110px"}
+      h="100%"
       shadow="card"
       textStyle="emphasis"
 

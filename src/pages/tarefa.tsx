@@ -10,7 +10,7 @@ import { QuestaoCheckbox } from "@/components/commons/TarefaQuestao/multiplaEsco
 import { QuestaoProp } from "@/types_consts/questao";
 
 import { shuffleArray } from "@/utils/shuffle";
-import { Alternativa, AlternativaMarcadaDTO, AlternativaMultiplaEscolhaDTO, SubtipoAlternativa, TipoAlternativa } from "@/types_consts/alternativa";
+import { Alternativa, AlternativaMarcadaDTO, AlternativaMultiplaEscolha, AlternativaMultiplaEscolhaDTO, SubtipoAlternativa, TipoAlternativa } from "@/types_consts/alternativa";
 import { MissaoAPI } from "../../api/missao";
 import { useAuth } from "@/hooks/useAuth";
 import { Missao, MissaoTarefa, ProgressoMissaoAtividade, TipoAtividade } from "@/types_consts/missao";
@@ -61,19 +61,9 @@ export default function Tarefa() {
     const [pontuacao, setPontuacao] = useState(0);
     const [tentativas, setTentativas] = useState(0);
 
-    const [exibicaoQuestoes] = useState(() =>
-        questoes.map((q) => {
-            if (q.alternativas[0].tipoAlternativa === TipoAlternativa.MULTIPLA_ESCOLHA) {
-                const alternativa = q.alternativas[0] as AlternativaMultiplaEscolhaDTO
-                return alternativa.subtipo === SubtipoAlternativa.MULTIPLAS_CORRETAS ?
-                    "checkbox" :
-                    Math.random() < 0.5
-                        ? "radio"
-                        : "select"
-            } else {
-                return "checkbox"
-            }
-        }));
+    const [exibicaoQuestoes, setExibicaoQuestoes] = useState<("select" | "checkbox" | "radio")[]>(
+        Array(5).fill("radio")
+    )
 
     const TEMPO_TAREFA = 30 * 60
     const [tempo, setTempo] = useState(TEMPO_TAREFA)
@@ -82,16 +72,16 @@ export default function Tarefa() {
 
     useEffect(() => {
         async function carregarDados() {
-            
+
             try {
                 const missaoResponse = await MissaoAPI.listar()
                 //const missaoResponse = await MissaoAPI.buscarPorId(Number(idMissao))
                 if (!missaoResponse.data) return; //MENSAGEM ERRO 
-                
+
                 const missoes = missaoResponse.data as Missao[]
                 const missao = missoes.find(m => m.id === (Number(idMissao)))
                 if (!missao) return
-                
+
                 //const missao = missaoResponse.data as Missao
                 if (!("tipoAtividade" in missao)) return; //MENSAGEM ERRO
 
@@ -110,7 +100,25 @@ export default function Tarefa() {
                 setValorMissao(tarefa.pontuacao)
                 setTrilha(obterNomeTematica(tarefa.tematica.titulo))
 
-                setQuestoes(shuffleArray(tarefa.questoes))
+                const questoesEmbaralhadas = shuffleArray(tarefa.questoes);
+
+                setQuestoes(questoesEmbaralhadas);
+
+                const formatos = questoesEmbaralhadas.map((q) => {
+                    if (q.alternativas[0].tipoAlternativa === TipoAlternativa.MULTIPLA_ESCOLHA) {
+                        const alternativa = q.alternativas[0] as AlternativaMultiplaEscolha
+                        return alternativa.subtipo ===
+                            SubtipoAlternativa.MULTIPLAS_CORRETAS
+                            ? "checkbox"
+                            : Math.random() < 0.5
+                                ? "radio"
+                                : "select";
+                    }
+
+                    return "checkbox";
+                });
+
+                setExibicaoQuestoes(formatos);
                 setCarregando(false)
 
                 const progresso = progressoMissoes.find(p => p.missao.id === tarefa.id)
@@ -120,7 +128,6 @@ export default function Tarefa() {
 
                 setProgressoTarefa(progressoTarefa)
                 setTentativas(progressoTarefa.tentativasRealizadas)
-
             } catch (erro) {
                 console.error(erro);
                 //MENSAGEM DE ERRO
@@ -294,32 +301,34 @@ export function FormatoQuestaoAleatorio({
 }: FormatoQuestaoAleatorioProps) {
 
     if (exibicaoQuestoes[index] === "checkbox") {
-        /* return (
-             <QuestaoCheckbox
-                 key={questao.id}
-                 questao={questao}
-                 index={index}
-                 value={respostas[index]}
-                 onChange={alterarResposta}
-             />
-         )*/
+        return (
+            <QuestaoCheckbox
+                key={questao.id}
+                questao={questao}
+                //index={index}
+                index={0}
+            //value={respostas[index]}
+            //onChange={alterarResposta}
+            />
+        )
     }
 
-    if (questao.alternativas[0].tipoAlternativa === TipoAlternativa.ASSOCIACAO) {
+    /*if (questao.alternativas[0].tipoAlternativa === TipoAlternativa.ASSOCIACAO) {
         const [colunas, setColunas] = useState(<></>)
         // gerar colunas
     }
     if (questao.alternativas[0].tipoAlternativa === TipoAlternativa.ORDENACAO) {
         const [linhas, setLinhas] = useState(<></>)
         // gerar combinacoes
-    }
+    }*/
 
     if (exibicaoQuestoes[index] === "radio") {
         return (
             <QuestaoRadio
                 key={questao.id}
                 questao={questao}
-                index={index}
+                //index={index}
+                 index={0}
                 value={String(respostas[index][0].idAlternativa) ?? ""}
                 onChange={alterarResposta}
             />
@@ -329,7 +338,8 @@ export function FormatoQuestaoAleatorio({
             <QuestaoSelect
                 key={questao.id}
                 questao={questao}
-                index={index}
+                //index={index}
+                 index={0}
                 value={String(respostas[index][0].idAlternativa) ?? ""}
                 onChange={alterarResposta}
             />
