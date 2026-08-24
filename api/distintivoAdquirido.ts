@@ -4,22 +4,22 @@ import { DistintivoAdquiridoDTO } from "../src/types_consts/distintivo";
 export const DistintivoAdquiridoAPI = {
 
     listar() {
-        return api.get("distintivo-adquirido");
+        return api.get("api/v1/distintivo-adquirido");
     },
 
     listarPorUsuario(idUsuario: number) {
-        return api.get(`usuarios/${idUsuario}/distintivos`);
+        return api.get(`api/v1/usuarios/${idUsuario}/distintivos`);
     },
 
     buscarPorId(idUsuario: number, idDistintivo: number) {
-        return api.get(`usuarios/${idUsuario}/distintivos/${idDistintivo}`);
+        return api.get(`api/v1/usuarios/${idUsuario}/distintivos/${idDistintivo}`);
     },
 
     salvar(distintivoAdquirido: DistintivoAdquiridoDTO) {
-        return api.post("usuarios/distintivos", distintivoAdquirido);
+        return api.post("api/v1/usuarios/distintivos", distintivoAdquirido);
     },
 
     deletar(idUsuario: number) {
-        return api.get(`usuarios/${idUsuario}/distintivos`);
+        return api.get(`api/v1/usuarios/${idUsuario}/distintivos`);
     },
 }
