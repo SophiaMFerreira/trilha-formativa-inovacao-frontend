@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-import { Box, Button, createListCollection, DatePicker, DatePickerClearTrigger, DateValue, Dialog, DialogFooter, Field, Fieldset, Flex, Grid, Heading, InputGroup, Link, List, ListCollection, parseDate, Portal, RadioGroup, ScrollArea, Select, Spinner, Stack, Text } from "@chakra-ui/react";
+import { Box, Button, createListCollection, DatePicker, DateValue, Dialog, DialogFooter, Em, Field, Fieldset, Flex, Grid, InputGroup, Link, List, ListCollection, parseDate, Portal, RadioGroup, ScrollArea, Select, Stack, Text } from "@chakra-ui/react";
 import { AvatarUsuario } from "@/components/AvatarUsuario";
 import { AppInput } from "@/components/commons/AppInput";
 import CardSimples from "@/components/commons/cardCustomizado";
@@ -12,7 +12,9 @@ import { UsuarioAPI } from "../../api/usuario";
 import { OcupacaoAPI } from "../../api/ocupacao";
 import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/contexts/AuthContext";
-import { FaCalendarAlt, FaRegCalendarAlt } from "react-icons/fa";
+import { FaRegCalendarAlt } from "react-icons/fa";
+import { validarUsuario } from "@/utils/validations/usuario";
+import { toaster } from "@/components/commons/toaster";
 
 export function CadastroAventureiro() {
     const navigate = useNavigate();
@@ -43,7 +45,7 @@ export function CadastroAventureiro() {
         return `${dia}/${mes}/${ano}`
     }
 
-    const [ocupacoes, setOcupacoes] = useState<OcupacaoDTO[]>();
+    const [ocupacoes, setOcupacoes] = useState<OcupacaoDTO[]>([]);
     const [ocupacaoCollection, setOcupacaoCollection] = useState<ListCollection>(createListCollection({
         items: [
             {
@@ -59,12 +61,10 @@ export function CadastroAventureiro() {
     const [correioEletronico, setCorreioEletronico] = useState("")
     const [dataNascimento, setDataNascimento] = useState<DateValue[]>()
     const [possuiConhecimento, setPossuiConhecimento] = useState(false)
+    const [idOcupacao, setIdOcupacao] = useState(-1)
     const [senha, setSenha] = useState("")
     const [confirmarSenha, setConfirmarSenha] = useState("")
     const [confirmarSenhaAtual, setConfirmarSenhaAtual] = useState("")
-    const [senhatemp, setSenhatemp] = useState("")
-
-    const [idOcupacao, setIdOcupacao] = useState(-1)
 
     const [imagem, setImagem] = useState("");
     const [arquivoImagem, setArquivoImagem] = useState<File | null>(null);
@@ -134,106 +134,82 @@ export function CadastroAventureiro() {
     const [validarNomeUsuario, setValidarNomeUsuario] = useState(false)
     const [validarNomeAventureiro, setValidarNomeAventureiro] = useState(false)
     const [validarCorreioEletronico, setValidarCorreioEletronico] = useState(false)
-    //const emailValido = /\S+@\S+\.\S+/.test(correioEletronico)
     const [validarDataNascimento, setValidarDataNascimento] = useState(false)
+    const [validarOcupacao, setValidarOcupacao] = useState(false)
     const [validarPossuiConhecimento, setValidarPossuiConhecimento] = useState(false)
     const [validarSenha, setValidarSenha] = useState(false)
     const [validarConfirmarSenha, setValidarConfirmarSenha] = useState(false)
     const [validarSenhaAtual, setValidarSenhaAtual] = useState(false)
-    const [validarOcupacao, setValidarOcupacao] = useState(false)
-
-    const validarFormulario = () => {
-        let valido = true
-
-        if (nomeUsuario.trim() === "") {
-            setValidarNomeUsuario(true)
-            valido = false
-        } else {
-            setValidarNomeUsuario(false)
-        }
-
-        if (nomeAventureiro.trim() === "") {
-            setValidarNomeAventureiro(true)
-            valido = false
-        } else {
-            setValidarNomeAventureiro(false)
-        }
-        if (correioEletronico.trim() === "" ||
-            !/\S+@\S+\.\S+/.test(correioEletronico)
-        ) {
-            setValidarCorreioEletronico(true)
-            valido = false
-        } else {
-            setValidarCorreioEletronico(false)
-        }
-
-        /*if (
-            dataNascimento?.toString().trim() !== "" && dataNascimento
-        ) {
-            setValidarDataNascimento(true)
-            valido = false
-        } else {
-            setValidarDataNascimento(false)
-        }
-        setValidarPossuiConhecimento(false)*/
-
-        if (user) {
-            if (confirmarSenhaAtual.trim() === "" || confirmarSenhaAtual.trim() !== senhatemp) {
-                setValidarSenhaAtual(true)
-                valido = false
-            } else {
-                setValidarSenha(false)
-            }
-
-            if (senha.trim() !== "" && confirmarSenha.trim() !== senha.trim()) {
-                setValidarSenha(true)
-                valido = false
-            } else {
-                setValidarSenha(false)
-            }
-            if (confirmarSenha.trim() !== "" && confirmarSenha.trim() !== senha.trim()) {
-                setValidarConfirmarSenha(true)
-                valido = false
-            } else {
-                setValidarConfirmarSenha(false)
-            }
-        } else {
-            if (senha.trim() === "") {
-                setValidarSenha(true)
-                valido = false
-            } else {
-                setValidarSenha(false)
-            }
-
-            if (
-                confirmarSenha.trim() === "" ||
-                confirmarSenha !== senha
-            ) {
-                setValidarConfirmarSenha(true)
-                valido = false
-            } else {
-                setValidarConfirmarSenha(false)
-            }
-        }
-
-        /* validar se o array contem o id
-         if (idOcupacao !== -1 ) {
-             setValidarOcupacao(true)
-             valido = false
-         } else {
-             setValidarOcupacao(false)
-         }*/
-
-        return valido
-    }
 
     const abrirModal = () => {
-        if (!validarFormulario()) return;
+        const resultado = validarUsuario({
+            idUsuario,
+            nomeUsuario,
+            nomeAventureiro,
+            correioEletronico,
+            dataNascimento,
+            dataAtual,
+            possuiConhecimento,
+            ocupacao: idOcupacao,
+            listaOcupacoes: ocupacoes,
+            senha,
+            confirmarSenha,
+            confirmarSenhaAtual,
+            edicao: idUsuario !== -1 ? true : false
+        })
+
+        if (resultado.valido) {
+            setValidarNomeUsuario(!resultado.nomeUsuario);
+            setValidarNomeAventureiro(!resultado.nomeAventureiro);
+            setValidarCorreioEletronico(!resultado.correioEletronico);
+            setValidarDataNascimento(!resultado.dataNascimento);
+            setValidarOcupacao(!resultado.ocupacao);
+            setValidarPossuiConhecimento(!resultado.possuiConhecimento);
+            setValidarSenha(!resultado.senha);
+            setValidarConfirmarSenha(!resultado.confirmarSenha);
+            setValidarSenhaAtual(!resultado.confirmarSenhaAtual);
+
+            //toaster.create(mensagensToastErro.validarConteudo)
+            setOpen(false);
+            return;
+        }
+
         setOpen(true);
     };
 
     const onSubmit = async () => {
-        if (!validarFormulario()) return
+        const resultado = validarUsuario({
+            idUsuario,
+            nomeUsuario,
+            nomeAventureiro,
+            correioEletronico,
+            dataNascimento,
+            dataAtual,
+            possuiConhecimento,
+            ocupacao: idOcupacao,
+            listaOcupacoes: ocupacoes,
+            senha,
+            confirmarSenha,
+            confirmarSenhaAtual,
+            edicao: idUsuario ? true : false
+        }
+        )
+
+        if (!resultado.valido) {
+            setValidarNomeUsuario(!resultado.nomeUsuario);
+            setValidarNomeAventureiro(!resultado.nomeAventureiro);
+            setValidarCorreioEletronico(!resultado.correioEletronico);
+            setValidarDataNascimento(!resultado.dataNascimento);
+            setValidarOcupacao(!resultado.ocupacao);
+            setValidarPossuiConhecimento(!resultado.possuiConhecimento);
+            setValidarSenha(!resultado.senha);
+            setValidarConfirmarSenha(!resultado.confirmarSenha);
+            setValidarSenhaAtual(!resultado.confirmarSenhaAtual);
+
+            //toaster.create(mensagensToastErro.validarConteudo)
+            setOpen(false);
+            return;
+        }
 
         try {
             const usuarioPayload = {
@@ -246,7 +222,7 @@ export function CadastroAventureiro() {
                 senha: senha,
                 senhaRepeticao: confirmarSenha,
                 //...(senhatemp !== "" && { novaSenha: senhatemp }),
-                ...(idOcupacao !== -1 && { idOcupacao: idOcupacao }),
+                idOcupacao: idOcupacao,
                 ...(idUsuario !== -1 && { id: idUsuario }),
             } as UsuarioDTO
 
@@ -274,7 +250,7 @@ export function CadastroAventureiro() {
     }
 
     const onExclude = () => {
-        if (!validarFormulario()) return
+        //if (!validarFormulario()) return
         try {
             if (user) {
                 //confirmar senha
@@ -511,7 +487,9 @@ export function CadastroAventureiro() {
                         justifyContent="space-between"
                     >
                         <Field.Root
+                            required
                             invalid={validarOcupacao}
+                            disabled={ocupacoes?.length === 0}
                         >
                             <Select.Root
                                 collection={ocupacaoCollection}
@@ -530,6 +508,7 @@ export function CadastroAventureiro() {
                                     color="brand.primaryDark"
                                 >
                                     Ocupação
+                                    <Em color="brand.secondaryRed">*</Em>
                                 </Select.Label>
                                 <Select.Control>
                                     <Select.Trigger
@@ -590,6 +569,14 @@ export function CadastroAventureiro() {
                                     </Select.Positioner>
                                 </Portal>
                             </Select.Root>
+                            {validarOcupacao && (
+                                <Field.ErrorText
+                                    textStyle="inputPlaceholder"
+                                    color="brand.secondaryRed"
+                                >
+                                    Este campo é obrigatório
+                                </Field.ErrorText>
+                            )}
                         </Field.Root>
                         <Fieldset.Root invalid={validarPossuiConhecimento}>
                             <Fieldset.Legend
@@ -597,6 +584,7 @@ export function CadastroAventureiro() {
                                 color="brand.primaryDark"
                             >
                                 Possui conhecimento em Inovação?
+                                <Em color="brand.secondaryRed">*</Em>
                             </Fieldset.Legend>
                             <RadioGroup.Root
                                 name="possuiConhecimento"
@@ -817,7 +805,6 @@ export function CadastroAventureiro() {
                                 </Link>
                             </Text>
                         </Box>
-
                     )}
                 </Stack>
             </form>
@@ -1066,71 +1053,69 @@ export function CadastroAventureiro() {
                                     >
                                         Ao clicar em “Aceito os Termos”, você confirma que leu, compreendeu e concorda com todas as condições apresentadas neste documento. Caso não concorde, selecione “Não Aceito” para continuar a trilha pelo Padlet.
                                     </Text>
-                                    <Fieldset.Root>
-                                        <RadioGroup.Root
-                                            name="aceiteTermos"
-                                            value={String(aceiteTermos)}
-                                            onValueChange={(details) => {
-                                                setAceiteTermos(details.value === "true");
-                                            }}
-                                            ml="8"
-                                            size="sm"
-                                            my="1"
-                                        >
-                                            <Stack gap="1.5">
-                                                <RadioGroup.Item
-                                                    key="sim"
-                                                    value="true"
-                                                >
-                                                    <RadioGroup.ItemHiddenInput />
-                                                    <RadioGroup.ItemIndicator
-                                                        borderColor="brand.neutral"
-                                                        _checked={{
-                                                            borderColor: "brand.neutral",
-                                                            bg: "brand.secondary",
-                                                            color: "brand.white",
-                                                        }}
-                                                    />
-                                                    <RadioGroup.ItemText
-                                                        color="brand.neutral"
-                                                        textStyle="inputPlaceholder"
-                                                    >
-                                                        Aceito os termos e condições
-                                                    </RadioGroup.ItemText>
-                                                </RadioGroup.Item>
-                                                <RadioGroup.Item
-                                                    key="nao"
-                                                    value="false"
-                                                    textStyle="bodyText"
-                                                    color="brand.neutral"
-                                                >
-                                                    <RadioGroup.ItemHiddenInput />
-                                                    <RadioGroup.ItemIndicator
-                                                        borderColor="brand.neutral"
-                                                        _checked={{
-                                                            borderColor: "brand.neutral",
-                                                            bg: "brand.secondary",
-                                                            color: "brand.white",
-                                                        }}
-                                                    />
-                                                    <RadioGroup.ItemText
-                                                        color="brand.neutral"
-                                                        textStyle="inputPlaceholder"
-                                                    >
-                                                        Não aceito os termos, e concordo em fazer a trilha pelo Padlet
-                                                    </RadioGroup.ItemText>
-                                                </RadioGroup.Item>
-                                            </Stack>
-                                        </RadioGroup.Root>
-                                        {aceiteTermos === null && (
-                                            <Text
-                                                textStyle="inputPlaceholder"
-                                                color="brand.secondaryRed"
+                                    <RadioGroup.Root
+                                        name="aceiteTermos"
+                                        value={String(aceiteTermos)}
+                                        onValueChange={(details) => {
+                                            setAceiteTermos(details.value === "true");
+                                        }}
+                                        ml="8"
+                                        size="sm"
+                                        my="1"
+                                    >
+                                        <Stack gap="1.5">
+                                            <RadioGroup.Item
+                                                key="sim"
+                                                value="true"
                                             >
-                                                Por favor, responda aos termos de uso
-                                            </Text>
-                                        )}
-                                    </Fieldset.Root>
+                                                <RadioGroup.ItemHiddenInput />
+                                                <RadioGroup.ItemIndicator
+                                                    borderColor="brand.neutral"
+                                                    _checked={{
+                                                        borderColor: "brand.neutral",
+                                                        bg: "brand.secondary",
+                                                        color: "brand.white",
+                                                    }}
+                                                />
+                                                <RadioGroup.ItemText
+                                                    color="brand.neutral"
+                                                    textStyle="inputPlaceholder"
+                                                >
+                                                    Aceito os termos e condições
+                                                </RadioGroup.ItemText>
+                                            </RadioGroup.Item>
+                                            <RadioGroup.Item
+                                                key="nao"
+                                                value="false"
+                                                textStyle="bodyText"
+                                                color="brand.neutral"
+                                            >
+                                                <RadioGroup.ItemHiddenInput />
+                                                <RadioGroup.ItemIndicator
+                                                    borderColor="brand.neutral"
+                                                    _checked={{
+                                                        borderColor: "brand.neutral",
+                                                        bg: "brand.secondary",
+                                                        color: "brand.white",
+                                                    }}
+                                                />
+                                                <RadioGroup.ItemText
+                                                    color="brand.neutral"
+                                                    textStyle="inputPlaceholder"
+                                                >
+                                                    Não aceito os termos, e concordo em fazer a trilha pelo Padlet
+                                                </RadioGroup.ItemText>
+                                            </RadioGroup.Item>
+                                        </Stack>
+                                    </RadioGroup.Root>
+                                    {aceiteTermos === null && (
+                                        <Text
+                                            textStyle="inputPlaceholder"
+                                            color="brand.secondaryRed"
+                                        >
+                                            Por favor, responda aos termos de uso
+                                        </Text>
+                                    )}
                                 </Stack>
                             </Dialog.Body>
                             <DialogFooter>

@@ -5,7 +5,7 @@ export type AvatarUsuarioProps = {
   onChange: (file: File, preview: string) => void;
 };
 
-export type UsuarioDTO = {
+export type UsuarioDTO = SenhasDTO & {
     id?: number
     nomeUsuario: string
     nomeAventureiro: string
@@ -13,10 +13,22 @@ export type UsuarioDTO = {
     dataNascimento: string
     possuiConhecimento: boolean
     primeiroAcesso: boolean
+    idOcupacao: number
+}
+
+type SenhasDTO = 
+    SenhaDTO |
+    SenhaAtualizarDTO
+
+type SenhaDTO = {
     senha: string
     senhaRepeticao: string
-    novaSenha?: string
-    idOcupacao: number
+}
+
+type SenhaAtualizarDTO = {
+    novaSenha: string
+    senhaAtual: string
+    novaSenhaRepeticao: string,
 }
 
 export type Usuario = {
@@ -27,7 +39,7 @@ export type Usuario = {
     dataNascimento: string
     possuiConhecimento: boolean
     primeiroAcesso: boolean
-    senha?: string
+    //senha?: string
     ocupacao: OcupacaoDTO
 }
 
