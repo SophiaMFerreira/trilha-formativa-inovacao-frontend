@@ -159,15 +159,15 @@ export function CadastroAventureiro() {
         })
 
         if (resultado.valido) {
-            setValidarNomeUsuario(!resultado.nomeUsuario);
-            setValidarNomeAventureiro(!resultado.nomeAventureiro);
-            setValidarCorreioEletronico(!resultado.correioEletronico);
-            setValidarDataNascimento(!resultado.dataNascimento);
-            setValidarOcupacao(!resultado.ocupacao);
-            setValidarPossuiConhecimento(!resultado.possuiConhecimento);
-            setValidarSenha(!resultado.senha);
-            setValidarConfirmarSenha(!resultado.confirmarSenha);
-            setValidarSenhaAtual(!resultado.confirmarSenhaAtual);
+            setValidarNomeUsuario(resultado.nomeUsuario);
+            setValidarNomeAventureiro(resultado.nomeAventureiro);
+            setValidarCorreioEletronico(resultado.correioEletronico);
+            setValidarDataNascimento(resultado.dataNascimento);
+            setValidarOcupacao(resultado.ocupacao);
+            setValidarPossuiConhecimento(resultado.possuiConhecimento);
+            setValidarSenha(resultado.senha);
+            setValidarConfirmarSenha(resultado.confirmarSenha);
+            setValidarSenhaAtual(resultado.confirmarSenhaAtual);
 
             //toaster.create(mensagensToastErro.validarConteudo)
             setOpen(false);
@@ -192,19 +192,18 @@ export function CadastroAventureiro() {
             confirmarSenha,
             confirmarSenhaAtual,
             edicao: idUsuario ? true : false
-        }
-        )
+        })
 
         if (!resultado.valido) {
-            setValidarNomeUsuario(!resultado.nomeUsuario);
-            setValidarNomeAventureiro(!resultado.nomeAventureiro);
-            setValidarCorreioEletronico(!resultado.correioEletronico);
-            setValidarDataNascimento(!resultado.dataNascimento);
-            setValidarOcupacao(!resultado.ocupacao);
-            setValidarPossuiConhecimento(!resultado.possuiConhecimento);
-            setValidarSenha(!resultado.senha);
-            setValidarConfirmarSenha(!resultado.confirmarSenha);
-            setValidarSenhaAtual(!resultado.confirmarSenhaAtual);
+            setValidarNomeUsuario(resultado.nomeUsuario);
+            setValidarNomeAventureiro(resultado.nomeAventureiro);
+            setValidarCorreioEletronico(resultado.correioEletronico);
+            setValidarDataNascimento(resultado.dataNascimento);
+            setValidarOcupacao(resultado.ocupacao);
+            setValidarPossuiConhecimento(resultado.possuiConhecimento);
+            setValidarSenha(resultado.senha);
+            setValidarConfirmarSenha(resultado.confirmarSenha);
+            setValidarSenhaAtual(resultado.confirmarSenhaAtual);
 
             //toaster.create(mensagensToastErro.validarConteudo)
             setOpen(false);
@@ -448,6 +447,7 @@ export function CadastroAventureiro() {
                                 color="brand.secondaryRed"
                             >
                                 A data não pode ser igual ou posterior a data de hoje
+                                {validarDataNascimento}
                             </Field.ErrorText>
                         )}
                     </Field.Root>
@@ -643,12 +643,12 @@ export function CadastroAventureiro() {
                                 </Stack>
                             </RadioGroup.Root>
                             {validarPossuiConhecimento && (
-                                <Field.ErrorText
+                                <Fieldset.ErrorText
                                     textStyle="inputPlaceholder"
                                     color="brand.secondaryRed"
                                 >
                                     Este campo é obrigatório
-                                </Field.ErrorText>
+                                </Fieldset.ErrorText>
                             )}
                         </Fieldset.Root>
                     </Stack>

@@ -29,7 +29,7 @@ export type ResultadoValidacaoUsuario = {
     ocupacao: boolean
     senha: boolean
     confirmarSenha: boolean
-    confirmarSenhaAtual?: boolean
+    confirmarSenhaAtual: boolean
 };
 
 export function validarUsuario({
@@ -81,7 +81,8 @@ export function validarUsuario({
 
     // POSSUI CONHECIMENTO
     const possuiConhecimentoValido =
-        typeof possuiConhecimento === "boolean"
+        typeof possuiConhecimento === "string" &&
+        (possuiConhecimento === "Sim" || possuiConhecimento === "Não")
 
     // OCUPACAO
     const ocupacaoValida =
@@ -152,7 +153,7 @@ function validacaoData(dataNascimento: unknown, dataAtual: string): boolean {
         dataNascimento === undefined ||
         dataNascimento === null ||
         (Array.isArray(dataNascimento) &&
-            dataNascimento.length === 0)) {
+        dataNascimento.length === 0)) {
         return true
     }
 
