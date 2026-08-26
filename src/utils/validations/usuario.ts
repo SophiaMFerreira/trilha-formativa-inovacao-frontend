@@ -81,8 +81,8 @@ export function validarUsuario({
 
     // POSSUI CONHECIMENTO
     const possuiConhecimentoValido =
-        typeof possuiConhecimento === "string" &&
-        (possuiConhecimento === "Sim" || possuiConhecimento === "Não")
+        typeof possuiConhecimento === "boolean" &&
+        (possuiConhecimento === true || possuiConhecimento === false)
 
     // OCUPACAO
     const ocupacaoValida =
