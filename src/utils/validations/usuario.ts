@@ -115,7 +115,6 @@ export function validarUsuario({
             confirmarSenhaAtual.length >= 8 &&
             confirmarSenhaAtual.length <= 255
         );
-    console.log(senhaAntigaValida)
 
     // RESULTADO FINAL
     const valido = !(
@@ -210,7 +209,7 @@ function validacaoData(dataNascimento: unknown, dataAtual: string): boolean {
     // Evita datas inexistentes, como 31/02
     if (
         dataInformada.year !== data.year ||
-        dataInformada.month !== data.month - 1 ||
+        dataInformada.month !== data.month ||
         dataInformada.day !== data.day
     ) {
         return false;
