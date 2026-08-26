@@ -249,7 +249,6 @@ export function CadastroAventureiro() {
     }
 
     const onExclude = () => {
-        //if (!validarFormulario()) return
         try {
             if (user) {
                 //confirmar senha
@@ -306,7 +305,7 @@ export function CadastroAventureiro() {
                                         textStyle="inputPlaceholder"
                                         color="brand.secondaryRed"
                                     >
-                                        Este campo é obrigatório
+                                        O nome completo é obrigatório e deve ter no máximo 255 caracteres.
                                     </Field.ErrorText>
                                 )}
                             </Field.Root>
@@ -332,7 +331,7 @@ export function CadastroAventureiro() {
                                         textStyle="inputPlaceholder"
                                         color="brand.secondaryRed"
                                     >
-                                        Este campo é obrigatório
+                                        O nome de aventureiro é obrigatório e deve ter no máximo 255 caracteres.
                                     </Field.ErrorText>
                                 )}
                             </Field.Root>
@@ -446,7 +445,7 @@ export function CadastroAventureiro() {
                                 textStyle="inputPlaceholder"
                                 color="brand.secondaryRed"
                             >
-                                A data não pode ser igual ou posterior a data de hoje
+                                A data não pode ser igual ou posterior a data de hoje. Informe uma data de nascimento válida.
                                 {validarDataNascimento}
                             </Field.ErrorText>
                         )}
@@ -474,7 +473,7 @@ export function CadastroAventureiro() {
                                 textStyle="inputPlaceholder"
                                 color="brand.secondaryRed"
                             >
-                                Este campo é obrigatório, lembre-se que o email deve ter um formato válido
+                                Informe um endereço de e-mail válido.
                             </Field.ErrorText>
                         )}
                     </Field.Root>
@@ -574,7 +573,7 @@ export function CadastroAventureiro() {
                                     textStyle="inputPlaceholder"
                                     color="brand.secondaryRed"
                                 >
-                                    Este campo é obrigatório
+                                    Selecione uma ocupação.
                                 </Field.ErrorText>
                             )}
                         </Field.Root>
@@ -647,7 +646,7 @@ export function CadastroAventureiro() {
                                     textStyle="inputPlaceholder"
                                     color="brand.secondaryRed"
                                 >
-                                    Este campo é obrigatório
+                                    Informe se possui ou não conhecimento em inovação.
                                 </Fieldset.ErrorText>
                             )}
                         </Fieldset.Root>
@@ -676,7 +675,7 @@ export function CadastroAventureiro() {
                                     textStyle="inputPlaceholder"
                                     color="brand.secondaryRed"
                                 >
-                                    Este campo é obrigatório
+                                    Informe sua senha atual para continuar a edição.
                                 </Field.ErrorText>
                             )}
                         </Field.Root>
@@ -704,7 +703,7 @@ export function CadastroAventureiro() {
                                 textStyle="inputPlaceholder"
                                 color="brand.secondaryRed"
                             >
-                                Este campo é obrigatório
+                                A senha deve ter no mínimo 8 caracteres, incluindo letra, número e caractere especial.
                             </Field.ErrorText>
                         )}
                     </Field.Root>
@@ -731,7 +730,7 @@ export function CadastroAventureiro() {
                                 textStyle="inputPlaceholder"
                                 color="brand.secondaryRed"
                             >
-                                Este campo é obrigatório
+                                A confirmação de senha deve ser igual à senha informada.
                             </Field.ErrorText>
                         )}
                     </Field.Root>
