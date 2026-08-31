@@ -210,21 +210,20 @@ export function CadastroAventureiro() {
             return;
         }
 
-        try {
-            const usuarioPayload = {
-                nomeUsuario: nomeUsuario,
-                nomeAventureiro: nomeAventureiro,
-                correioEletronico: correioEletronico,
-                ...(dataNascimento && { dataNascimento: dataNascimento.toString() }),
-                possuiConhecimento: possuiConhecimento,
-                primeiroAcesso: !editando,
-                senha: senha,
-                senhaRepeticao: confirmarSenha,
-                //...(senhatemp !== "" && { novaSenha: senhatemp }),
-                idOcupacao: idOcupacao,
-                ...(idUsuario !== -1 && { id: idUsuario }),
-            } as UsuarioDTO
+        const usuarioPayload = {
+            nomeUsuario: nomeUsuario,
+            nomeAventureiro: nomeAventureiro,
+            correioEletronico: correioEletronico,
+            ...(dataNascimento && { dataNascimento: `${dataNascimento[0].year}-${String(dataNascimento[0].month).padStart(2, "0")}-${String(dataNascimento[0].day).padStart(2, "0")}` }),
+            possuiConhecimento: possuiConhecimento,
+            primeiroAcesso: !editando,
+            senha: senha,
+            senhaRepeticao: confirmarSenha,
+            idOcupacao: idOcupacao,
+            ...(idUsuario !== -1 && { id: idUsuario }),
+        } as UsuarioDTO
 
+        try {
             if (user) {
                 //confirmar senha
                 const response = await UsuarioAPI.atualizar(idUsuario, usuarioPayload);
@@ -235,16 +234,21 @@ export function CadastroAventureiro() {
                 }
                 updateUser(user)
             } else {
-                const response = await UsuarioAPI.salvar(usuarioPayload);
-                if (!response) return
+                const responseCadastro = await UsuarioAPI.salvar(usuarioPayload);
+                if (!responseCadastro.data) return // erro
 
-                await login(usuarioPayload.nomeAventureiro, senha)
-
-                // criar todos os progressos nulos
+                const responseLogin = await login(usuarioPayload.correioEletronico, senha)
+                if (!responseLogin) {
+                    console.error("Usuário cadastrado com sucesso, mas não foi possível realizar o login.");
+                    navigate("/login");
+                    return
+                }
             }
+
             navigate("/trilhaFormativaInovacao");
         } catch (erro) {
-            console.error(erro)
+
+            console.error("Erro:", erro);
         }
     }
 

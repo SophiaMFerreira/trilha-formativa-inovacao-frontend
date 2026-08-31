@@ -39,8 +39,6 @@ export function AuthProvider({ children }: Props) {
             localStorage.setItem("user", JSON.stringify(usuarioLogado))
             localStorage.setItem("token", loginResponse.token)
 
-
-
             return usuarioLogado;
         } catch (e){
             console.error(e)
