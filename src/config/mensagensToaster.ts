@@ -304,6 +304,33 @@ export const mensagensToastErro = {
         closable: true,
         duration: 7000,
     },
+
+    validarImagemArquivo: {
+        title: "Imagem de perfil inválida",
+        description:
+            "Selecione uma imagem JPG, JPEG, PNG ou WEBP com tamanho máximo de 2 MB.",
+        type: "warning",
+        closable: true,
+        duration: 7000,
+    },
+
+    falhaAoEnviarRespostas: {
+        title: "Falha ao salvar as respostas",
+        description:
+            "Não foi possível salvar suas respostas. Por favor, tente novamente mais tarde",
+        type: "warning",
+        closable: true,
+        duration: 7000,
+    },
+
+    falhaAoCarregarRanking: {
+        title: "Falha ao carregar o ranking",
+        description:
+            "Não foi possível carregar o ranking no momento. Por favor, tente novamente mais tarde.",
+        type: "warning",
+        closable: true,
+        duration: 7000,
+    },
 } as const;
 
 export const mensagensToastSucesso = {

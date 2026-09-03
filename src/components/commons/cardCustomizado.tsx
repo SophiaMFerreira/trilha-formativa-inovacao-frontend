@@ -1,4 +1,4 @@
-import { Box, Card, Grid, Heading, HStack, Text } from "@chakra-ui/react"
+import { Box, Card, Grid, Heading, Text } from "@chakra-ui/react"
 
 type CardCustomizadoProps = {
     titulo: string
@@ -66,7 +66,6 @@ export default function CardCustomizado({ titulo, mensagem, children, info }: Ca
                 </Text>
                 {children}
             </Card.Body>
-            {/*Adcionar footer com os dois botões */}
         </Card.Root>
     )
 }

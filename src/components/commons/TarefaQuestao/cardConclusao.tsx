@@ -12,6 +12,9 @@ import { TipoAtividade } from "@/types_consts/missao";
 import { AlternativaMarcadaDTO } from "@/types_consts/alternativa";
 import { ResultadoQuestao } from "@/utils/calcularRespostas";
 import { useGame } from "@/hooks/useGame";
+import { mensagensErroConsole } from "@/config/mensagensError";
+import { toaster } from "../toaster";
+import { mensagensToastErro } from "@/config/mensagensToaster";
 
 type ConclusaoProps = {
     valorMissao: number
@@ -92,8 +95,8 @@ export default function ConclusaoMissao({
                 atualizarProgresso()
                 atualizarDistintivos()
             } catch (erro) {
-                console.error(erro);
-                //MENSAGEM DE ERRO
+                console.error(mensagensErroConsole.calcularRespostas, erro);
+                toaster.create(mensagensToastErro.falhaAoEnviarRespostas)
             }
         }
         corrigir()
@@ -163,10 +166,7 @@ export default function ConclusaoMissao({
                 )});
     }
 
-    if (!retornoConclusao) {
-        //MENSAGEM DE ERRO
-        return
-    }
+    if (!retornoConclusao) return
 
     return (
         <CardCustomizado

@@ -23,6 +23,9 @@ export const mensagensErroConsole = {
     buscarAventureiro:
         "Falha ao buscar o aventureiro. ",
     
+    buscarProgressos:
+        "Falha ao buscar os progressos. ",
+    
     salvarTematica:
         "Erro ao salvar a temática. ",
 
@@ -78,4 +81,7 @@ export const mensagensErroConsole = {
 
     excluirAventureiro:
         "Erro ao excluir o aventureiro. ",
+    calcularRespostas:
+        "Erro ao calcular respostas do quiz/tarefa. ",
+    
 } as const;

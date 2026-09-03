@@ -9,6 +9,9 @@ import { FaAngleDown } from "react-icons/fa";
 
 import { ProgressoMissaoAPI } from "../../api/progressoMissao";
 import { Missao, ProgressoMissao, ProgressoMissaoAtividade } from "@/types_consts/missao";
+import { mensagensErroConsole } from "@/config/mensagensError";
+import { toaster } from "./commons/toaster";
+import { mensagensToastErro } from "@/config/mensagensToaster";
 
 type RankingUsuario = {
     indice: number;
@@ -37,7 +40,7 @@ export function Ranking() {
                 const progressoMissaoResponse = await ProgressoMissaoAPI.listar()
                 const progressos = progressoMissaoResponse.data as ProgressoMissao[]
 
-                if (!progressos) return; //MENSAGEM ERRO
+                if (!progressos) return;
 
                 const rankingMap = new Map<number, RankingUsuario>();
 
@@ -80,8 +83,8 @@ export function Ranking() {
 
                 setProgressosMissoes(rankingArray)
             } catch (erro) {
-                console.error(erro);
-                //MENSAGEM DE ERRO
+                console.error(mensagensErroConsole.buscarProgressos, erro);
+                toaster.create(mensagensToastErro.falhaAoCarregarRanking)
             }
         }
         carregarDados();

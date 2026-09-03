@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 
 import { Box, Collapsible, Heading, Text, HStack, IconButton, Link, Dialog, Portal, Button, Stack } from "@chakra-ui/react"

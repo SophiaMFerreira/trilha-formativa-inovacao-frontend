@@ -4,12 +4,12 @@ import { estilosAlternativa } from "@/config/alternativasEstiloConfig"
 
 import { shuffleArray } from "@/utils/shuffle"
 import { QuestaoProp } from "@/types_consts/questao"
-import { ReactNode, useEffect, useMemo, useState } from "react"
+import { ReactNode, useMemo, useState } from "react"
 
 import { DragDropProvider, useDroppable } from '@dnd-kit/react';
 import { move } from '@dnd-kit/helpers';
 import { useSortable } from "@dnd-kit/react/sortable"
-import { Alternativa, AlternativaOrdenacao, AlternativaOrdenacaoDTO } from "@/types_consts/alternativa"
+import { Alternativa, AlternativaOrdenacaoDTO } from "@/types_consts/alternativa"
 
 type OrdenacaoProps = {
     questao: QuestaoProp
@@ -44,26 +44,6 @@ export default function Ordenacao({ questao, onChange }: OrdenacaoProps) {
             .filter((id): id is number => id !== undefined)
     );
 }
-    /*useEffect(() => {
-        const novaOrigem =
-            value.length !== 0
-                ? alternativas
-                    .filter(alternativa => !value.includes(alternativa.id!))
-                    .map(alternativa => alternativa.texto)
-                : alternativas.map(alternativa => alternativa.texto);
-
-        const novaResposta = value
-            .map(id =>
-                alternativas.find(alternativa => alternativa.id === id)?.texto
-            )
-            .filter((texto): texto is string => texto !== undefined);
-
-        setListas({
-            origem: novaOrigem,
-            resposta: novaResposta,
-        });
-    }, [questao.id, alternativas, value]);*/
-
     const estilos = useMemo(
         () =>
             Object.fromEntries(

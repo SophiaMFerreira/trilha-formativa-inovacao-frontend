@@ -6,8 +6,6 @@ import { QuestaoProp } from "@/types_consts/questao"
 import { shuffleArray } from "@/utils/shuffle"
 import { ReactNode, useMemo } from "react"
 import { Alternativa, AlternativaMultiplaEscolha, } from "@/types_consts/alternativa"
-import { FaCheckCircle, FaRegCircle } from "react-icons/fa"
-
 
 type QuestaoProps = {
   questao: QuestaoProp;
