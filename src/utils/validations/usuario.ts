@@ -1,5 +1,6 @@
 import { OcupacaoDTO } from "@/types_consts/ocupacao";
 import { parseDate } from "@chakra-ui/react";
+import { validarImagem } from "./imagem";
 
 type ValidarUsuarioParams = {
     idUsuario: unknown
@@ -14,6 +15,7 @@ type ValidarUsuarioParams = {
     senha: unknown
     confirmarSenha: unknown
     confirmarSenhaAtual?: unknown
+    imagemArquivo: unknown
     edicao: boolean
 };
 
@@ -30,6 +32,7 @@ export type ResultadoValidacaoUsuario = {
     senha: boolean
     confirmarSenha: boolean
     confirmarSenhaAtual: boolean
+    imagemArquivo: boolean
 };
 
 export function validarUsuario({
@@ -45,6 +48,7 @@ export function validarUsuario({
     senha,
     confirmarSenha,
     confirmarSenhaAtual,
+    imagemArquivo,
     edicao
 }: ValidarUsuarioParams): ResultadoValidacaoUsuario {
 
@@ -116,6 +120,9 @@ export function validarUsuario({
             confirmarSenhaAtual.length <= 255
         );
 
+    // CONFIRMAR SENHA ANTIGA
+    const imagemValida = validarImagem(imagemArquivo)
+
     // RESULTADO FINAL
     const valido = !(
         idUsuarioValido &&
@@ -127,7 +134,8 @@ export function validarUsuario({
         ocupacaoValida &&
         senhaValida &&
         confirmarSenhaValida &&
-        senhaAntigaValida
+        senhaAntigaValida &&
+        imagemValida
     );
 
     return {
@@ -143,6 +151,7 @@ export function validarUsuario({
         senha: !senhaValida,
         confirmarSenha: !confirmarSenhaValida,
         confirmarSenhaAtual: !senhaAntigaValida,
+        imagemArquivo: !imagemValida,
     };
 }
 
