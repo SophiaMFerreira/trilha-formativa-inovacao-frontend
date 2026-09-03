@@ -150,7 +150,7 @@ export default function ConclusaoMissao({
                             questao: respostaQuestao.questao,
                             index: index,
                         });
-                        setOpen(true);
+                        setOpen(tentativas === 3 ||  valorMissao === retornoConclusao.pontos);
                     }}
                 >
                     {status === "correta" && <FaCheck size={16} />}
