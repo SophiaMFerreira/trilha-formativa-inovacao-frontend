@@ -5,35 +5,19 @@ import { TematicaRota, tematicaRotaLabel } from "@/types_consts/tematica";
 
 import mapaPrincipal from "@/assets/images/Mapas/trilhaFormativaInovacao.png";
 
-import { MissaoTarefa, ProgressoMissao } from "@/types_consts/missao";
+import { ProgressoPontosTematicaMap } from "@/types_consts/missao";
 import { posicaoTarefaFinal, posicoesTematicas } from "@/config/itensRegional";
 
 type mapaPrincipalProps = {
     navigate: Function
-    progressos: ProgressoMissao[]
+    progressoPontosTematicas: ProgressoPontosTematicaMap
     progressoTotal: number
 }
 
-export default function MapaPrincipal({ navigate, progressos, progressoTotal }: mapaPrincipalProps) {
+export default function MapaPrincipal({ navigate, progressoPontosTematicas, progressoTotal }: mapaPrincipalProps) {
 
     const [loadedMapa, setLoadedMapa] = useState(false)
     const tematicas = Object.values(TematicaRota) as TematicaRota[]
-
-    const progressosPorTematica = tematicas.reduce(
-        (acc, tematica) => {
-            acc[tematica] = 0;
-            return acc;
-        },
-        {} as Record<string, number>
-    );
-
-    progressos.forEach(progresso => {
-        const tematica = progresso.missao.tematica.titulo
-
-        if (tematica in progressosPorTematica) {
-            progressosPorTematica[tematica] += progresso.progresso;
-        }
-    });
 
     return (
         <Skeleton
@@ -64,7 +48,7 @@ export default function MapaPrincipal({ navigate, progressos, progressoTotal }: 
                     index={index}
                     tematica={tematica}
                     navigate={navigate}
-                    progresso={progressosPorTematica[tematica]}
+                    progresso={progressoPontosTematicas.get(tematica)?.progresso}
                     tarefaFinal={false}
                     progressoTotal={progressoTotal}
                 />

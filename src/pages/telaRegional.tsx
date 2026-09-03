@@ -2,9 +2,8 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 
-import { Box, Button, Dialog, Flex, Heading, HStack, IconButton, Image, Portal, Progress, SimpleGrid, Skeleton, Stack, Text, } from "@chakra-ui/react";
-import CustomTooltip from "@/components/commons/customTooltip";
-import { FaArrowLeft, FaAward } from "react-icons/fa";
+import { Box, Button, Dialog, Flex, Heading, HStack, Image, Portal, Progress, SimpleGrid, Skeleton, Stack, Text, } from "@chakra-ui/react";
+import { FaAward } from "react-icons/fa";
 
 import trilhaFormativa from "@/assets/images/Regional.jpg"
 
@@ -21,21 +20,20 @@ export function TelaRegional() {
     const navigate = useNavigate();
     const { ParamTrilha } = useParams();
     const { user } = useAuth();
-    const { progressoMissoes, distintivos } = useGame()
+    const { progressoMissoes, progressoPontosTematicas, distintivos } = useGame()
 
     const trilha = obterNomeTematicaBanco(ParamTrilha!)
-    const [progresso, setProgresso] = useState(0)
     const [distintivosTrilha, setDistintivosTrilha] = useState<Distintivo[]>([])
-    const [pontos, setPontos] = useState(0)
-    const [progressoMissao, setProgressoMissao] = useState<ProgressoMissao[]>([])
     const [missoesTematica, setMissoesTematica] = useState<ProgressoMissao[]>([])
     const [missoesPendentes, setMissoesPendentes] = useState<Missao[]>([])
     const [missaoSelecionada, setMissaoSelecionada] = useState<Missao | null>(null);
     const [tituloMissao, setTituloMissao] = useState<"Leitura" | "Vídeo" | "Quiz" | "Tarefa" | "Tarefa Final">("Leitura");
     const [rota, setRota] = useState<string>("");
 
+    const pontos = progressoPontosTematicas.get(trilha)?.pontuacao ?? 0
+    const progresso = progressoPontosTematicas.get(trilha)?.progresso ?? 0
+
     const [loaded, setLoaded] = useState(false)
-    const [loadedMapa, setLoadedMapa] = useState(false)
     const [open, setOpen] = useState(false);
 
     function calcularTituloMissaoSelecionada(missao: Missao) {
@@ -108,29 +106,6 @@ export function TelaRegional() {
                     calcularTituloMissaoSelecionada(missoesTrilha[0])
                 }
 
-                const progressoMissaoTrilha = progressoMissoes.filter(
-                    p => p.missao.tematica.titulo === trilha
-                );
-                setProgressoMissao(progressoMissaoTrilha);
-
-                let pontos = 0
-                let progressoTot = 0
-                let p = 0
-                for (const progresso of progressoMissaoTrilha) {
-                    if ("tipoMaterial" in progresso.missao) {
-                        p = (Number(progresso.progresso) || 0) ?
-                            Number(progresso.missao.pontuacao) : 0
-                    } else {
-                        let atividade = progresso as ProgressoMissaoAtividade
-                        p = Number(atividade.pontuacaoObtida) || 0
-                    }
-
-                    pontos += p
-                    progressoTot += progresso.progresso
-                }
-                setPontos(pontos)
-                setProgresso(progressoTot / missoesTrilha.length)
-
                 const distintivosTrilha = missoesTrilha.flatMap(missao => {
                     if (!("tipoAtividade" in missao)) return [];
 
@@ -163,7 +138,6 @@ export function TelaRegional() {
     if (!ParamTrilha) return
 
     if (!missaoSelecionada) return
-
     return (
         <SimpleGrid
             columns={{

@@ -1,5 +1,5 @@
 import { Distintivo } from "@/types_consts/distintivo";
-import { ProgressoMissao } from "@/types_consts/missao";
+import { ProgressoMissao, ProgressoPontosTematicaMap } from "@/types_consts/missao";
 import { createContext } from "react";
 
 
@@ -7,6 +7,7 @@ export type GameContextType = {
     carregando: boolean
     pontuacao: number
     progressoTotal: number
+    progressoPontosTematicas: ProgressoPontosTematicaMap
     distintivos: Distintivo[]
     progressoMissoes: ProgressoMissao[]
     atualizar(): Promise<void>;

@@ -129,3 +129,12 @@ export type ProgressoMissaoAtividade = ProgressoMissaoBase & {
     tentativasRealizadas: number
     pontuacaoObtida: number
 }
+
+
+//------------------------------------------------------------
+export type ProgressoPontuacaoTematica = {
+    progresso: number;
+    pontuacao: number;
+};
+
+export type ProgressoPontosTematicaMap = Map<string, ProgressoPontuacaoTematica>;

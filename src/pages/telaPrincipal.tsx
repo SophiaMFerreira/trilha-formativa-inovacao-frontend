@@ -13,7 +13,7 @@ import MapaPrincipal from "@/components/commons/mapaPrincipal";
 export default function TelaPrincipal() {
     const navigate = useNavigate()
     const { user } = useAuth()
-    const { progressoTotal, progressoMissoes, distintivos } = useGame()
+    const { progressoTotal, progressoPontosTematicas, distintivos } = useGame()
 
     if (!user) {
         return <Navigate to="/login" replace />
@@ -101,7 +101,7 @@ export default function TelaPrincipal() {
                 </HStack>
                 <   MapaPrincipal
                     navigate={navigate}
-                    progressos={progressoMissoes}
+                    progressoPontosTematicas={progressoPontosTematicas}
                     progressoTotal={progressoTotal}
                 />
             </Stack>
