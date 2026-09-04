@@ -153,8 +153,7 @@ export default function CadastroMissoesAtividade() {
                 const tematicasCollection = createListCollection({
                     items:
                         tematicas.length === 0
-                            ? [
-                                {
+                            ? [{
                                     label: "Nenhuma temática cadastrada",
                                     value: "-1",
                                 },

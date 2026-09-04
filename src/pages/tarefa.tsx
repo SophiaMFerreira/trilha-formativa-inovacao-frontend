@@ -10,12 +10,15 @@ import { QuestaoCheckbox } from "@/components/commons/TarefaQuestao/multiplaEsco
 import { QuestaoProp } from "@/types_consts/questao";
 
 import { shuffleArray } from "@/utils/shuffle";
-import { Alternativa, AlternativaMarcadaDTO, AlternativaMultiplaEscolha, AlternativaMultiplaEscolhaDTO, SubtipoAlternativa, TipoAlternativa } from "@/types_consts/alternativa";
+import { Alternativa, AlternativaMarcadaDTO, AlternativaMultiplaEscolha, SubtipoAlternativa, TipoAlternativa } from "@/types_consts/alternativa";
 import { MissaoAPI } from "../../api/missao";
 import { useAuth } from "@/hooks/useAuth";
 import { Missao, MissaoTarefa, ProgressoMissaoAtividade, TipoAtividade } from "@/types_consts/missao";
 import { useGame } from "@/hooks/useGame";
 import { obterNomeTematica } from "@/types_consts/tematica";
+import { toaster } from "@/components/commons/toaster";
+import { mensagensToastErro } from "@/config/mensagensToaster";
+import { mensagensErroConsole } from "@/config/mensagensError";
 
 
 export default function Tarefa() {
@@ -74,23 +77,29 @@ export default function Tarefa() {
         async function carregarDados() {
 
             try {
-                const missaoResponse = await MissaoAPI.listar()
-                //const missaoResponse = await MissaoAPI.buscarPorId(Number(idMissao))
-                if (!missaoResponse.data) return; //MENSAGEM ERRO 
+                const missaoResponse = await MissaoAPI.buscarPorId(Number(idMissao))
+                if (!missaoResponse.data) {
+                    toaster.create(mensagensToastErro.carregarMissaoAtividade)
+                    return
+                }
+                
+                const missao = missaoResponse.data as Missao
+                if (!("tipoAtividade" in missao)) {
+                    console.error(mensagensErroConsole.tipoMissaoInvalido);
+                    navigate(`/trilhaFormativaInovacao/${ParamTrilha}`);
+                    return
+                }
 
-                const missoes = missaoResponse.data as Missao[]
-                const missao = missoes.find(m => m.id === (Number(idMissao)))
-                if (!missao) return
-
-                //const missao = missaoResponse.data as Missao
-                if (!("tipoAtividade" in missao)) return; //MENSAGEM ERRO
-
-                if (missao.tipoAtividade === TipoAtividade.QUIZ) return; //MENSAGEM ERRO
+                if (missao.tipoAtividade === TipoAtividade.QUIZ) {
+                    console.error(mensagensErroConsole.tipoMissaoInvalido);
+                    navigate(`/trilhaFormativaInovacao/${ParamTrilha}`);
+                    return
+                }
                 const tarefa = missao as MissaoTarefa
 
                 if (!("questoes" in tarefa) ||
                     tarefa.questoes.length < 5) {
-                    //MENSAGEM ERRO
+                    toaster.create(mensagensToastErro.nenhumaQuestao);
                     navigate(`/trilhaFormativaInovacao/${ParamTrilha}`)
                     return
                 }
@@ -129,8 +138,8 @@ export default function Tarefa() {
                 setProgressoTarefa(progressoTarefa)
                 setTentativas(progressoTarefa.tentativasRealizadas)
             } catch (erro) {
-                console.error(erro);
-                //MENSAGEM DE ERRO
+                toaster.create(mensagensToastErro.carregarMissaoAtividade)
+                console.error(mensagensErroConsole.buscarMissaoAtividade, erro);
             }
         }
 
@@ -160,7 +169,7 @@ export default function Tarefa() {
             <CardCustomizado
                 titulo=""
                 mensagem={""}
-                info="--:--"
+                info="00:00"
             >
                 <Text>Carregando tarefa...</Text>
             </CardCustomizado>
@@ -173,7 +182,8 @@ export default function Tarefa() {
             q.alternativas.length === 0 ||
             !q.alternativas
         )) {
-        //MENSAGEM ERRO
+        toaster.create(mensagensToastErro.nenhumaQuestao);
+        console.error(mensagensErroConsole.buscarMissaoAtividade);
         return <Navigate to={`/trilhaFormativaInovacao/${ParamTrilha}`} replace />
     }
 
@@ -328,7 +338,7 @@ export function FormatoQuestaoAleatorio({
                 key={questao.id}
                 questao={questao}
                 //index={index}
-                 index={0}
+                index={0}
                 value={String(respostas[index][0].idAlternativa) ?? ""}
                 onChange={alterarResposta}
             />
@@ -339,7 +349,7 @@ export function FormatoQuestaoAleatorio({
                 key={questao.id}
                 questao={questao}
                 //index={index}
-                 index={0}
+                index={0}
                 value={String(respostas[index][0].idAlternativa) ?? ""}
                 onChange={alterarResposta}
             />

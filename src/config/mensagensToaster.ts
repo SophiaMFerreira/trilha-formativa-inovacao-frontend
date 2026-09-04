@@ -39,6 +39,24 @@ export const mensagensToastErro = {
         duration: 7000,
     },
 
+    carregarConteudo: {
+        title: "Falha ao carregar o conteúdo",
+        description:
+            "Não foi possível carregar o conteúdo. Tente novamente mais tarde.",
+        type: "error",
+        closable: true,
+        duration: 7000,
+    },
+
+    carregarMissaoAtividade: {
+        title: "Falha ao carregar a missão atividade",
+        description:
+            "Não foi possível carregar a missão atividade. Tente novamente mais tarde.",
+        type: "error",
+        closable: true,
+        duration: 7000,
+    },
+
     carregarMissoesTipoIncompativel: {
         title: "Falha ao carregar a missão",
         description:
@@ -84,10 +102,10 @@ export const mensagensToastErro = {
         duration: 7000,
     },
 
-    carregarUsuarios: {
-        title: "Falha ao carregar os usuários",
+    carregarUsuario: {
+        title: "Falha ao carregar o aventureiro",
         description:
-            "Não foi possível carregar os usuários. Tente novamente mais tarde.",
+            "Não foi possível carregar dados de aventureiro. Tente novamente mais tarde.",
         type: "error",
         closable: true,
         duration: 7000,
@@ -137,7 +155,7 @@ export const mensagensToastErro = {
     nenhumaQuestao: {
         title: "Nenhuma questão encontrada",
         description:
-            "Ainda não há questões cadastradas para este conteúdo.",
+            "Ainda não há questões cadastradas para esta missao.",
         type: "info",
         closable: true,
         duration: 7000,
@@ -184,6 +202,52 @@ export const mensagensToastErro = {
         duration: 7000,
     },
 
+    salvarAventureiro: {
+        title: "Falha ao salvar o aventureiro",
+        description:
+            "Não foi possível salvar os dados do seu aventureiro. Verifique as informações e tente novamente.",
+        type: "error",
+        closable: true,
+        duration: 7000,
+    },
+
+    falhaAoEnviarRespostas: {
+        title: "Falha ao salvar as respostas",
+        description:
+            "Não foi possível salvar suas respostas. Por favor, tente novamente mais tarde",
+        type: "error",
+        closable: true,
+        duration: 7000,
+    },
+
+    falhaAoCarregarRanking: {
+        title: "Falha ao carregar o ranking",
+        description:
+            "Não foi possível carregar o ranking no momento. Por favor, tente novamente mais tarde.",
+        type: "error",
+        closable: true,
+        duration: 7000,
+    },
+
+    falhaAoConsumirConteudo: {
+        title: "Falha ao fazer login",
+        description:
+            "Não foi possível fazer login no momento. Por favor, tente novamente mais tarde.",
+        type: "error",
+        closable: true,
+        duration: 7000,
+    },
+
+    falhaAoFazerLogin: {
+        title: "Falha ao fazer login",
+        description:
+            "Não foi possível fazer login no momento. Por favor, tente novamente mais tarde.",
+        type: "error",
+        closable: true,
+        duration: 7000,
+    },
+
+
 
     // =========================
     // EDIÇÃO
@@ -220,6 +284,15 @@ export const mensagensToastErro = {
         title: "Falha ao editar a questão",
         description:
             "Não foi possível salvar as alterações da questão. Tente novamente.",
+        type: "error",
+        closable: true,
+        duration: 7000,
+    },
+
+    editarAventureiro: {
+        title: "Falha ao editar o aventureiro",
+        description:
+            "Não foi possível editar os dados do seu aventureiro. Verifique as informações e tente novamente.",
         type: "error",
         closable: true,
         duration: 7000,
@@ -314,23 +387,24 @@ export const mensagensToastErro = {
         duration: 7000,
     },
 
-    falhaAoEnviarRespostas: {
-        title: "Falha ao salvar as respostas",
+    validarAventureiro: {
+        title: "Imagem de perfil inválida",
         description:
-            "Não foi possível salvar suas respostas. Por favor, tente novamente mais tarde",
+            "Para continuar, preencha corretamente seus dados de aventureiro.",
         type: "warning",
         closable: true,
         duration: 7000,
     },
 
-    falhaAoCarregarRanking: {
-        title: "Falha ao carregar o ranking",
+    conteudoNaoConsumido: {
+        title: "Conteúdo ainda não concluído",
         description:
-            "Não foi possível carregar o ranking no momento. Por favor, tente novamente mais tarde.",
+            "Não conseguimos registrar o consumo deste conteúdo no momento. Tente novamente para garantir que seu progresso seja contabilizado.",
         type: "warning",
         closable: true,
         duration: 7000,
     },
+    
 } as const;
 
 export const mensagensToastSucesso = {

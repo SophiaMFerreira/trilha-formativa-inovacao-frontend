@@ -13,13 +13,16 @@ import Ordenacao from "@/components/commons/TarefaQuestao/ordenacao";
 import { shuffleArray } from "@/utils/shuffle";
 import { Missao, MissaoQuiz, ProgressoMissaoAtividade, TipoAtividade } from "@/types_consts/missao";
 import { QuestaoProp } from "@/types_consts/questao";
-import { Alternativa, AlternativaMarcadaAssociacaoDTO, AlternativaMarcadaDTO, SubtipoAlternativa, TipoAlternativa } from "@/types_consts/alternativa";
+import { Alternativa, AlternativaMarcadaDTO, SubtipoAlternativa, TipoAlternativa } from "@/types_consts/alternativa";
 
 import { MissaoAPI } from "../../api/missao";
 import { useAuth } from "@/hooks/useAuth";
 import { useGame } from "@/hooks/useGame";
 import { obterNomeTematica } from "@/types_consts/tematica";
 import { User } from "@/contexts/AuthContext";
+import { toaster } from "@/components/commons/toaster";
+import { mensagensToastErro } from "@/config/mensagensToaster";
+import { mensagensErroConsole } from "@/config/mensagensError";
 
 export default function Quiz() {
     const navigate = useNavigate()
@@ -78,17 +81,28 @@ export default function Quiz() {
         async function carregarDados() {
             try {
                 const missaoResponse = await MissaoAPI.buscarPorId(Number(idMissao))
-                if (!missaoResponse.data) return; //MENSAGEM ERRO 
+                if (!missaoResponse.data) {
+                    toaster.create(mensagensToastErro.carregarMissaoAtividade)
+                    return
+                }
 
                 const missao = missaoResponse.data as Missao
-                if (!("tipoAtividade" in missao)) return; //MENSAGEM ERRO
+                if (!("tipoAtividade" in missao)) {
+                    console.error(mensagensErroConsole.tipoMissaoInvalido);
+                    navigate(`/trilhaFormativaInovacao/${ParamTrilha}`);
+                    return
+                }
 
-                if (missao.tipoAtividade !== TipoAtividade.QUIZ) return; //MENSAGEM ERRO
+                if (missao.tipoAtividade !== TipoAtividade.QUIZ) {
+                    console.error(mensagensErroConsole.tipoMissaoInvalido);
+                    navigate(`/trilhaFormativaInovacao/${ParamTrilha}`);
+                    return
+                }
                 const quiz = missao as MissaoQuiz
 
                 if (!("questoes" in quiz) ||
                     quiz.questoes.length < 5) {
-                    //MENSAGEM ERRO
+                    toaster.create(mensagensToastErro.nenhumaQuestao);
                     navigate(`/trilhaFormativaInovacao/${ParamTrilha}`)
                     return
                 }
@@ -110,8 +124,8 @@ export default function Quiz() {
                 setTentativas(progressoTarefa.tentativasRealizadas)
 
             } catch (erro) {
-                console.error(erro);
-                //MENSAGEM DE ERRO
+                toaster.create(mensagensToastErro.carregarMissaoAtividade)
+                console.error(mensagensErroConsole.buscarMissaoAtividade, erro);
             }
         }
 
@@ -166,7 +180,7 @@ export default function Quiz() {
             <CardCustomizado
                 titulo="Pergunta"
                 mensagem={""}
-                info="--:--"
+                info="00:00"
             >
                 <Text>Carregando questao...</Text>
             </CardCustomizado>
@@ -177,7 +191,8 @@ export default function Quiz() {
         questao.alternativas.length === 0 ||
         !("alternativas" in questao)
     ) {
-        //MENSAGEM ERRO
+        toaster.create(mensagensToastErro.nenhumaQuestao);
+        console.error(mensagensErroConsole.buscarMissaoAtividade);
         return <Navigate to={`/trilhaFormativaInovacao/${ParamTrilha}`} replace />
     }
 
@@ -186,7 +201,7 @@ export default function Quiz() {
             <CardCustomizado
                 titulo="Pergunta"
                 mensagem={""}
-                info="05:00"
+                info="00:00"
             >
                 <Text>Carregando questao...</Text>
             </CardCustomizado>

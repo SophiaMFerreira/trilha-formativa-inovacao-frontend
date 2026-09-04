@@ -5,6 +5,9 @@ export const mensagensErroConsole = {
     buscarTematica:
         "Falha ao buscar a temática. ",
 
+    buscarMissoes:
+        "Falha ao buscar as missões desta trilha. ",
+        
     buscarMissaoAtividade:
         "Falha ao buscar a missão atividade. ",
 
@@ -22,10 +25,13 @@ export const mensagensErroConsole = {
 
     buscarAventureiro:
         "Falha ao buscar o aventureiro. ",
-    
+
     buscarProgressos:
         "Falha ao buscar os progressos. ",
-    
+
+    buscarOcupacoes:
+        "Falha ao buscar as ocupações. ",
+
     salvarTematica:
         "Erro ao salvar a temática. ",
 
@@ -46,6 +52,9 @@ export const mensagensErroConsole = {
 
     salvarAventureiro:
         "Erro ao salvar o aventureiro. ",
+
+    salvarConsumoConteudo:
+        "Erro ao contabilizar o consumo do conteúdo.",
 
     editarTematica:
         "Erro ao atualizar a temática. ",
@@ -81,7 +90,13 @@ export const mensagensErroConsole = {
 
     excluirAventureiro:
         "Erro ao excluir o aventureiro. ",
+
     calcularRespostas:
         "Erro ao calcular respostas do quiz/tarefa. ",
-    
+
+    fazerLogin:
+        "Erro ao fazer login.",
+
+    tipoMissaoInvalido:
+        "Tipo de missão invalido",
 } as const;

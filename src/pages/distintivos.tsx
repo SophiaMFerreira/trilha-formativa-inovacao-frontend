@@ -1,12 +1,14 @@
 import { Navigate, useNavigate, } from "react-router-dom";
 import { useEffect, useState } from "react";
 
-import { Box, Button, Card, CloseButton, Dialog, Grid, Heading, Portal, Spinner, Stack, Text } from "@chakra-ui/react"
+import { Box, Button, Card, CloseButton, Dialog, Grid, Heading, Portal, Stack, Text } from "@chakra-ui/react"
 import { FaAward, FaTrophy } from "react-icons/fa";
 import { useAuth } from "@/hooks/useAuth";
 import { useGame } from "@/hooks/useGame";
 import { UsuarioAPI } from "../../api/usuario";
-import { Usuario } from "@/types_consts/usuario";
+import { toaster } from "@/components/commons/toaster";
+import { mensagensToastErro } from "@/config/mensagensToaster";
+import { mensagensErroConsole } from "@/config/mensagensError";
 
 export default function Distintivos() {
     const navigate = useNavigate();
@@ -25,15 +27,14 @@ export default function Distintivos() {
         async function carregarDados() {
             try {
                 const usuarioResponse = await UsuarioAPI.buscarPorId(Number(user?.id))
-                if (!usuarioResponse) return; //MENSAGEM ERRO
+                if (!usuarioResponse) return;
 
                 setNomeUsuario(usuarioResponse.data.nomeUsuario)
             } catch (erro) {
-                console.error(erro);
-                //MENSAGEM DE ERRO
+                toaster.create(mensagensToastErro.carregarUsuario)
+                console.error(mensagensErroConsole.buscarAventureiro, erro);
             }
         }
-
         carregarDados();
     }, [user]);
 

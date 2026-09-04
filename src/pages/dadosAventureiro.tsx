@@ -7,10 +7,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { UsuarioAPI } from "../../api/usuario";
 import { Usuario } from "@/types_consts/usuario";
+import { toaster } from "@/components/commons/toaster";
+import { mensagensToastErro } from "@/config/mensagensToaster";
+import { mensagensErroConsole } from "@/config/mensagensError";
 
 export default function DadosAventureiro() {
     const navigate = useNavigate();
-        const {user} = useAuth()
+    const {user} = useAuth()
     const { pontuacao, distintivos } = useGame()
 
     const [nomeUsuario, setNomeUsuario] = useState("")
@@ -27,15 +30,15 @@ export default function DadosAventureiro() {
                 const usuarioResponse = await UsuarioAPI.buscarPorId(Number(user?.id))
                 const usuario = usuarioResponse.data as Usuario
 
-                if (!usuario) return; //MENSAGEM ERRO
+                if (!usuario) return;
 
                 setNomeUsuario(usuario.nomeUsuario)
                 setNomeAventureiro(usuario.nomeAventureiro)
                 setCorreioEletronico(usuario.correioEletronico)
                 setOcupacao(usuario.ocupacao.titulo)
             } catch (erro) {
-                console.error(erro);
-                //MENSAGEM DE ERRO
+                toaster.create(mensagensToastErro.carregarUsuario)
+                console.error(mensagensErroConsole.buscarAventureiro, erro);
             }
         }
 
@@ -226,7 +229,6 @@ export default function DadosAventureiro() {
                             flex={1}
                             w="100%"
                             variant="solid"
-                            //onClick={() => navigate(`/cadastroAventureiro/${idParam}`)}
                             onClick={() => navigate(`/editarDadosAventureiro`)}
                         >
                             Editar meus dados

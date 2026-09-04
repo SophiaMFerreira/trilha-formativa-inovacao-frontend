@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 
 import { Box, Button, Card, Carousel, Center, Em, Grid, Heading, IconButton, Image, Link, Skeleton, Stack, Text } from "@chakra-ui/react";
 import { FaAngleLeft, FaAngleRight, FaExternalLinkAlt, FaGamepad } from "react-icons/fa";
@@ -7,13 +7,19 @@ import { FaAngleLeft, FaAngleRight, FaExternalLinkAlt, FaGamepad } from "react-i
 import { carrosselConteudo } from "@/config/carrosselConfig";
 import CustomTooltip from "@/components/commons/customTooltip";
 import trilhaFormativa from "@/assets/images/Regional.jpg"
+import { useAuth } from "@/hooks/useAuth";
 
 export default function LandingPage() {
     const navigate = useNavigate();
+    const { user, logout } = useAuth();
 
     const [loaded, setLoaded] = useState(false)
     const [loadedGamificacao, setLoadedGamificacao] = useState(false)
 
+    if (user) {
+        logout();
+    }
+    
     return (
         <Box
             //minH="calc(100vh - 88px)"

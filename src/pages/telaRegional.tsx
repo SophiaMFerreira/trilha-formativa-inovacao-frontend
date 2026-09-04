@@ -14,6 +14,9 @@ import { useGame } from "@/hooks/useGame";
 import { obterNomeTematicaBanco } from "@/types_consts/tematica";
 import { Distintivo } from "@/types_consts/distintivo";
 import MapaRegional from "@/components/commons/mapaRegional";
+import { mensagensErroConsole } from "@/config/mensagensError";
+import { toaster } from "@/components/commons/toaster";
+import { mensagensToastErro } from "@/config/mensagensToaster";
 
 
 export function TelaRegional() {
@@ -74,18 +77,21 @@ export function TelaRegional() {
                 const missoesResponse = await MissaoAPI.listar()
                 const listaMissoes = missoesResponse.data as Missao[]
 
-                if (!listaMissoes) return; //MENSAGEM ERRO
+                if (!listaMissoes) {
+                    navigate(`/trilhaFormativaInovacao`);
+                    return
+                }
                 const missoesTrilha = listaMissoes.filter(m => m.tematica.titulo === trilha)
 
                 if (missoesTrilha.length === 0) {
-                    //MENSAGEM ERRO
+                    toaster.create(mensagensToastErro.nenhumaMissao)
                     navigate("/trilhaFormativaInovacao")
                 }
 
-                const missoesT = progressoMissoes.filter(p => 
+                const missoesT = progressoMissoes.filter(p =>
                     missoesTrilha.find(
                         m => p.missao.id === m.id
-                ))
+                    ))
                 setMissoesTematica(missoesT)
 
                 const pendentes = missoesTrilha.filter(m => {
@@ -123,8 +129,8 @@ export function TelaRegional() {
 
 
             } catch (erro) {
-                console.error(erro);
-                //MENSAGEM DE ERRO
+                toaster.create(mensagensToastErro.carregarMissoes)
+                console.error(mensagensErroConsole.buscarMissoes, erro);
             }
         }
         carregarDados();

@@ -1,4 +1,4 @@
-import { Box, Button, Card, Field, Flex, Heading, Image, InputGroup, Link, SimpleGrid, Skeleton, Stack, Text } from "@chakra-ui/react";
+import { Box, Button, Card, Field, Flex, Heading, Image, InputGroup, Link, SimpleGrid, Skeleton, Stack, Text, Toaster } from "@chakra-ui/react";
 import { NavLink, useNavigate } from "react-router-dom";
 
 import trilhaFormativa from "@/assets/images/Regional.jpg"
@@ -8,6 +8,9 @@ import { useState } from "react";
 import { AppInput } from "@/components/commons/AppInput";
 import { useAuth } from "@/hooks/useAuth";
 import { validarLogin } from "@/utils/validations/login";
+import { mensagensToastErro } from "@/config/mensagensToaster";
+import { toaster } from "@/components/commons/toaster";
+import { mensagensErroConsole } from "@/config/mensagensError";
 
 export function Login() {
     const navigate = useNavigate();
@@ -39,8 +42,8 @@ export function Login() {
                 navigate("/trilhaFormativaInovacao");
             }
         } catch (e) {
-            console.error(e)
-            //MENSAGEM ERRO
+            toaster.create(mensagensToastErro.falhaAoFazerLogin)
+            console.error(mensagensErroConsole.fazerLogin, e);
         }
     }
 
