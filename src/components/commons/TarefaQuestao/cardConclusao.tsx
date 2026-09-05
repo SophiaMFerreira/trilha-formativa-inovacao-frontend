@@ -8,7 +8,7 @@ import { shuffleArray } from "@/utils/shuffle";
 
 import { useAuth } from "@/hooks/useAuth";
 import { ConcluirAtividadeProps, concluirMissao, RetornoConclusao } from "@/utils/concluirMissao";
-import { TipoAtividade } from "@/types_consts/missao";
+import { ProgressoMissao, TipoAtividade } from "@/types_consts/missao";
 import { AlternativaMarcadaDTO } from "@/types_consts/alternativa";
 import { ResultadoQuestao } from "@/utils/calcularRespostas";
 import { useGame } from "@/hooks/useGame";
@@ -24,6 +24,7 @@ type ConclusaoProps = {
     questoes: QuestaoProp[]
     respostas: AlternativaMarcadaDTO[][]
     tentativas: number
+    progressoAtual: ProgressoMissao
 
     trilha: string
     parametroTrilha: string
@@ -44,6 +45,7 @@ export default function ConclusaoMissao({
     questoes,
     respostas,
     tentativas,
+    progressoAtual,
 
     trilha,
     parametroTrilha,
@@ -74,7 +76,8 @@ export default function ConclusaoMissao({
         idDistintivo: idDistintivo,
         questoes: questoes,
         respostas: respostas,
-        tentativas: tentativas
+        tentativas: tentativas,
+        progressoAtual: progressoAtual
     } as ConcluirAtividadeProps
 
     const [retornoConclusao, setRetornoConclusao] =
@@ -101,7 +104,7 @@ export default function ConclusaoMissao({
 
                 atualizarProgresso();
                 atualizarDistintivos();
-                
+
                 setTentativas(retorno.tentativas)
             } catch (erro) {
                 console.error(mensagensErroConsole.calcularRespostas, erro);

@@ -4,7 +4,7 @@ import { corrigirRespostas, ResultadoQuestao } from "./calcularRespostas";
 import { calcularProgresso } from "./calcularProgresso";
 import { AlternativaMarcadaDTO } from "@/types_consts/alternativa";
 import { ProgressoMissaoAPI } from "../../api/progressoMissao";
-import { ProgressoMissao, ProgressoMissaoAtividade, ProgressoMissaoDTO, TipoAtividade } from "@/types_consts/missao";
+import { ProgressoMissao, ProgressoMissaoAtividade, ProgressoMissaoAtividadeDTO, ProgressoMissaoDTO, TipoAtividade } from "@/types_consts/missao";
 import { DistintivoAdquiridoAPI } from "../../api/distintivoAdquirido";
 import { DistintivoAdquiridoDTO } from "@/types_consts/distintivo";
 import { User } from "@/contexts/AuthContext";
@@ -22,6 +22,7 @@ type BaseProps = {
   user: User
   valorMissao: number
   idMissao: number
+  progressoAtual: ProgressoMissao
 };
 
 type ConcluirConteudoProps = BaseProps & {
@@ -46,7 +47,6 @@ export async function concluirMissao(props: ConcluirMissaoProps) {
     throw new Error("Usuário não autenticado.");
   }
 
-
   let progresso = 0
   let pontuacao = 0
   let progressoMissao = {}
@@ -66,8 +66,8 @@ export async function concluirMissao(props: ConcluirMissaoProps) {
     const respostasValidas = props.respostas
       .flat()
       .filter(resposta => resposta.idAlternativa !== -1);
-    
-     await Promise.all(
+
+    await Promise.all(
       respostasValidas.map(resposta =>
         AlternativaMarcadaAPI.salvar(resposta)
       ))
@@ -97,7 +97,7 @@ export async function concluirMissao(props: ConcluirMissaoProps) {
 
     if (props.tipoMaterial === "conteudo") {
       const melhorDesempenho = await verificarDesempenho(
-        100, 0, props.user.id, props.idMissao, "conteudo")
+        100, 0, props.progressoAtual, "conteudo")
 
       progressoMissao = {
         progresso: 100,
@@ -111,22 +111,30 @@ export async function concluirMissao(props: ConcluirMissaoProps) {
         );
       }
     } else {
-      if (props.tipoAtividade === "tarefa" &&
+      /*if (props.tipoAtividade === "tarefa" &&
         progresso === 100 && props.tentativas === 0) {
         await DistintivoAdquiridoAPI.salvar({
           idUsuario: props.user.id,
           idDistintivo: props.idDistintivo
         } as DistintivoAdquiridoDTO)
-      }
+      }*/
 
       const melhorDesempenho = await verificarDesempenho(
         progresso,
         pontuacao,
-        props.user.id,
-        props.idMissao,
+        props.progressoAtual,
         "atividade")
 
-      if (props.tentativas < 3 && melhorDesempenho) {
+      if (props.tentativas < 3) {
+        if (!melhorDesempenho) {
+          const progressoAntigo = props.progressoAtual as ProgressoMissaoAtividade
+          progressoMissao = {
+            progresso: progressoAntigo.progresso,
+            tentativasRealizadas: props.tentativas + 1,
+            pontuacaoObtida: progressoAntigo.pontuacaoObtida
+          }
+        }
+
         await ProgressoMissaoAPI.atualizar(
           props.user.id,
           props.idMissao,
@@ -156,24 +164,17 @@ export async function concluirMissao(props: ConcluirMissaoProps) {
 async function verificarDesempenho(
   progresso: number,
   pontuacao: number,
-  idUsuario: number,
-  idMissao: number,
+  progressoAtual: ProgressoMissao,
   tipoMaterial: "conteudo" | "atividade"
 ) {
 
   try {
-    const progressoAnteriorResponse = await ProgressoMissaoAPI.buscarPorId(idUsuario, idMissao);
-    if (!progressoAnteriorResponse.data) return //MENSAGEMDE ERRO
-
     if (tipoMaterial === "conteudo") {
-      const progressoAnterior = progressoAnteriorResponse.data as ProgressoMissao;
-
-      return (progressoAnterior.progresso === 0 && progresso === 100) ? true : false
+      return (progressoAtual.progresso === 0 && progresso === 100) ? true : false
     } else {
-      const progressoAnterior = progressoAnteriorResponse.data as ProgressoMissaoAtividade;
-
-      return (progressoAnterior.progresso < progresso
-        || progressoAnterior.pontuacaoObtida < pontuacao) ? true : false
+      const progressoAtualAtividade = progressoAtual as ProgressoMissaoAtividade
+      return (progressoAtualAtividade.progresso < progresso
+        || progressoAtualAtividade.pontuacaoObtida < pontuacao) ? true : false
 
     }
   } catch (e) {

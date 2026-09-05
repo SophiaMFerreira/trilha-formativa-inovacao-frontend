@@ -265,6 +265,7 @@ export default function Tarefa() {
                     questoes={questoes}
                     respostas={respostas}
                     tentativas={tentativas}
+                    progressoAtual={progressoTarefa!}
 
                     trilha={trilha}
                     parametroTrilha={ParamTrilha!}
