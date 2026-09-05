@@ -103,7 +103,7 @@ export function TelaRegional() {
                     return progressoM?.progresso === 0;
                 });
 
-                setMissoesPendentes([...pendentes])
+                setMissoesPendentes([...pendentes].slice(0, 3))
                 setMissaoSelecionada(pendentes[0])
                 calcularTituloMissaoSelecionada(pendentes[0])
 
