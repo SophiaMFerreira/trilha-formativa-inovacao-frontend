@@ -57,7 +57,7 @@ export default function Material() {
                 return;
             }
 
-            atualizarProgresso()
+            await atualizarProgresso()
             //setCloncluido(true)
 
             navigate(`/trilhaFormativaInovacao/${ParamTrilha}`);
