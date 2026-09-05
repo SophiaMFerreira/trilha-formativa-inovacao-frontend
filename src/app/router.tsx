@@ -22,6 +22,7 @@ import ConditionalRoute from "@/routes/ConditionalRoute"
 import BancoMissoesAtividade from "@/pages/bancoMissoesAtividade"
 import CadastroMissoesAtividade from "@/pages/cadastroMissoesAtividade"
 import ErrorPage from "@/pages/errorPage"
+import RecuperarSenha from "@/pages/recuperarSenha"
 
 export const router = createBrowserRouter([
   {
@@ -158,8 +159,7 @@ export const router = createBrowserRouter([
         element: <CadastroAventureiro />,
       }, {
         path: "recuperarSenha",
-        //element: <LandingPage />,
-        //element: <Home />,
+        element: <RecuperarSenha />
       },
     ],
   },
