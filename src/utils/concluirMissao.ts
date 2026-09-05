@@ -4,10 +4,12 @@ import { corrigirRespostas, ResultadoQuestao } from "./calcularRespostas";
 import { calcularProgresso } from "./calcularProgresso";
 import { AlternativaMarcadaDTO } from "@/types_consts/alternativa";
 import { ProgressoMissaoAPI } from "../../api/progressoMissao";
-import { ProgressoMissao, ProgressoMissaoAtividade, ProgressoMissaoAtividadeDTO, ProgressoMissaoDTO, TipoAtividade } from "@/types_consts/missao";
+import { ProgressoMissao, ProgressoMissaoAtividade, ProgressoMissaoDTO, TipoAtividade } from "@/types_consts/missao";
 import { DistintivoAdquiridoAPI } from "../../api/distintivoAdquirido";
 import { DistintivoAdquiridoDTO } from "@/types_consts/distintivo";
 import { User } from "@/contexts/AuthContext";
+import { toaster } from "@/components/commons/toaster";
+import { mensagemToasterConquista } from "@/config/mensagensToaster";
 
 export type RetornoConclusao = {
   pontos: number
@@ -49,7 +51,7 @@ export async function concluirMissao(props: ConcluirMissaoProps) {
 
   let progresso = 0
   let pontuacao = 0
-  let progressoMissao = {}
+  let progressoMissao = {} 
   let corretas = [] as ResultadoQuestao[]
   let parciais = [] as ResultadoQuestao[]
   let incorretas = [] as ResultadoQuestao[]
@@ -60,7 +62,7 @@ export async function concluirMissao(props: ConcluirMissaoProps) {
 
     progressoMissao = {
       progresso: progresso,
-    }
+    } as ProgressoMissao
 
   } else {
     const respostasValidas = props.respostas
@@ -109,6 +111,7 @@ export async function concluirMissao(props: ConcluirMissaoProps) {
           props.idMissao,
           progressoMissao as ProgressoMissaoDTO
         );
+        toaster.create(mensagemToasterConquista(pontuacao))
       }
     } else {
       /*if (props.tipoAtividade === "tarefa" &&
@@ -132,14 +135,17 @@ export async function concluirMissao(props: ConcluirMissaoProps) {
             progresso: progressoAntigo.progresso,
             tentativasRealizadas: props.tentativas + 1,
             pontuacaoObtida: progressoAntigo.pontuacaoObtida
-          }
+          } as ProgressoMissao
         }
-
+        
         await ProgressoMissaoAPI.atualizar(
           props.user.id,
           props.idMissao,
           progressoMissao as ProgressoMissaoDTO
         );
+        
+          toaster.create(mensagemToasterConquista(pontuacao))
+
       }
     }
 

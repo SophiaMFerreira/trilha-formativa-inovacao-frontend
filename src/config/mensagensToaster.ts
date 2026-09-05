@@ -1,3 +1,25 @@
+export const mensagemToasterConquista = (
+    pontos: number,
+    distintivo?: string
+) => {
+    if (distintivo) {
+        return {
+            title: "🏆 Novo distintivo!",
+            description:
+                `Você ganhou +${pontos} pontos e conquistou o distintivo ${distintivo}.`,
+            type: "success",
+            duration: 7000,
+        }
+    } else {
+        return {
+            title: "⭐ Missão concluída!",
+            description: `Você ganhou +${pontos} pontos.`,
+            type: "success",
+            duration: 7000,
+        }
+    }
+};
+
 export const mensagensToastErro = {
     // =========================
     // CARREGAMENTO
@@ -142,7 +164,7 @@ export const mensagensToastErro = {
         closable: true,
         duration: 7000,
     },
-    
+
     nenhumaMissao: {
         title: "Nenhuma missão encontrada",
         description:
@@ -424,7 +446,7 @@ export const mensagensToastErro = {
     conteudoNaoConsumido: {
         title: "Conteúdo ainda não concluído",
         description:
-            "Não conseguimos registrar o consumo deste conteúdo no momento. Tente novamente para garantir que seu progresso seja contabilizado.",
+            "Ao prosseguir sem consumir integralmente o conteúdo você não obtem os pontos dessa missão.",
         type: "warning",
         closable: true,
         duration: 7000,
@@ -446,7 +468,7 @@ export const mensagensToastErro = {
         closable: true,
         duration: 7000,
     },
-    
+
 } as const;
 
 export const mensagensToastSucesso = {
