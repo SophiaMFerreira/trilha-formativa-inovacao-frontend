@@ -41,24 +41,24 @@ export default function RecuperarSenha() {
     });
 
     useEffect(() => {
-    const chaveExpiracao = "recuperacaoSenhaExpiraEm";
+        const chaveExpiracao = "recuperacaoSenhaExpiraEm";
 
-    const atualizarTempo = () => {
-        const expiraEm = localStorage.getItem(chaveExpiracao);
+        const atualizarTempo = () => {
+            const expiraEm = localStorage.getItem(chaveExpiracao);
 
-        if (!expiraEm) {
-            setTempo(0);
-            return;
-        }
+            if (!expiraEm) {
+                setTempo(0);
+                return;
+            }
 
-        const restante = Math.max(Math.ceil((Number(expiraEm) - Date.now()) / 1000), 0);
-        setTempo(restante);
-    };
+            const restante = Math.max(Math.ceil((Number(expiraEm) - Date.now()) / 1000), 0);
+            setTempo(restante);
+        };
 
-    atualizarTempo();
-    const intervalo = setInterval(atualizarTempo, 1000);
-    return () => clearInterval(intervalo);
-}, []);
+        atualizarTempo();
+        const intervalo = setInterval(atualizarTempo, 1000);
+        return () => clearInterval(intervalo);
+    }, []);
 
     const reenviarCodigo = async () => {
         try {
@@ -103,9 +103,36 @@ export default function RecuperarSenha() {
         }
     }
 
+    const onSubmitNovaSenha = async () => {
+        //const invalido = tempo === 0
+        /*if (invalido) {
+            setValidarCodigo(false)
+            toaster.create(mensagensToastErro.falhaAoFazerLogin)
+            return
+        }*/
+        try {
+            //const usuarioLogado = await login(email, senha)
+            //if (!usuarioLogado) {
+            //    setValido(true)
+            //    return
+            //}
+
+            setValidarCodigo(true)
+
+            //if (usuarioLogado.role === "admin") {
+            //    navigate("/banco-materiais");
+            //} else {
+            //    navigate("/trilhaFormativaInovacao");
+            //}
+        } catch (e) {
+            toaster.create(mensagensToastErro.falhaAoFazerLogin)
+            console.error(mensagensErroConsole.fazerLogin, e);
+        }
+    }
+
     return (
         //{!validarCodigo &&
-        <CardCustomizado
+        /*<CardCustomizado
             key="cardCodigo"
             titulo="Esqueceu sua senha ?"
             mensagem="Enviaremos um código para seu e-mail para que você possa trocar sua senha."
@@ -196,7 +223,88 @@ export default function RecuperarSenha() {
                     Retornar para tela de login
                 </Link>
             </Stack >
-        </CardCustomizado >
+        </CardCustomizado > */
+        <CardCustomizado
+            key="cardRecuperarSenha"
+            titulo="Redefinir senha "
+            mensagem="Defina uma nova senha para realizar login na plataforma."
+        >
 
+            <form onSubmit={(e) => {
+                e.preventDefault();
+                onSubmitNovaSenha();
+            }}>
+                <Stack
+                    mt="9"
+                    w="100%"
+                    gap="5"
+                >
+                    <Field.Root required invalid={validarSenha}>
+                        <Field.Label
+                            textStyle="emphasis"
+                            color="brand.primaryDark"
+                        >
+                            Nova senha
+                            <Field.RequiredIndicator color="brand.secondaryRed" />
+                        </Field.Label>
+                        <InputGroup>
+                            <AppInput
+                                name="senha"
+                                value={senha}
+                                type="password"
+                                placeholder="*************"
+                                size="md"
+                                onChange={(e) => setSenha(e.target.value)}
+                            />
+                        </InputGroup>
+                        {validarSenha && (
+                            <Field.ErrorText
+                                textStyle="inputPlaceholder"
+                                color="brand.secondaryRed"
+                            >
+                                A senha deve ter no mínimo 8 caracteres, incluindo letra, número e caractere especial.
+                            </Field.ErrorText>
+                        )}
+                    </Field.Root>
+                    <Field.Root required invalid={validarConfirmarSenha}>
+                        <Field.Label
+                            textStyle="emphasis"
+                            color="brand.primaryDark"
+                        >
+                            Confirmar nova senha
+                            <Field.RequiredIndicator color="brand.secondaryRed" />
+                        </Field.Label>
+                        <InputGroup>
+                            <AppInput
+                                name="confirmarSenha"
+                                value={confirmarSenha}
+                                type="password"
+                                placeholder="*************"
+                                size="md"
+                                onChange={(e) => setConfirmarSenha(e.target.value)}
+                            />
+                        </InputGroup>
+                        {validarConfirmarSenha && (
+                            <Field.ErrorText
+                                textStyle="inputPlaceholder"
+                                color="brand.secondaryRed"
+                            >
+                                A confirmação de senha deve ser igual à senha informada.
+                            </Field.ErrorText>
+                        )}
+                    </Field.Root>
+                    <Button
+                        flex={1}
+                        w="100%"
+                        variant="solid"
+                        type="submit"
+                        size="md"
+                        mt="3"
+                    >
+                        Fazer login com a nova senha
+                    </Button>
+                </Stack>
+            </form>
+        </CardCustomizado >
     );
 }
