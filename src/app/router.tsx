@@ -21,6 +21,7 @@ import Tarefa from "@/pages/tarefa"
 import ConditionalRoute from "@/routes/ConditionalRoute"
 import BancoMissoesAtividade from "@/pages/bancoMissoesAtividade"
 import CadastroMissoesAtividade from "@/pages/cadastroMissoesAtividade"
+import ErrorPage from "@/pages/errorPage"
 
 export const router = createBrowserRouter([
   {
@@ -29,6 +30,7 @@ export const router = createBrowserRouter([
         <GeneralLayout />
       </ProtectedRoute>
     ),
+    errorElement: <ErrorPage />,
     children: [
       {
         path: "/banco-questoes",
@@ -142,7 +144,8 @@ export const router = createBrowserRouter([
       }
     ],
   }, {
-  element: <GeneralLayout />,
+    element: <GeneralLayout />,
+    errorElement: <ErrorPage />,
     children: [
       {
         path: "/",
