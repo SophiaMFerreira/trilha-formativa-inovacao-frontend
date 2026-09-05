@@ -262,6 +262,7 @@ export default function Quiz() {
                             w="100%"
                             variant="outline"
                             onClick={() => voltarQuestao()}
+                            disabled={idQuestao === 0}
                         >
                             Voltar
                         </Button>

@@ -1,10 +1,10 @@
 import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Box, Button, Heading, HStack, Link, Stack, Text } from "@chakra-ui/react";
 import CardCustomizado from "@/components/commons/cardCustomizado";
 import { FaExternalLinkAlt } from "react-icons/fa";
-import { MissaoConteudo } from "@/types_consts/missao";
+import { MissaoConteudo, ProgressoMissao } from "@/types_consts/missao";
 import { MissaoAPI } from "../../api/missao";
 import { useAuth } from "@/hooks/useAuth";
 import { useGame } from "@/hooks/useGame";
@@ -27,8 +27,11 @@ export default function Material() {
     const [tipoMaterial, setTipoMaterial] = useState<"texto" | "video">("texto")
     const [pontuacao, setPontuacao] = useState<number>(0)
 
+    const [progressoConteudo, setProgressoConteudo] = useState<ProgressoMissao>();
     const [clicouLink, setClicouLink] = useState<boolean>(false)
     const [concluido, setCloncluido] = useState<boolean>(false)
+    const conclusaoExecutada = useRef(false);
+    
 
     async function concluirMaterial() {
         if (!clicouLink) {
@@ -36,12 +39,16 @@ export default function Material() {
             return
         }
 
+        if (conclusaoExecutada.current) return;
+        conclusaoExecutada.current = true;
+
         try {
             const conclusaoProps = {
                 user,
                 valorMissao: pontuacao,
                 idMissao: idMaterial,
-                tipoMaterial: "conteudo"
+                tipoMaterial: "conteudo",
+                progressoAtual: progressoConteudo
             } as ConcluirMissaoProps;
 
             const retornoConclusao = await concluirMissao(conclusaoProps);
@@ -51,6 +58,7 @@ export default function Material() {
             }
 
             atualizarProgresso()
+            //setCloncluido(true)
 
             navigate(`/trilhaFormativaInovacao/${ParamTrilha}`);
         } catch (e) {
@@ -64,13 +72,6 @@ export default function Material() {
             try {
                 if (!ParamTrilha) return
                 if (!idMissao) return
-
-                const progressoMissao = progressoMissoes.find(progresso =>
-                    progresso.missao.id === Number(idMissao))
-
-                if (progressoMissao?.progresso === 100) {
-                    setCloncluido(true)
-                }
 
                 const missaoResponse = await MissaoAPI.buscarPorId(Number(idMissao))
                 if (!missaoResponse.data) return
@@ -88,6 +89,16 @@ export default function Material() {
                 setUrl(material.url)
                 setTipoMaterial(material.tipoMaterial)
                 setPontuacao(material.pontuacao)
+
+                const progressoMissao = progressoMissoes.find(progresso =>
+                    progresso.missao.id === material.id)
+                if (!progressoMissao) return
+
+                setProgressoConteudo(progressoMissao)
+                
+                if (progressoMissao.progresso === 100) {
+                    setCloncluido(true)
+                }
 
             } catch (erro) {
                 toaster.create(mensagensToastErro.carregarConteudo)
@@ -203,6 +214,7 @@ export default function Material() {
                         variant="solid"
                         type="submit"
                         onClick={() => concluirMaterial()}
+                        disabled={concluido}
                     >
                         {tipoMaterial === "texto" ? "Concluir leitura" : "Concluir vídeo"}
                     </Button>

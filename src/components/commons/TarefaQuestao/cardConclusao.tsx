@@ -92,7 +92,6 @@ export default function ConclusaoMissao({
 
     useEffect(() => {
         if (conclusaoExecutada.current) return;
-
         conclusaoExecutada.current = true;
 
         async function corrigir() {

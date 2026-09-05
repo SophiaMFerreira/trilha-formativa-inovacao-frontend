@@ -147,7 +147,6 @@ function IconeMissao({
             break
     }
 
-    const disabled = concluido && tentativas
     let rota = `/trilhaFormativaInovacao/${paramTrilha}/material/${missao.missao.id}`
     let distintivo = <FaBook size={20} />
 
@@ -183,7 +182,6 @@ function IconeMissao({
                 left={posicao.left}
                 transform="translate(-50%, -50%)"
                 onClick={() => navigate(rota)}
-                disabled={disabled}
 
                 aria-label={missao.missao.titulo}
                 variant="solid"
