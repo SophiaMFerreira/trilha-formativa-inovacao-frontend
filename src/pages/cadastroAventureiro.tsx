@@ -264,22 +264,11 @@ export function CadastroAventureiro() {
                 }
 
                 if (arquivoImagem) {
-                    console.log("1")
-                    console.log(
-                        "TOKEN ANTES DO UPLOAD:",
-                        localStorage.getItem("token")
-                    );
                     const formData = new FormData();
-                    console.log("2")
-
                     formData.append("foto", arquivoImagem);
-                        console.log(arquivoImagem)
 
-                    console.log("3")
                     await UsuarioAPI.salvarImagemPerfil(responseLogin.id, formData);
-                    console.log("4")
                 }
-                console.log("5")
             }
 
             navigate("/trilhaFormativaInovacao");

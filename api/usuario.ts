@@ -12,8 +12,6 @@ export const UsuarioAPI = {
     },
 
     salvarImagemPerfil(idUsauario: number, imagemPerfil: FormData) {
-        console.log(imagemPerfil)
-        console.log(imagemPerfil.get("foto"))
         return api.post(`api/v1/usuarios/${idUsauario}/foto`, imagemPerfil);
     },
 
