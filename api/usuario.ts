@@ -7,6 +7,16 @@ export const UsuarioAPI = {
         return api.post("api/v1/login", login)
     },
 
+    buscarImagemPerfil(idUsauario: number, usuario: string, imagemPerfil: string) {
+        return api.get(`image/upload/perfil/${idUsauario}_${usuario}/${imagemPerfil}.png`);
+    },
+
+    salvarImagemPerfil(idUsauario: number, imagemPerfil: FormData) {
+        console.log(imagemPerfil)
+        console.log(imagemPerfil.get("foto"))
+        return api.post(`api/v1/usuarios/${idUsauario}/foto`, imagemPerfil);
+    },
+
     listar() {
         return api.get("api/v1/usuarios");
     },

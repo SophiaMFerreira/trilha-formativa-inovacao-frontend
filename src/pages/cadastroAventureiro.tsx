@@ -15,6 +15,8 @@ import { User } from "@/contexts/AuthContext";
 import { FaRegCalendarAlt } from "react-icons/fa";
 import { validarUsuario } from "@/utils/validations/usuario";
 import { toaster } from "@/components/commons/toaster";
+import { mensagensToastErro } from "@/config/mensagensToaster";
+import { mensagensErroConsole } from "@/config/mensagensError";
 
 export function CadastroAventureiro() {
     const navigate = useNavigate();
@@ -75,17 +77,16 @@ export function CadastroAventureiro() {
         async function carregarDados() {
             try {
                 const ocupacaoResponse = await OcupacaoAPI.listar()
-                if (!ocupacaoResponse.data) return // MENSAGEM DE ERRO
+                if (!ocupacaoResponse.data) return
 
                 const ocupacoes = ocupacaoResponse.data as OcupacaoDTO[]
                 const ocupacoesCollection = createListCollection({
                     items:
                         ocupacoes.length === 0
-                            ? [
-                                {
-                                    label: "Nenhuma ocupação cadastrada",
-                                    value: "-1",
-                                },
+                            ? [{
+                                label: "Nenhuma ocupação cadastrada",
+                                value: "-1",
+                            },
                             ]
                             : ocupacoes.map(item => ({
                                 label: item.titulo,
@@ -95,8 +96,8 @@ export function CadastroAventureiro() {
                 setOcupacoes(ocupacoes)
                 setOcupacaoCollection(ocupacoesCollection)
             } catch (erro) {
-                console.error(erro);
-                //MENSAGEM DE ERRO
+                toaster.create(mensagensToastErro.carregarOcupacoes)
+                console.error(mensagensErroConsole.buscarOcupacoes, erro);
             }
         }
 
@@ -105,7 +106,7 @@ export function CadastroAventureiro() {
                 if (!user) return;
 
                 const usuarioResponse = await UsuarioAPI.buscarPorId(Number(user?.id))
-                if (!usuarioResponse.data) return // MENSAGEM DE ERRO
+                if (!usuarioResponse.data) return
 
                 const usuario = usuarioResponse.data as Usuario
 
@@ -121,8 +122,8 @@ export function CadastroAventureiro() {
                 }
 
             } catch (erro) {
-                console.error(erro);
-                //MENSAGEM DE ERRO
+                toaster.create(mensagensToastErro.carregarUsuario)
+                console.error(mensagensErroConsole.buscarOcupacoes, erro);
             }
         }
 
@@ -155,6 +156,7 @@ export function CadastroAventureiro() {
             senha,
             confirmarSenha,
             confirmarSenhaAtual,
+            imagemArquivo: arquivoImagem,
             edicao: idUsuario !== -1 ? true : false
         })
 
@@ -169,7 +171,11 @@ export function CadastroAventureiro() {
             setValidarConfirmarSenha(resultado.confirmarSenha);
             setValidarSenhaAtual(resultado.confirmarSenhaAtual);
 
-            //toaster.create(mensagensToastErro.validarConteudo)
+            if (!resultado.imagemArquivo) {
+                toaster.create(mensagensToastErro.validarImagemArquivo)
+            }
+
+            toaster.create(mensagensToastErro.validarAventureiro)
             setOpen(false);
             return;
         }
@@ -191,6 +197,7 @@ export function CadastroAventureiro() {
             senha,
             confirmarSenha,
             confirmarSenhaAtual,
+            imagemArquivo: arquivoImagem,
             edicao: idUsuario ? true : false
         })
 
@@ -205,7 +212,11 @@ export function CadastroAventureiro() {
             setValidarConfirmarSenha(resultado.confirmarSenha);
             setValidarSenhaAtual(resultado.confirmarSenhaAtual);
 
-            //toaster.create(mensagensToastErro.validarConteudo)
+            if (resultado.imagemArquivo) {
+                toaster.create(mensagensToastErro.validarImagemArquivo)
+            }
+
+            toaster.create(mensagensToastErro.validarAventureiro)
             setOpen(false);
             return;
         }
@@ -226,16 +237,24 @@ export function CadastroAventureiro() {
         try {
             if (user) {
                 //confirmar senha
-                const response = await UsuarioAPI.atualizar(idUsuario, usuarioPayload);
+                const responseEdicao = await UsuarioAPI.atualizar(idUsuario, usuarioPayload);
+                if (!responseEdicao.data) {
+                    toaster.create(mensagensToastErro.editarAventureiro)
+                    return
+                }
+
                 const user: User = {
-                    id: response.data.id,
+                    id: responseEdicao.data.id,
                     nomeAventureiro: nomeAventureiro,
                     role: "usuario",
                 }
                 updateUser(user)
             } else {
                 const responseCadastro = await UsuarioAPI.salvar(usuarioPayload);
-                if (!responseCadastro.data) return // erro
+                if (!responseCadastro.data) {
+                    toaster.create(mensagensToastErro.salvarAventureiro)
+                    return
+                }
 
                 const responseLogin = await login(usuarioPayload.correioEletronico, senha)
                 if (!responseLogin) {
@@ -243,12 +262,29 @@ export function CadastroAventureiro() {
                     navigate("/login");
                     return
                 }
+
+                if (arquivoImagem) {
+                    console.log("1")
+                    console.log(
+                        "TOKEN ANTES DO UPLOAD:",
+                        localStorage.getItem("token")
+                    );
+                    const formData = new FormData();
+                    console.log("2")
+
+                    formData.append("foto", arquivoImagem);
+                        console.log(arquivoImagem)
+
+                    console.log("3")
+                    await UsuarioAPI.salvarImagemPerfil(responseLogin.id, formData);
+                    console.log("4")
+                }
+                console.log("5")
             }
 
             navigate("/trilhaFormativaInovacao");
         } catch (erro) {
-
-            console.error("Erro:", erro);
+            console.error("Erro: ", erro);
         }
     }
 
@@ -261,7 +297,8 @@ export function CadastroAventureiro() {
                 navigate("/");
             }
         } catch (erro) {
-            console.error(erro);
+            console.error(mensagensErroConsole.excluirAventureiro, erro);
+            toaster.create(mensagensToastErro.excluirUsuario)
         }
     }
 
