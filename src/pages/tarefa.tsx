@@ -19,6 +19,7 @@ import { obterNomeTematica } from "@/types_consts/tematica";
 import { toaster } from "@/components/commons/toaster";
 import { mensagensToastErro } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
+import { ProgressoMissaoAPI } from "../../api/progressoMissao";
 
 
 export default function Tarefa() {

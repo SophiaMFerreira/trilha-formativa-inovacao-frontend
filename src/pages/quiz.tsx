@@ -118,10 +118,10 @@ export default function Quiz() {
                 const progresso = progressoMissoes.find(p => p.missao.id === quiz.id)
                 if (!progresso) return;
 
-                const progressoTarefa = progresso as ProgressoMissaoAtividade
+                const progressoQuiz = progresso as ProgressoMissaoAtividade
 
-                setProgressoQuiz(progressoTarefa)
-                setTentativas(progressoTarefa.tentativasRealizadas)
+                setProgressoQuiz(progressoQuiz)
+                setTentativas(progressoQuiz.tentativasRealizadas)
 
             } catch (erro) {
                 toaster.create(mensagensToastErro.carregarMissaoAtividade)
@@ -286,6 +286,7 @@ export default function Quiz() {
                     questoes={questoes}
                     respostas={respostas}
                     tentativas={tentativas}
+                    progressoAtual={progressoQuiz!}
 
                     trilha={trilha}
                     parametroTrilha={ParamTrilha!}
@@ -294,6 +295,7 @@ export default function Quiz() {
                     setRespostas={setRespostas}
                     setPontuacao={setPontuacao}
                     setIdQuestao={setIdQuestao}
+                    setTentativas={setTentativas}
 
                     navigate={navigate}
                 />

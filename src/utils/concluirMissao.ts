@@ -167,7 +167,6 @@ async function verificarDesempenho(
   progressoAtual: ProgressoMissao,
   tipoMaterial: "conteudo" | "atividade"
 ) {
-
   try {
     if (tipoMaterial === "conteudo") {
       return (progressoAtual.progresso === 0 && progresso === 100) ? true : false
