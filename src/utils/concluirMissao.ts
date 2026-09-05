@@ -46,6 +46,7 @@ export async function concluirMissao(props: ConcluirMissaoProps) {
     throw new Error("Usuário não autenticado.");
   }
 
+
   let progresso = 0
   let pontuacao = 0
   let progressoMissao = {}
@@ -65,8 +66,8 @@ export async function concluirMissao(props: ConcluirMissaoProps) {
     const respostasValidas = props.respostas
       .flat()
       .filter(resposta => resposta.idAlternativa !== -1);
-
-    await Promise.all(
+    
+     await Promise.all(
       respostasValidas.map(resposta =>
         AlternativaMarcadaAPI.salvar(resposta)
       ))
@@ -112,12 +113,10 @@ export async function concluirMissao(props: ConcluirMissaoProps) {
     } else {
       if (props.tipoAtividade === "tarefa" &&
         progresso === 100 && props.tentativas === 0) {
-        console.log(3.1)
         await DistintivoAdquiridoAPI.salvar({
           idUsuario: props.user.id,
           idDistintivo: props.idDistintivo
         } as DistintivoAdquiridoDTO)
-        console.log(3.2)
       }
 
       const melhorDesempenho = await verificarDesempenho(

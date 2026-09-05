@@ -82,7 +82,7 @@ export default function Tarefa() {
                     toaster.create(mensagensToastErro.carregarMissaoAtividade)
                     return
                 }
-                
+
                 const missao = missaoResponse.data as Missao
                 if (!("tipoAtividade" in missao)) {
                     console.error(mensagensErroConsole.tipoMissaoInvalido);
@@ -243,29 +243,15 @@ export default function Tarefa() {
                                 alterarResposta={alterarRespostaMultiplaEscolha}
                             />
                         ))}
-                        <HStack
-                            gap="6"
+                        <Button
+                            flex={1}
                             w="100%"
-                            maxW="3xl"
+                            variant="solid"
+                            type="submit"
+                            onClick={() => setEtapa("resultado")}
                         >
-                            <Button
-                                flex={1}
-                                w="100%"
-                                variant="outline"
-                                onClick={() => setEtapa("home")}
-                            >
-                                Voltar
-                            </Button>
-                            <Button
-                                flex={1}
-                                w="100%"
-                                variant="solid"
-                                type="submit"
-                                onClick={() => setEtapa("resultado")}
-                            >
-                                Responder tarefa
-                            </Button>
-                        </HStack>
+                            Responder tarefa
+                        </Button>
                     </Stack>
                 </CardCustomizado>
             } {
@@ -286,6 +272,7 @@ export default function Tarefa() {
                     setQuestoes={setQuestoes}
                     setRespostas={setRespostas}
                     setPontuacao={setPontuacao}
+                    setTentativas={setTentativas}
 
                     navigate={navigate}
                 />
@@ -315,10 +302,9 @@ export function FormatoQuestaoAleatorio({
             <QuestaoCheckbox
                 key={questao.id}
                 questao={questao}
-                //index={index}
-                index={0}
-            //value={respostas[index]}
-            //onChange={alterarResposta}
+                index={index}
+                value={respostas[index]}
+                onChange={alterarResposta}
             />
         )
     }
@@ -337,8 +323,7 @@ export function FormatoQuestaoAleatorio({
             <QuestaoRadio
                 key={questao.id}
                 questao={questao}
-                //index={index}
-                index={0}
+                index={index}
                 value={String(respostas[index][0].idAlternativa) ?? ""}
                 onChange={alterarResposta}
             />
@@ -348,8 +333,7 @@ export function FormatoQuestaoAleatorio({
             <QuestaoSelect
                 key={questao.id}
                 questao={questao}
-                //index={index}
-                index={0}
+                index={index}
                 value={String(respostas[index][0].idAlternativa) ?? ""}
                 onChange={alterarResposta}
             />

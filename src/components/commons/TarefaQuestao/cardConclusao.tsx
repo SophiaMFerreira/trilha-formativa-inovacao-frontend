@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button, CloseButton, Dialog, Em, Heading, HStack, Portal, Stack, Text } from "@chakra-ui/react";
 import { FaCheck, FaExclamationTriangle, FaTimes } from "react-icons/fa";
@@ -31,6 +31,7 @@ type ConclusaoProps = {
     setQuestoes: Function
     setRespostas: Function
     setPontuacao: Function
+    setTentativas: Function
     setIdQuestao?: Function
 
     navigate: Function
@@ -51,6 +52,7 @@ export default function ConclusaoMissao({
     setRespostas,
     setPontuacao,
     setIdQuestao,
+    setTentativas,
     navigate
 }: ConclusaoProps) {
     const [questaoSelecionada, setQuestaoSelecionada] = useState<{
@@ -60,6 +62,7 @@ export default function ConclusaoMissao({
 
     const { user } = useAuth()
     const { atualizarDistintivos, atualizarProgresso } = useGame()
+    const conclusaoExecutada = useRef(false);
 
     const [open, setOpen] = useState(false)
     const propsCorrecao = {
@@ -85,21 +88,28 @@ export default function ConclusaoMissao({
         });
 
     useEffect(() => {
+        if (conclusaoExecutada.current) return;
+
+        conclusaoExecutada.current = true;
+
         async function corrigir() {
             try {
-                const retorno = await concluirMissao(propsCorrecao)
+                const retorno = await concluirMissao(propsCorrecao);
                 if (!retorno) return;
 
-                setRetornoConclusao(retorno)
+                setRetornoConclusao(retorno);
+
+                atualizarProgresso();
+                atualizarDistintivos();
                 
-                atualizarProgresso()
-                atualizarDistintivos()
+                setTentativas(retorno.tentativas)
             } catch (erro) {
                 console.error(mensagensErroConsole.calcularRespostas, erro);
-                toaster.create(mensagensToastErro.falhaAoEnviarRespostas)
+                toaster.create(mensagensToastErro.falhaAoEnviarRespostas);
             }
         }
-        corrigir()
+
+        corrigir();
     }, []);
 
     function reiniciarMissao() {
@@ -113,7 +123,7 @@ export default function ConclusaoMissao({
             ]));
         setPontuacao(0);
 
-        if(tipoAtividade == TipoAtividade.QUIZ){
+        if (tipoAtividade == TipoAtividade.QUIZ) {
             setIdQuestao!(0)
         }
         setEtapa("home")
@@ -126,7 +136,7 @@ export default function ConclusaoMissao({
     function ExibirRespostas({
         grupoQuestoes,
         status
-    } : ExibirRespostasProp) {
+    }: ExibirRespostasProp) {
         if (!Array.isArray(grupoQuestoes)) return
         if (grupoQuestoes.length === 0) return
 
@@ -134,36 +144,37 @@ export default function ConclusaoMissao({
             .map((respostaQuestao, i) => {
                 const index = questoes.findIndex(q => q.id === respostaQuestao.questao.id)
                 return (
-                <HStack
-                    key={index}
-                    justify="space-between"
-                    rounded="md"
-                    gap="1"
-                    cursor="pointer"
-                    color={
-                        status === "correta"
-                            ? "brand.secondary"
-                            : status === "incompleta"
-                                ? "orange.500"
-                                : "brand.secondaryRed"
-                    }
+                    <HStack
+                        key={index}
+                        justify="space-between"
+                        rounded="md"
+                        gap="1"
+                        cursor="pointer"
+                        color={
+                            status === "correta"
+                                ? "brand.secondary"
+                                : status === "incompleta"
+                                    ? "orange.500"
+                                    : "brand.secondaryRed"
+                        }
 
-                    onClick={() => {
-                        setQuestaoSelecionada({
-                            questao: respostaQuestao.questao,
-                            index: index,
-                        });
-                        setOpen(tentativas === 3 ||  valorMissao === retornoConclusao.pontos);
-                    }}
-                >
-                    {status === "correta" && <FaCheck size={16} />}
-                    {status === "incompleta" && <FaExclamationTriangle size={16} />}
-                    {status === "errada" && <FaTimes size={16} />}
-                    <Text textStyle="bodyText">
-                        Questão {index + 1}
-                    </Text>
-                </HStack>
-                )});
+                        onClick={() => {
+                            setQuestaoSelecionada({
+                                questao: respostaQuestao.questao,
+                                index: index,
+                            });
+                            setOpen(tentativas === 3 || valorMissao === retornoConclusao.pontos);
+                        }}
+                    >
+                        {status === "correta" && <FaCheck size={16} />}
+                        {status === "incompleta" && <FaExclamationTriangle size={16} />}
+                        {status === "errada" && <FaTimes size={16} />}
+                        <Text textStyle="bodyText">
+                            Questão {index + 1}
+                        </Text>
+                    </HStack>
+                )
+            });
     }
 
     if (!retornoConclusao) return

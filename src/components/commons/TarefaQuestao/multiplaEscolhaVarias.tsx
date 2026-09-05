@@ -1,10 +1,11 @@
-import { Checkbox, CheckboxCard, CheckboxGroup, Fieldset, Grid,Stack, Text } from "@chakra-ui/react"
+import { Checkbox, CheckboxCard, CheckboxGroup, Fieldset, Grid, Stack, Text } from "@chakra-ui/react"
 import CaixaAlternativa from "./caixaAlternativa"
 import { estilosAlternativa } from "@/config/alternativasEstiloConfig"
 
-import type {QuestaoProp } from "@/types_consts/questao"
+import type { QuestaoProp } from "@/types_consts/questao"
 import { shuffleArray } from "@/utils/shuffle"
 import { useMemo } from "react"
+import { AlternativaMarcadaMultiplaEscolhaDTO } from "@/types_consts/alternativa"
 
 type QuestaoProps = {
   questao: QuestaoProp;
@@ -22,14 +23,14 @@ export function MultiplaEscolhaVarias({ questao, value, onChange }: QuestaoProps
     <CheckboxGroup
       value={value}
       onValueChange={(values) => onChange(values)}
->
-  <Grid
-    templateColumns={{
-      base: "1fr",
-      md: "repeat(2, 1fr)",
-    }}
-    gap="4"
-  >
+    >
+      <Grid
+        templateColumns={{
+          base: "1fr",
+          md: "repeat(2, 1fr)",
+        }}
+        gap="4"
+      >
         {alternativas.map(
           (alternativa, index) => {
             const estilo = estilosAlternativa[index % estilosAlternativa.length]
@@ -50,7 +51,7 @@ export function MultiplaEscolhaVarias({ questao, value, onChange }: QuestaoProps
             )
           })
         }
-    </Grid>
+      </Grid>
     </CheckboxGroup>
   )
 }
@@ -58,19 +59,20 @@ export function MultiplaEscolhaVarias({ questao, value, onChange }: QuestaoProps
 type QuestaoCheckboxProps = {
   questao: QuestaoProp;
   index: number;
-  //value: string[];
-  //onChange: (value: string[]) => void;
+  value: AlternativaMarcadaMultiplaEscolhaDTO[];
+  onChange: (idAlternativas: string[], idQuestao: number) => void;
 };
 export function QuestaoCheckbox({
   questao,
   index,
-  //value,
-  //onChange,
+  value,
+  onChange,
 }: QuestaoCheckboxProps) {
   const alternativas = useMemo(
     () => shuffleArray([...questao.alternativas]),
     [questao.id]
   );
+  const alternativasMarcadas = value.map(v => String(v.idAlternativa)) 
 
   return (
     <Fieldset.Root>
@@ -84,8 +86,12 @@ export function QuestaoCheckbox({
         {questao.enunciado}
       </Text>
       <CheckboxGroup
-        //value={value}
-        //onValueChange={(values) => onChange(values)}
+        value={alternativasMarcadas}
+        onValueChange={(values) => {
+          const valuesNovo = values.filter(v => v !== "-1")
+          onChange(valuesNovo, index)
+
+        }}
       >
         <Fieldset.Content
           mt="-2"
@@ -95,7 +101,7 @@ export function QuestaoCheckbox({
             {alternativas.map((alternativa) => (
               <Checkbox.Root
                 key={alternativa.texto}
-                value={alternativa.texto}
+                value={String(alternativa.id)}
                 size="sm"
               >
                 <Checkbox.HiddenInput />
