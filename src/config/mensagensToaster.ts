@@ -134,6 +134,15 @@ export const mensagensToastErro = {
     // AUSÊNCIA DE CONTEÚDO
     // =========================
 
+    permissaoNegada: {
+        title: "Acesso negado",
+        description:
+            "Você não possui permissão para acessar a essa página.",
+        type: "error",
+        closable: true,
+        duration: 7000,
+    },
+    
     nenhumaMissao: {
         title: "Nenhuma missão encontrada",
         description:

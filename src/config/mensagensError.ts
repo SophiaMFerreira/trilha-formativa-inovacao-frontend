@@ -95,8 +95,11 @@ export const mensagensErroConsole = {
         "Erro ao calcular respostas do quiz/tarefa. ",
 
     fazerLogin:
-        "Erro ao fazer login.",
+        "Erro ao fazer login. ",
 
     tipoMissaoInvalido:
-        "Tipo de missão invalido",
+        "Tipo de missão invalido. ",
+    
+    permissaoNegada:
+        "Acesso negado a esta página. ",
 } as const;
