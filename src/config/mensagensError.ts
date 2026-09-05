@@ -7,7 +7,7 @@ export const mensagensErroConsole = {
 
     buscarMissoes:
         "Falha ao buscar as missões desta trilha. ",
-        
+
     buscarMissaoAtividade:
         "Falha ao buscar a missão atividade. ",
 
@@ -99,7 +99,19 @@ export const mensagensErroConsole = {
 
     tipoMissaoInvalido:
         "Tipo de missão invalido. ",
-    
+
     permissaoNegada:
         "Acesso negado a esta página. ",
+
+    calcularTempoCodigoRecuperacao:
+        "Erro ao calcular tempo do o código de recuperação. ",
+
+    enviarCodigoRecuperacao:
+        "Erro ao enviar o código de recuperação. ",
+
+    validarCodigoRecuperacao:
+        "Erro ao validar o código de recuperação. ",
+
+    recuperarSenha:
+        "Erro ao recuperar a senha. ",
 } as const;

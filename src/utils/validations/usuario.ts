@@ -1,6 +1,7 @@
 import { OcupacaoDTO } from "@/types_consts/ocupacao";
 import { parseDate } from "@chakra-ui/react";
 import { validarImagem } from "./imagem";
+import { validarSenhas } from "./senha";
 
 type ValidarUsuarioParams = {
     idUsuario: unknown
@@ -94,33 +95,14 @@ export function validarUsuario({
         Number.isInteger(ocupacao) &&
         listaOcupacoes.some(o => o.id === ocupacao)
 
-    // SENHA
-    const senhaValida =
-        typeof senha === "string" &&
-        senha.length >= 8 &&
-        senha.length <= 255 &&
-        /\W/.test(senha) &&
-        /\d/.test(senha) &&
-        /[a-zA-Z]/.test(senha);
-
-    // CONFIRMAR SENHA
-    const confirmarSenhaValida =
-        senha === confirmarSenha
-        && senhaValida
-
-    // CONFIRMAR SENHA ANTIGA
-    const senhaAntigaValida =
-        !edicao ||
-        (edicao &&
-            senha === undefined &&
-            confirmarSenha === undefined
-        ) || (
-            typeof confirmarSenhaAtual === "string" &&
-            confirmarSenhaAtual.length >= 8 &&
-            confirmarSenhaAtual.length <= 255
-        );
-
-    // CONFIRMAR SENHA ANTIGA
+    // SENHAS
+    const resultadoValidacaoSenhas = validarSenhas(senha, confirmarSenha, edicao, confirmarSenhaAtual)
+    
+    const senhaValida = resultadoValidacaoSenhas.senha
+    const confirmarSenhaValida = resultadoValidacaoSenhas.confirmarSenha
+    const senhaAntigaValida = resultadoValidacaoSenhas.confirmarSenhaAtual
+     
+    // CONFIRMAR IMAGEM
     const imagemValida = validarImagem(imagemArquivo)
 
     // RESULTADO FINAL

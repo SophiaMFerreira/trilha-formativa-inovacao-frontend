@@ -256,7 +256,23 @@ export const mensagensToastErro = {
         duration: 7000,
     },
 
+    enviarCodigoRecSenha: {
+        title: "Falha ao  enviar código de verificação",
+        description:
+            "Não foi possível fazer enviar o código de verificação. Por favor, tente novamente mais tarde.",
+        type: "warning",
+        closable: true,
+        duration: 7000,
+    },
 
+    enviarRecuperacaoSenha: {
+        title: "Falha ao  enviar nova senha",
+        description:
+            "Não foi possível fazer enviar a nova senha. Por favor, tente novamente mais tarde.",
+        type: "warning",
+        closable: true,
+        duration: 7000,
+    },
 
     // =========================
     // EDIÇÃO
@@ -413,6 +429,23 @@ export const mensagensToastErro = {
         closable: true,
         duration: 7000,
     },
+
+    validarCodigoRecSenhaTempo: {
+        title: "Código de verificação expirado",
+        description:
+            "O código de verificação expirou. Solicite um novo código para continuar a recuperação da sua senha.",
+        type: "warning",
+        closable: true,
+        duration: 7000,
+    },
+    validarCodigoRecSenha: {
+        title: "Código de verificação não preenchido",
+        description:
+            "O código de verificação precisa ser preenchido antes de prosseguir.",
+        type: "warning",
+        closable: true,
+        duration: 7000,
+    },
     
 } as const;
 
@@ -452,6 +485,15 @@ export const mensagensToastSucesso = {
         title: "Questão salva com sucesso!",
         description:
             "A questão foi cadastrada com sucesso.",
+        type: "success",
+        closable: true,
+        duration: 7000,
+    },
+
+    recuperarSenha: {
+        title: "Senha recuperada com sucesso!",
+        description:
+            "Sua senha foi atualizada com sucesso. Boas-vindas novamente!",
         type: "success",
         closable: true,
         duration: 7000,
