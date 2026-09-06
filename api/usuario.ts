@@ -8,7 +8,8 @@ export const UsuarioAPI = {
     },
 
     buscarImagemPerfil(idUsauario: number, usuario: string, imagemPerfil: string) {
-        return api.get(`image/upload/perfil/${idUsauario}_${usuario}/${imagemPerfil}.png`);
+        //return api.get(`image/upload/perfil/${String(idUsauario)}_${usuario}/${imagemPerfil}`);
+        return `http://localhost:8000/image/upload/perfil/${String(idUsauario)}_${usuario}/${imagemPerfil}`
     },
 
     salvarImagemPerfil(idUsauario: number, imagemPerfil: FormData) {

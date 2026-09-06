@@ -39,7 +39,7 @@ export type Usuario = {
     dataNascimento: string
     possuiConhecimento: boolean
     primeiroAcesso: boolean
-    //senha?: string
+    fotoPerfil?: string
     ocupacao: OcupacaoDTO
 }
 

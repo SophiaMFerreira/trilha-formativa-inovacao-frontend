@@ -25,6 +25,9 @@ export const mensagensErroConsole = {
 
     buscarAventureiro:
         "Falha ao buscar o aventureiro. ",
+    
+    buscarFotoPerfil:
+        "Falha ao buscar o foto de perfil. ",
 
     buscarProgressos:
         "Falha ao buscar os progressos. ",

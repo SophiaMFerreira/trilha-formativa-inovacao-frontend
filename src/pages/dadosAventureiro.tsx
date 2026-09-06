@@ -1,6 +1,6 @@
-import { Navigate, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-import { Avatar, Box, Button, Card, Heading, Spinner, Stack, Text } from "@chakra-ui/react"
+import { Avatar, Box, Button, Card, Heading, Stack, Text } from "@chakra-ui/react"
 import { FaAward } from "react-icons/fa";
 import { useGame } from "@/hooks/useGame";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,14 +13,11 @@ import { mensagensErroConsole } from "@/config/mensagensError";
 
 export default function DadosAventureiro() {
     const navigate = useNavigate();
-    const {user} = useAuth()
+    const { user } = useAuth()
     const { pontuacao, distintivos } = useGame()
 
-    const [nomeUsuario, setNomeUsuario] = useState("")
-    const [nomeAventureiro, setNomeAventureiro] = useState("")
-    const [correioEletronico, setCorreioEletronico] = useState("")
-    const [ocupacao, setOcupacao] = useState("")
-    const [imagem, setImagem] = useState("");
+    const [usuario, setUsuario] = useState<Usuario>()
+    const [imagem, setImagem] = useState<string | undefined>();
 
     useEffect(() => {
         if (!user) return;
@@ -32,18 +29,41 @@ export default function DadosAventureiro() {
 
                 if (!usuario) return;
 
-                setNomeUsuario(usuario.nomeUsuario)
-                setNomeAventureiro(usuario.nomeAventureiro)
-                setCorreioEletronico(usuario.correioEletronico)
-                setOcupacao(usuario.ocupacao.titulo)
+                setUsuario(usuario)
             } catch (erro) {
                 toaster.create(mensagensToastErro.carregarUsuario)
                 console.error(mensagensErroConsole.buscarAventureiro, erro);
             }
         }
-
         carregarDados();
-    }, [user]);
+    }, [user?.id]);
+
+    useEffect(() => {
+        async function carregarImagem() {
+            try {
+                if (!user) return;
+                if (!usuario?.fotoPerfil) return;
+
+                const nomeImagem = usuario.fotoPerfil.split("/").pop();
+                if (!nomeImagem) return;
+
+                const fotoPerfilResponse = await UsuarioAPI.buscarImagemPerfil(usuario.id, usuario.nomeAventureiro, nomeImagem);
+                setImagem(fotoPerfilResponse);
+
+                /*if (fotoPerfilResponse.data) {
+                    const url = URL.createObjectURL(fotoPerfilResponse.data);
+                    setImagem(url);
+                }*/
+            } catch (erro) {
+                toaster.create(mensagensToastErro.carregarFotoPerfil)
+                console.error(mensagensErroConsole.buscarFotoPerfil, erro);
+            }
+        }
+        carregarImagem();
+    }, [usuario?.id, usuario?.fotoPerfil]);
+
+    if(!usuario) return
+
     return (
         <Box
             h="calc(100vh - 88px)"
@@ -85,7 +105,7 @@ export default function DadosAventureiro() {
                                 <Avatar.Fallback
                                     color="brand.primaryDark"
                                 />
-                                <Avatar.Image src={imagem} />
+                                {imagem && <Avatar.Image src={imagem} />}
                             </Avatar.Root>
                             <Stack gap="2">
                                 <Heading
@@ -94,7 +114,7 @@ export default function DadosAventureiro() {
                                     color="brand.primaryDark"
                                     textAlign="left"
                                 >
-                                    {nomeUsuario}
+                                    {usuario.nomeUsuario}
                                 </Heading>
                                 <Heading
                                     as="h2"
@@ -102,7 +122,7 @@ export default function DadosAventureiro() {
                                     color="brand.neutral"
                                     textAlign="left"
                                 >
-                                    {nomeAventureiro}
+                                    {usuario.nomeAventureiro}
                                 </Heading>
                             </Stack>
                         </Stack>
@@ -157,7 +177,7 @@ export default function DadosAventureiro() {
                                     color="brand.neutral"
                                     textAlign="left"
                                 >
-                                    {correioEletronico}
+                                    {usuario.correioEletronico}
                                 </Text>
                             </Stack>
                             <Stack gap="0.5" justify="left" flex={1}>
@@ -174,7 +194,7 @@ export default function DadosAventureiro() {
                                     color="brand.neutral"
                                     textAlign="left"
                                 >
-                                    {ocupacao}
+                                    {usuario.ocupacao.titulo}
                                 </Text>
                             </Stack>
                         </Stack>

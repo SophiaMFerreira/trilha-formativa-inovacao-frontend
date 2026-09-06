@@ -8,6 +8,12 @@ import { FaAward } from "react-icons/fa";
 
 import { useGame } from "@/hooks/useGame";
 import MapaPrincipal from "@/components/commons/mapaPrincipal";
+import { Usuario } from "@/types_consts/usuario";
+import { useEffect, useState } from "react";
+import { UsuarioAPI } from "../../api/usuario";
+import { toaster } from "@/components/commons/toaster";
+import { mensagensToastErro } from "@/config/mensagensToaster";
+import { mensagensErroConsole } from "@/config/mensagensError";
 
 
 export default function TelaPrincipal() {
@@ -15,11 +21,57 @@ export default function TelaPrincipal() {
     const { user } = useAuth()
     const { progressoTotal, progressoPontosTematicas, distintivos } = useGame()
 
+    const [usuario, setUsuario] = useState<Usuario>()
+    const [imagem, setImagem] = useState<string | undefined>();
+
+
+    useEffect(() => {
+        if (!user) return;
+
+        async function carregarDados() {
+            try {
+                const usuarioResponse = await UsuarioAPI.buscarPorId(Number(user?.id))
+                const usuario = usuarioResponse.data as Usuario
+
+                if (!usuario) return;
+
+                setUsuario(usuario)
+            } catch (erro) {
+                toaster.create(mensagensToastErro.carregarUsuario)
+                console.error(mensagensErroConsole.buscarAventureiro, erro);
+            }
+        }
+        carregarDados();
+    }, [user?.id]);
+
+    useEffect(() => {
+        async function carregarImagem() {
+            try {
+                if (!user) return;
+                if (!usuario?.fotoPerfil) return;
+
+                const nomeImagem = usuario.fotoPerfil.split("/").pop();
+                if (!nomeImagem) return;
+
+                const fotoPerfilResponse = await UsuarioAPI.buscarImagemPerfil(usuario.id, usuario.nomeAventureiro, nomeImagem);
+                setImagem(fotoPerfilResponse);
+
+                /*if (fotoPerfilResponse.data) {
+                    const url = URL.createObjectURL(fotoPerfilResponse.data);
+                    setImagem(url);
+                }*/
+            } catch (erro) {
+                toaster.create(mensagensToastErro.carregarFotoPerfil)
+                console.error(mensagensErroConsole.buscarFotoPerfil, erro);
+            }
+        }
+        carregarImagem();
+    }, [usuario?.id, usuario?.fotoPerfil]);
+
     if (!user) {
         return <Navigate to="/login" replace />
     }
-
-    // dados de usuario para coletar a imagem
+    if (!usuario) return
 
     return (
         <SimpleGrid
@@ -49,7 +101,7 @@ export default function TelaPrincipal() {
                         onClick={() => navigate(`/dadosAventureiro`)}
                     >
                         <Avatar.Fallback color="brand.primaryDark" />
-                        {/**<Avatar.Image src={imagem} />*/}
+                        {imagem && <Avatar.Image src={imagem} />}
                     </Avatar.Root>
                     <HStack gap={2}>
                         {distintivos.map((distintivo) => (

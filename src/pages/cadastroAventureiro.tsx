@@ -68,7 +68,8 @@ export function CadastroAventureiro() {
     const [confirmarSenha, setConfirmarSenha] = useState("")
     const [confirmarSenhaAtual, setConfirmarSenhaAtual] = useState("")
 
-    const [imagem, setImagem] = useState("");
+    const [fotoPerfilNome, setFotoPerfilNome] = useState<string | undefined>();
+    const [imagem, setImagem] = useState<string | undefined>();
     const [arquivoImagem, setArquivoImagem] = useState<File | null>(null);
 
     const [aceiteTermos, setAceiteTermos] = useState<boolean | null>(null)
@@ -116,6 +117,7 @@ export function CadastroAventureiro() {
                 setCorreioEletronico(usuario.correioEletronico)
                 setDataNascimento([parseDate(usuario.dataNascimento)])
                 setPossuiConhecimento(usuario.possuiConhecimento)
+                setFotoPerfilNome(usuario.fotoPerfil)
 
                 if ("ocupacao" in usuario) {
                     setIdOcupacao(Number(usuario.ocupacao.id))
@@ -130,7 +132,31 @@ export function CadastroAventureiro() {
         carregarDados()
         carregarDadosUsuario()
 
-    }, [user]);
+    }, [user?.id]);
+
+    useEffect(() => {
+        async function carregarImagem() {
+            try {
+                if (!user) return;
+                if (!fotoPerfilNome) return;
+
+                const nomeImagem = fotoPerfilNome.split("/").pop();
+                if (!nomeImagem) return;
+
+                const fotoPerfilResponse = await UsuarioAPI.buscarImagemPerfil(idUsuario, nomeAventureiro, nomeImagem);
+                setImagem(fotoPerfilResponse);
+
+                /*if (fotoPerfilResponse.data) {
+                    const url = URL.createObjectURL(fotoPerfilResponse.data);
+                    setImagem(url);
+                }*/
+            } catch (erro) {
+                toaster.create(mensagensToastErro.carregarFotoPerfil)
+                console.error(mensagensErroConsole.buscarFotoPerfil, erro);
+            }
+        }
+        carregarImagem();
+    }, [idUsuario, fotoPerfilNome]);
 
     const [validarNomeUsuario, setValidarNomeUsuario] = useState(false)
     const [validarNomeAventureiro, setValidarNomeAventureiro] = useState(false)

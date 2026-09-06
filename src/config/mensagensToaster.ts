@@ -151,6 +151,15 @@ export const mensagensToastErro = {
         duration: 7000,
     },
 
+    carregarFotoPerfil: {
+        title: "Falha ao carregar as foto de perfil",
+        description:
+            "Não foi possível carregar sua foto de perfil. Tente novamente mais tarde.",
+        type: "warning",
+        closable: true,
+        duration: 7000,
+    },
+
 
     // =========================
     // AUSÊNCIA DE CONTEÚDO
