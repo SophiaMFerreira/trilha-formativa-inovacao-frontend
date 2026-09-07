@@ -23,6 +23,7 @@ import BancoMissoesAtividade from "@/pages/bancoMissoesAtividade"
 import CadastroMissoesAtividade from "@/pages/cadastroMissoesAtividade"
 import ErrorPage from "@/pages/errorPage"
 import RecuperarSenha from "@/pages/recuperarSenha"
+import SolicitarRecuperarSenha from "@/pages/solicitarRecuperarSenha"
 
 export const router = createBrowserRouter([
   {
@@ -159,6 +160,9 @@ export const router = createBrowserRouter([
         element: <CadastroAventureiro />,
       }, {
         path: "recuperarSenha",
+        element: <SolicitarRecuperarSenha />
+      }, {
+        path: "recuperarSenha/enviarNovaSenha",
         element: <RecuperarSenha />
       },
     ],

@@ -109,8 +109,8 @@ export const mensagensErroConsole = {
     calcularTempoCodigoRecuperacao:
         "Erro ao calcular tempo do o código de recuperação. ",
 
-    enviarCodigoRecuperacao:
-        "Erro ao enviar o código de recuperação. ",
+    enviarEmailRecuperacao:
+        "Erro ao enviar o email para recuperação de senha. ",
 
     validarCodigoRecuperacao:
         "Erro ao validar o código de recuperação. ",

@@ -287,11 +287,11 @@ export const mensagensToastErro = {
         duration: 7000,
     },
 
-    enviarCodigoRecSenha: {
-        title: "Falha ao  enviar código de verificação",
+    enviarEmailRecSenha: {
+        title: "Falha ao  enviar email",
         description:
-            "Não foi possível fazer enviar o código de verificação. Por favor, tente novamente mais tarde.",
-        type: "warning",
+            "Não foi possível enviar o email para recuperar o acesso. Por favor, tente novamente mais tarde.",
+        type: "error",
         closable: true,
         duration: 7000,
     },
@@ -300,7 +300,7 @@ export const mensagensToastErro = {
         title: "Falha ao  enviar nova senha",
         description:
             "Não foi possível fazer enviar a nova senha. Por favor, tente novamente mais tarde.",
-        type: "warning",
+        type: "error",
         closable: true,
         duration: 7000,
     },
@@ -530,6 +530,14 @@ export const mensagensToastSucesso = {
         duration: 7000,
     },
 
+    emailRecuperarSenha: {
+        title: "Email enviado com sucesso!",
+        description:
+            "Enviamos um link para o seu e-mail. Acesse-o para continuar a recuperação da sua senha.",
+        type: "success",
+        closable: true,
+        duration: 7000,
+    },
 
     // =========================
     // EDIÇÃO
