@@ -6,7 +6,6 @@ export type AvatarUsuarioProps = {
 };
 
 export type UsuarioDTO = SenhasDTO & {
-    id?: number
     nomeUsuario: string
     nomeAventureiro: string
     correioEletronico: string
@@ -27,8 +26,8 @@ type SenhaDTO = {
 
 type SenhaAtualizarDTO = {
     novaSenha: string
-    senhaAtual: string
     novaSenhaRepeticao: string,
+    senhaAtual: string
 }
 
 export type Usuario = {

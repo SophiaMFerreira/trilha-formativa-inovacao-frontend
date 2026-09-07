@@ -63,7 +63,7 @@ export function CadastroAventureiro() {
     const [correioEletronico, setCorreioEletronico] = useState("")
     const [dataNascimento, setDataNascimento] = useState<DateValue[]>()
     const [possuiConhecimento, setPossuiConhecimento] = useState(false)
-    const [idOcupacao, setIdOcupacao] = useState(-1)
+    const [idOcupacao, setIdOcupacao] = useState<number>(-1)
     const [senha, setSenha] = useState("")
     const [confirmarSenha, setConfirmarSenha] = useState("")
     const [confirmarSenhaAtual, setConfirmarSenhaAtual] = useState("")
@@ -117,11 +117,20 @@ export function CadastroAventureiro() {
                 setCorreioEletronico(usuario.correioEletronico)
                 setDataNascimento([parseDate(usuario.dataNascimento)])
                 setPossuiConhecimento(usuario.possuiConhecimento)
-                setFotoPerfilNome(usuario.fotoPerfil)
+
+                const fotoPerfil = usuario.fotoPerfil;
+
+                setFotoPerfilNome(fotoPerfil);
+
+                if (fotoPerfil) {
+                    localStorage.setItem("fotoPerfil", fotoPerfil);
+                }
 
                 if ("ocupacao" in usuario) {
-                    setIdOcupacao(Number(usuario.ocupacao.id))
+                    toaster.create(mensagensToastErro.carregarUsuario)
+                    console.error(mensagensErroConsole.buscarOcupacoes);
                 }
+                setIdOcupacao(Number(usuario.ocupacao.id))
 
             } catch (erro) {
                 toaster.create(mensagensToastErro.carregarUsuario)
@@ -138,9 +147,14 @@ export function CadastroAventureiro() {
         async function carregarImagem() {
             try {
                 if (!user) return;
-                if (!fotoPerfilNome) return;
+                const fotoPerfilStorage = localStorage.getItem("fotoPerfil");
+                
+                if(!fotoPerfilStorage) return
+                if(!(fotoPerfilStorage.trim())) return
 
-                const nomeImagem = fotoPerfilNome.split("/").pop();
+                setFotoPerfilNome(fotoPerfilStorage)
+
+                const nomeImagem = fotoPerfilStorage.split("/").pop();
                 if (!nomeImagem) return;
 
                 const fotoPerfilResponse = await UsuarioAPI.buscarImagemPerfil(idUsuario, nomeAventureiro, nomeImagem);
@@ -186,7 +200,7 @@ export function CadastroAventureiro() {
             edicao: idUsuario !== -1 ? true : false
         })
 
-        if (resultado.valido) {
+        if (!resultado.valido) {
             setValidarNomeUsuario(resultado.nomeUsuario);
             setValidarNomeAventureiro(resultado.nomeAventureiro);
             setValidarCorreioEletronico(resultado.correioEletronico);
@@ -224,7 +238,7 @@ export function CadastroAventureiro() {
             confirmarSenha,
             confirmarSenhaAtual,
             imagemArquivo: arquivoImagem,
-            edicao: idUsuario ? true : false
+            edicao: idUsuario !== -1 ? true : false
         })
 
         if (!resultado.valido) {
@@ -238,7 +252,7 @@ export function CadastroAventureiro() {
             setValidarConfirmarSenha(resultado.confirmarSenha);
             setValidarSenhaAtual(resultado.confirmarSenhaAtual);
 
-            if (resultado.imagemArquivo) {
+            if (!resultado.imagemArquivo) {
                 toaster.create(mensagensToastErro.validarImagemArquivo)
             }
 
@@ -247,35 +261,55 @@ export function CadastroAventureiro() {
             return;
         }
 
-        const usuarioPayload = {
-            nomeUsuario: nomeUsuario,
-            nomeAventureiro: nomeAventureiro,
-            correioEletronico: correioEletronico,
-            ...(dataNascimento && { dataNascimento: `${dataNascimento[0].year}-${String(dataNascimento[0].month).padStart(2, "0")}-${String(dataNascimento[0].day).padStart(2, "0")}` }),
-            possuiConhecimento: possuiConhecimento,
-            primeiroAcesso: !editando,
-            senha: senha,
-            senhaRepeticao: confirmarSenha,
-            idOcupacao: idOcupacao,
-            ...(idUsuario !== -1 && { id: idUsuario }),
-        } as UsuarioDTO
-
         try {
-            if (user) {
-                //confirmar senha
+            if (user?.id) {
+                const usuarioPayload = {
+                    nomeUsuario: nomeUsuario,
+                    nomeAventureiro: nomeAventureiro,
+                    correioEletronico: correioEletronico,
+                    ...(dataNascimento && { dataNascimento: `${dataNascimento[0].year}-${String(dataNascimento[0].month).padStart(2, "0")}-${String(dataNascimento[0].day).padStart(2, "0")}` }),
+                    possuiConhecimento: possuiConhecimento,
+                    primeiroAcesso: !editando,
+                    novaSenha: senha ? senha : confirmarSenhaAtual,
+                    novaSenhaRepeticao: senha ? confirmarSenha : confirmarSenhaAtual,
+                    senhaAtual: confirmarSenhaAtual,
+                    idOcupacao: idOcupacao,
+                } as UsuarioDTO
+
                 const responseEdicao = await UsuarioAPI.atualizar(idUsuario, usuarioPayload);
                 if (!responseEdicao.data) {
                     toaster.create(mensagensToastErro.editarAventureiro)
                     return
                 }
 
-                const user: User = {
-                    id: responseEdicao.data.id,
+                const novoUser: User = {
+                    id: idUsuario,
                     nomeAventureiro: nomeAventureiro,
                     role: "usuario",
                 }
-                updateUser(user)
+
+                if (arquivoImagem) {
+                    const formData = new FormData();
+                    formData.append("foto", arquivoImagem);
+
+                    await UsuarioAPI.salvarImagemPerfil(idUsuario, formData);
+                }
+
+                updateUser(novoUser)
             } else {
+                const usuarioPayload = {
+                    nomeUsuario: nomeUsuario,
+                    nomeAventureiro: nomeAventureiro,
+                    correioEletronico: correioEletronico,
+                    ...(dataNascimento && { dataNascimento: `${dataNascimento[0].year}-${String(dataNascimento[0].month).padStart(2, "0")}-${String(dataNascimento[0].day).padStart(2, "0")}` }),
+                    possuiConhecimento: possuiConhecimento,
+                    primeiroAcesso: !editando,
+                    senha: senha,
+                    senhaRepeticao: confirmarSenha,
+                    idOcupacao: idOcupacao,
+                    ...(idUsuario !== -1 && { id: idUsuario }),
+                } as UsuarioDTO
+
                 const responseCadastro = await UsuarioAPI.salvar(usuarioPayload);
                 if (!responseCadastro.data) {
                     toaster.create(mensagensToastErro.salvarAventureiro)
@@ -306,7 +340,6 @@ export function CadastroAventureiro() {
     const onExclude = () => {
         try {
             if (user) {
-                //confirmar senha
                 UsuarioAPI.deletar(idUsuario)
                 logout()
                 navigate("/");
@@ -613,7 +646,7 @@ export function CadastroAventureiro() {
                                                         color: "brand.primaryDark"
                                                     }}
 
-                                                    item={ocupacao}
+                                                    item={ocupacao.value}
                                                     key={ocupacao.value}
                                                 >
                                                     {ocupacao.label}
