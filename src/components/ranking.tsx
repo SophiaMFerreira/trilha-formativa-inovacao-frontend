@@ -12,12 +12,14 @@ import { Missao, ProgressoMissao, ProgressoMissaoAtividade } from "@/types_const
 import { mensagensErroConsole } from "@/config/mensagensError";
 import { toaster } from "./commons/toaster";
 import { mensagensToastErro } from "@/config/mensagensToaster";
+import { UsuarioAPI } from "../../api/usuario";
+import { Usuario } from "@/types_consts/usuario";
 
 type RankingUsuario = {
     indice: number;
     id: number;
     nomeAventureiro: string;
-    //imagem: string;
+    imagem: string | undefined;
     pontuacao: number;
 }
 
@@ -31,9 +33,53 @@ export function Ranking() {
 
     const [open, setOpen] = useState(true)
 
+    const [usuario, setUsuario] = useState<Usuario>()
+    const [imagem, setImagem] = useState<string | undefined>();
     const [progressosMissoes, setProgressosMissoes] = useState<RankingUsuario[]>([]);
     const { rankingExibido, meuRanking } = gerarRankingResumido(progressosMissoes, user.nomeAventureiro);
 
+    useEffect(() => {
+        if (!user) return;
+
+        async function carregarDados() {
+            try {
+                const usuarioResponse = await UsuarioAPI.buscarPorId(Number(user?.id))
+                const usuario = usuarioResponse.data as Usuario
+
+                if (!usuario) return;
+
+                setUsuario(usuario)
+            } catch (erro) {
+                toaster.create(mensagensToastErro.carregarUsuario)
+                console.error(mensagensErroConsole.buscarAventureiro, erro);
+            }
+        }
+        carregarDados();
+    }, [user?.id]);
+
+    useEffect(() => {
+        async function carregarImagem() {
+            try {
+                if (!user) return;
+                if (!usuario?.fotoPerfil) return;
+
+                const nomeImagem = usuario.fotoPerfil.split("/").pop();
+                if (!nomeImagem) return;
+
+                const fotoPerfilResponse = await UsuarioAPI.buscarImagemPerfil(usuario.id, usuario.nomeAventureiro, nomeImagem);
+                setImagem(fotoPerfilResponse);
+
+                /*if (fotoPerfilResponse.data) {
+                    const url = URL.createObjectURL(fotoPerfilResponse.data);
+                    setImagem(url);
+                }*/
+            } catch (erro) {
+                toaster.create(mensagensToastErro.carregarFotoPerfil)
+                console.error(mensagensErroConsole.buscarFotoPerfil, erro);
+            }
+        }
+        carregarImagem();
+    }, [usuario?.id, usuario?.fotoPerfil]);
     useEffect(() => {
         async function carregarDados() {
             try {
@@ -47,12 +93,20 @@ export function Ranking() {
                 for (const progresso of progressos) {
                     const id = progresso.usuario.id;
 
+                    if (!progresso.usuario?.fotoPerfil) continue
+
+                    const nomeImagem = progresso.usuario.fotoPerfil.split("/").pop();
+                    if (!nomeImagem) continue;
+
+                    const fotoPerfilResponse = await UsuarioAPI.buscarImagemPerfil(
+                        progresso.usuario.id, progresso.usuario.nomeAventureiro, nomeImagem);
+
                     if (!rankingMap.has(id)) {
                         const usuario = {
                             indice: 0,
                             id,
                             nomeAventureiro: progresso.usuario.nomeAventureiro,
-                            //imagem: progresso.imagem
+                            imagem: fotoPerfilResponse,
                             pontuacao: 0,
                         };
 
@@ -82,6 +136,7 @@ export function Ranking() {
                     }));
 
                 setProgressosMissoes(rankingArray)
+
             } catch (erro) {
                 console.error(mensagensErroConsole.buscarProgressos, erro);
                 toaster.create(mensagensToastErro.falhaAoCarregarRanking)
@@ -137,7 +192,7 @@ export function Ranking() {
                                 posicao={u.indice}
                                 nomeAventureiro={u.nomeAventureiro}
                                 pontuacao={u.pontuacao}
-                                //imagem={u.imagem}
+                                imagem={u.imagem}
                                 usuario={u.id === user.id}
                             />
                         ))}
@@ -149,7 +204,7 @@ export function Ranking() {
                     posicao={meuRanking}
                     nomeAventureiro={user.nomeAventureiro}
                     pontuacao={pontuacao}
-                    //imagem={progressoMissoUsuario.imagem}
+                    imagem={imagem}
                     usuario={true}
                 />
             }
