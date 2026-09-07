@@ -54,7 +54,7 @@ export function GameProvider({
         }));
 
         setDistintivos(distintivos)
-    }, [user]);
+    }, [user?.id]);
 
     const [tematicas, setTematicas] = useState<TematicaDTO[]>([]);
     const carregarTematicas = useCallback(async () => {
@@ -68,10 +68,9 @@ export function GameProvider({
     }, [tematicas.length]);
 
     const atualizarProgresso = useCallback(async () => {
-        if (!user) return;
+        if (!user?.id) return;
 
         const response = await ProgressoMissaoAPI.listarPorUsuario(user.id);
-
         if (!response.data) return;
 
         const progressos = response.data as ProgressoMissao[];
@@ -102,7 +101,8 @@ export function GameProvider({
             tematica.pontuacao +=
                 "pontuacaoObtida" in progresso
                     ? Number(progresso.pontuacaoObtida) || 0
-                    : Number(progresso.missao.pontuacao) || 0;
+                    : (Number(progresso.progresso) || 0) ?
+                        Number(progresso.missao.pontuacao) : 0
         }
 
         for (const [titulo, tematica] of mapa) {
@@ -116,7 +116,7 @@ export function GameProvider({
 
         setProgressoMissoes(progressos);
         setProgressoPontosTematicas(mapa);
-    }, [user, tematicas]);
+    }, [user?.id, tematicas]);
 
     const atualizarPontuacaoProgressoTotal = useCallback(() => {
         if (!progressoMissoes) return;
@@ -211,7 +211,7 @@ export function GameProvider({
             console.error(e)
             //MENSAGEM DE ERRO
         }
-    }, [user]);
+    }, [user?.id]);
 
     useEffect(() => {
         if (!user?.id) return;
@@ -223,7 +223,7 @@ export function GameProvider({
         };
 
         inicializar();
-    }, [user, iniciarProgressos, atualizar, carregarTematicas]);
+    }, [user?.id, iniciarProgressos, atualizar, carregarTematicas]);
 
     useEffect(() => {
         atualizarPontuacaoProgressoTotal();
