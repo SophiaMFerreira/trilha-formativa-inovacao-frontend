@@ -8,6 +8,7 @@ import ConclusaoMissao from "@/components/commons/TarefaQuestao/cardConclusao";
 import { QuestaoRadio, QuestaoSelect } from "@/components/commons/TarefaQuestao/multiplaEscolha";
 import { QuestaoCheckbox } from "@/components/commons/TarefaQuestao/multiplaEscolhaVarias";
 import { QuestaoProp } from "@/types_consts/questao";
+import { DistintivoDTO } from "@/types_consts/distintivo";
 
 import { shuffleArray } from "@/utils/shuffle";
 import { Alternativa, AlternativaMarcadaDTO, AlternativaMultiplaEscolha, SubtipoAlternativa, TipoAlternativa } from "@/types_consts/alternativa";
@@ -52,6 +53,12 @@ export default function Tarefa() {
     const [trilha, setTrilha] = useState("");
 
     const [progressoTarefa, setProgressoTarefa] = useState<ProgressoMissaoAtividade>();
+    /*
+     * Distintivo vinculado à tarefa. A tela nunca repassava essa
+     * informação para a conclusão, então a concessão do distintivo não
+     * tinha como saber qual distintivo conceder.
+     */
+    const [distintivoTarefa, setDistintivoTarefa] = useState<DistintivoDTO>();
     const [respostas, setRespostas] = useState<AlternativaMarcadaDTO[][]>(
         Array.from({ length: 5 }, () => [
             {
@@ -108,6 +115,7 @@ export default function Tarefa() {
                 setTitulo(tarefa.titulo)
                 setValorMissao(tarefa.pontuacao)
                 setTrilha(obterNomeTematica(tarefa.tematica.titulo))
+                setDistintivoTarefa(tarefa.distintivo)
 
                 const questoesEmbaralhadas = shuffleArray(tarefa.questoes);
 
@@ -262,6 +270,7 @@ export default function Tarefa() {
                     valorMissao={valorMissao}
                     idMissao={idTarefa}
                     tipoAtividade={TipoAtividade.TAREFA}
+                    distintivo={distintivoTarefa}
                     questoes={questoes}
                     respostas={respostas}
                     tentativas={tentativas}

@@ -48,17 +48,29 @@ export type AlternativaMultiplaEscolhaDTO = AlternativaBaseDTO & {
     subtipo: string
 }
 
+/**
+ * Alternativa associada em uma CRIAÇÃO.
+ *
+ * Não leva ID: o par ainda não existe no banco e é o backend quem o
+ * cria (AlternativaDAO::salvarEspecializacao) antes de gravar o
+ * vínculo em ALTERNATIVA_ASSOCIACAO.
+ */
 export type AlternativaAssociadaPostDTO = {
-    idAlternativaAssociada: number
     texto: string
-    correta: true
+    tipoAlternativa: TipoAlternativa.ASSOCIACAO
 }
 
+/**
+ * Alternativa associada em uma EDIÇÃO.
+ *
+ * Leva o ID da associada já existente, para que o backend atualize o
+ * par em vez de criar outro. O backend aceita tanto
+ * `idAlternativaAssociada` quanto `id`.
+ */
 export type AlternativaAssociadaPutDTO = {
     idAlternativaAssociada: number
     texto: string
     tipoAlternativa: TipoAlternativa.ASSOCIACAO
-
 }
 
 export type AlternativaAssociacaoDTO = AlternativaBaseDTO & {
@@ -69,6 +81,30 @@ export type AlternativaAssociacaoDTO = AlternativaBaseDTO & {
 export type AlternativaOrdenacaoDTO = AlternativaBaseDTO & {
     tipoAlternativa: TipoAlternativa.ORDENACAO
     numeroSequencia: number
+}
+
+/**
+ * Resposta do POST de alternativa (HTTP 201), com os IDs gerados —
+ * inclusive o da alternativa associada.
+ */
+export type RetornoSalvarAlternativa = {
+    mensagem: string
+    alternativas: AlternativaSalvaDTO[]
+}
+
+export type AlternativaSalvaDTO = {
+    id: number
+    texto: string
+    tipoAlternativa: TipoAlternativa
+    idQuestao?: number
+    numeroSequencia?: number
+    correta?: boolean
+    subtipo?: string
+    alternativaAssociada?: {
+        id: number
+        texto: string
+        tipoAlternativa: TipoAlternativa.ASSOCIACAO
+    }
 }
   
 // Alternativa marcada

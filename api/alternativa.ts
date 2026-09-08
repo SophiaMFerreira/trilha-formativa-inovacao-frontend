@@ -1,5 +1,5 @@
 import { api } from "./axios";
-import { AlternativaDTO } from "../src/types_consts/alternativa";
+import { AlternativaDTO, RetornoSalvarAlternativa } from "../src/types_consts/alternativa";
 
 export const AlternativaAPI = {
 
@@ -15,8 +15,16 @@ export const AlternativaAPI = {
         return api.get(`api/v1/questoes/${idQuestao}/alternativas/${idAlternativa}`);
     },
 
+    /**
+     * Responde 201 com as alternativas criadas em `alternativas`, já
+     * com os IDs gerados — inclusive o da alternativa associada, no
+     * caso do tipo Associação.
+     */
     salvar(idQuestao: number, alternativa: AlternativaDTO) {
-        return api.post(`api/v1/questoes/${idQuestao}/alternativas`, alternativa);
+        return api.post<RetornoSalvarAlternativa>(
+            `api/v1/questoes/${idQuestao}/alternativas`,
+            alternativa
+        );
     },
 
     atualizar(idQuestao: number, idAlternativa: number, alternativa: AlternativaDTO) {
@@ -24,6 +32,7 @@ export const AlternativaAPI = {
     },
 
     deletar(idQuestao: number, idAlternativa: number) {
-        return api.get(`api/v1/questoes/${idQuestao}/alternativas/${idAlternativa}`);
+        /* Estava usando api.get: a exclusão nunca chegava ao backend. */
+        return api.delete(`api/v1/questoes/${idQuestao}/alternativas/${idAlternativa}`);
     },
 }

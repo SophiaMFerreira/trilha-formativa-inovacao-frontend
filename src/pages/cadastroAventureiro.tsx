@@ -10,12 +10,15 @@ import { Usuario, UsuarioDTO } from "@/types_consts/usuario";
 import { OcupacaoDTO } from "@/types_consts/ocupacao";
 import { UsuarioAPI } from "../../api/usuario";
 import { OcupacaoAPI } from "../../api/ocupacao";
+import { urlDaFotoDePerfil } from "@/utils/fotoPerfil";
+import { mensagemDeErroDaApi } from "@/utils/erroApi";
 import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/contexts/AuthContext";
 import { FaRegCalendarAlt } from "react-icons/fa";
 import { validarUsuario } from "@/utils/validations/usuario";
+import { informouNovaSenha } from "@/utils/validations/senha";
 import { toaster } from "@/components/commons/toaster";
-import { mensagensToastErro } from "@/config/mensagensToaster";
+import { mensagensToastErro, mensagensToastSucesso } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
 
 export function CadastroAventureiro() {
@@ -68,19 +71,85 @@ export function CadastroAventureiro() {
     const [confirmarSenha, setConfirmarSenha] = useState("")
     const [confirmarSenhaAtual, setConfirmarSenhaAtual] = useState("")
 
-    const [fotoPerfilNome, setFotoPerfilNome] = useState<string | undefined>();
-    const [imagem, setImagem] = useState<string | undefined>();
     const [arquivoImagem, setArquivoImagem] = useState<File | null>(null);
+    /** Pré-visualização local, só depois de o usuário escolher um arquivo. */
+    const [previewImagem, setPreviewImagem] = useState<string | undefined>();
+    /** Usuário carregado da API, na edição. */
+    const [usuarioCarregado, setUsuarioCarregado] = useState<Usuario | null>(null);
+
+    /*
+     * A imagem exibida é a pré-visualização, quando existe, ou a foto
+     * já cadastrada — derivada do usuário carregado.
+     *
+     * A versão anterior guardava o caminho da foto em
+     * localStorage("fotoPerfil") e montava a URL num segundo useEffect
+     * que dependia de idUsuario/fotoPerfilNome, mas usava também
+     * nomeAventureiro SEM declará-lo nas dependências. Na primeira
+     * execução esses estados ainda valiam -1 e "", então a URL saía
+     * inválida e o efeito não rodava de novo quando os dados chegavam:
+     * era por isso que a foto só aparecia depois de o usuário
+     * selecionar o arquivo outra vez.
+     */
+    const imagem = previewImagem ?? urlDaFotoDePerfil(usuarioCarregado);
+
+    const [removendoImagem, setRemovendoImagem] = useState(false);
+
+    /**
+     * Remove a imagem de perfil.
+     *
+     * A interface só reflete a remoção depois de o backend confirmar:
+     * apaga o arquivo, limpa a referência no banco e devolve
+     * fotoPerfil nulo. Assim não sobra no registro um caminho
+     * apontando para arquivo que já não existe.
+     */
+    const onRemoverImagem = async () => {
+        if (!user?.id || removendoImagem) return;
+
+        setRemovendoImagem(true);
+
+        try {
+            await UsuarioAPI.removerImagemPerfil(Number(user.id));
+
+            /* Descarta também a pré-visualização e o arquivo pendente. */
+            setPreviewImagem(anterior => {
+                if (anterior?.startsWith("blob:")) {
+                    URL.revokeObjectURL(anterior);
+                }
+                return undefined;
+            });
+            setArquivoImagem(null);
+
+            setUsuarioCarregado(anterior =>
+                anterior ? { ...anterior, fotoPerfil: null } : anterior
+            );
+
+            toaster.create(mensagensToastSucesso.removerFotoPerfil);
+        } catch (erro) {
+            console.error(
+                mensagensErroConsole.removerFotoPerfil,
+                mensagemDeErroDaApi(erro) ?? erro
+            );
+            toaster.create(mensagensToastErro.removerFotoPerfil);
+        } finally {
+            setRemovendoImagem(false);
+        }
+    };
 
     const [aceiteTermos, setAceiteTermos] = useState<boolean | null>(null)
 
     useEffect(() => {
-        async function carregarDados() {
+        let ativo = true;
+
+        async function carregarOcupacoes(): Promise<OcupacaoDTO[]> {
             try {
                 const ocupacaoResponse = await OcupacaoAPI.listar()
-                if (!ocupacaoResponse.data) return
 
-                const ocupacoes = ocupacaoResponse.data as OcupacaoDTO[]
+                const ocupacoes = Array.isArray(ocupacaoResponse.data)
+                    ? ocupacaoResponse.data as OcupacaoDTO[]
+                    : []
+
+                if (!ativo) return ocupacoes
+
                 const ocupacoesCollection = createListCollection({
                     items:
                         ocupacoes.length === 0
@@ -96,81 +165,106 @@ export function CadastroAventureiro() {
                 })
                 setOcupacoes(ocupacoes)
                 setOcupacaoCollection(ocupacoesCollection)
+
+                return ocupacoes
             } catch (erro) {
-                toaster.create(mensagensToastErro.carregarOcupacoes)
-                console.error(mensagensErroConsole.buscarOcupacoes, erro);
+                if (ativo) {
+                    toaster.create(mensagensToastErro.carregarOcupacoes)
+                }
+                console.error(
+                    mensagensErroConsole.buscarOcupacoes,
+                    mensagemDeErroDaApi(erro) ?? erro
+                );
+                return []
             }
         }
 
-        async function carregarDadosUsuario() {
+        async function carregarDadosUsuario(listaOcupacoes: OcupacaoDTO[]) {
             try {
                 if (!user) return;
 
-                const usuarioResponse = await UsuarioAPI.buscarPorId(Number(user?.id))
+                const usuarioResponse = await UsuarioAPI.buscarPorId(Number(user.id))
                 if (!usuarioResponse.data) return
+                if (!ativo) return
 
                 const usuario = usuarioResponse.data as Usuario
 
+                setUsuarioCarregado(usuario)
                 setIdUsuario(usuario.id)
                 setNomeUsuario(usuario.nomeUsuario)
                 setNomeAventureiro(usuario.nomeAventureiro)
                 setCorreioEletronico(usuario.correioEletronico)
-                setDataNascimento([parseDate(usuario.dataNascimento)])
+
+                if (usuario.dataNascimento) {
+                    setDataNascimento([parseDate(usuario.dataNascimento)])
+                }
+
                 setPossuiConhecimento(usuario.possuiConhecimento)
 
-                const fotoPerfil = usuario.fotoPerfil;
+                /*
+                 * A condição estava invertida ("ocupacao" in usuario):
+                 * o erro era disparado justamente quando a ocupação
+                 * VINHA na resposta, e seguia adiante quando ela
+                 * faltava.
+                 */
+                const idOcupacaoUsuario = Number(usuario.ocupacao?.id)
 
-                setFotoPerfilNome(fotoPerfil);
-
-                if (fotoPerfil) {
-                    localStorage.setItem("fotoPerfil", fotoPerfil);
+                if (!Number.isInteger(idOcupacaoUsuario) || idOcupacaoUsuario <= 0) {
+                    toaster.create(mensagensToastErro.carregarOcupacoes)
+                    console.error(
+                        mensagensErroConsole.buscarOcupacoes,
+                        "Usuário sem ocupação válida:",
+                        usuario.ocupacao
+                    );
+                    return
                 }
 
-                if ("ocupacao" in usuario) {
+                /*
+                 * O Select casa o valor pelo ID vindo da lista. Se a
+                 * ocupação do usuário não estiver entre as opções, o
+                 * campo apareceria em branco e a validação recusaria um
+                 * valor que está correto no banco — então a opção é
+                 * acrescentada à coleção.
+                 */
+                const ocupacaoNaLista = listaOcupacoes.some(
+                    o => Number(o.id) === idOcupacaoUsuario
+                )
+
+                if (!ocupacaoNaLista && usuario.ocupacao) {
+                    const ocupacoesComAAtual = [...listaOcupacoes, usuario.ocupacao]
+
+                    setOcupacoes(ocupacoesComAAtual)
+                    setOcupacaoCollection(createListCollection({
+                        items: ocupacoesComAAtual.map(item => ({
+                            label: item.titulo,
+                            value: String(item.id),
+                        })),
+                    }))
+                }
+
+                setIdOcupacao(idOcupacaoUsuario)
+
+            } catch (erro) {
+                if (ativo) {
                     toaster.create(mensagensToastErro.carregarUsuario)
-                    console.error(mensagensErroConsole.buscarOcupacoes);
                 }
-                setIdOcupacao(Number(usuario.ocupacao.id))
-
-            } catch (erro) {
-                toaster.create(mensagensToastErro.carregarUsuario)
-                console.error(mensagensErroConsole.buscarOcupacoes, erro);
+                console.error(
+                    mensagensErroConsole.buscarAventureiro,
+                    mensagemDeErroDaApi(erro) ?? erro
+                );
             }
         }
 
-        carregarDados()
-        carregarDadosUsuario()
+        /*
+         * As ocupações são carregadas ANTES dos dados do usuário: a
+         * segunda etapa precisa da lista para conferir se a ocupação
+         * gravada está entre as opções do Select. As duas chamadas
+         * eram disparadas soltas, sem ordem nem await.
+         */
+        carregarOcupacoes().then(carregarDadosUsuario)
 
+        return () => { ativo = false };
     }, [user?.id]);
-
-    useEffect(() => {
-        async function carregarImagem() {
-            try {
-                if (!user) return;
-                const fotoPerfilStorage = localStorage.getItem("fotoPerfil");
-                
-                if(!fotoPerfilStorage) return
-                if(!(fotoPerfilStorage.trim())) return
-
-                setFotoPerfilNome(fotoPerfilStorage)
-
-                const nomeImagem = fotoPerfilStorage.split("/").pop();
-                if (!nomeImagem) return;
-
-                const fotoPerfilResponse = await UsuarioAPI.buscarImagemPerfil(idUsuario, nomeAventureiro, nomeImagem);
-                setImagem(fotoPerfilResponse);
-
-                /*if (fotoPerfilResponse.data) {
-                    const url = URL.createObjectURL(fotoPerfilResponse.data);
-                    setImagem(url);
-                }*/
-            } catch (erro) {
-                toaster.create(mensagensToastErro.carregarFotoPerfil)
-                console.error(mensagensErroConsole.buscarFotoPerfil, erro);
-            }
-        }
-        carregarImagem();
-    }, [idUsuario, fotoPerfilNome]);
 
     const [validarNomeUsuario, setValidarNomeUsuario] = useState(false)
     const [validarNomeAventureiro, setValidarNomeAventureiro] = useState(false)
@@ -261,6 +355,9 @@ export function CadastroAventureiro() {
             return;
         }
 
+        /* Trocar a senha é opcional na edição: só vale se ele digitou. */
+        const alterarSenha = informouNovaSenha(senha, confirmarSenha)
+
         try {
             if (user?.id) {
                 const usuarioPayload = {
@@ -270,8 +367,19 @@ export function CadastroAventureiro() {
                     ...(dataNascimento && { dataNascimento: `${dataNascimento[0].year}-${String(dataNascimento[0].month).padStart(2, "0")}-${String(dataNascimento[0].day).padStart(2, "0")}` }),
                     possuiConhecimento: possuiConhecimento,
                     primeiroAcesso: !editando,
-                    novaSenha: senha ? senha : confirmarSenhaAtual,
-                    novaSenhaRepeticao: senha ? confirmarSenha : confirmarSenhaAtual,
+                    /*
+                     * A nova senha vai no payload SOMENTE quando o
+                     * usuário digitou uma. Antes, quando ele não queria
+                     * trocar, a tela mandava a senha ATUAL em claro no
+                     * campo de nova senha e o backend gerava um hash
+                     * novo para a mesma senha — além de tornar
+                     * impossível editar qualquer dado sem redigitar
+                     * uma senha completa.
+                     */
+                    ...(alterarSenha && {
+                        novaSenha: senha,
+                        novaSenhaRepeticao: confirmarSenha,
+                    }),
                     senhaAtual: confirmarSenhaAtual,
                     idOcupacao: idOcupacao,
                 } as UsuarioDTO
@@ -296,6 +404,7 @@ export function CadastroAventureiro() {
                 }
 
                 updateUser(novoUser)
+                toaster.create(mensagensToastSucesso.editarAventureiro)
             } else {
                 const usuarioPayload = {
                     nomeUsuario: nomeUsuario,
@@ -329,23 +438,50 @@ export function CadastroAventureiro() {
 
                     await UsuarioAPI.salvarImagemPerfil(responseLogin.id, formData);
                 }
+
+                toaster.create(mensagensToastSucesso.salvarAventureiro)
             }
 
             navigate("/trilhaFormativaInovacao");
         } catch (erro) {
-            console.error("Erro: ", erro);
+            /*
+             * O erro só ia para o console: a tela ficava parada, sem
+             * navegar e sem dizer nada ao usuário.
+             */
+            console.error(
+                user?.id
+                    ? mensagensErroConsole.editarAventureiro
+                    : mensagensErroConsole.salvarAventureiro,
+                mensagemDeErroDaApi(erro) ?? erro
+            );
+
+            toaster.create(
+                user?.id
+                    ? mensagensToastErro.editarAventureiro
+                    : mensagensToastErro.salvarAventureiro
+            )
         }
     }
 
-    const onExclude = () => {
+    const onExclude = async () => {
         try {
-            if (user) {
-                UsuarioAPI.deletar(idUsuario)
-                logout()
-                navigate("/");
-            }
+            if (!user) return
+
+            /*
+             * A exclusão precisa terminar antes do logout e da
+             * navegação: sem o await, a requisição saía com o token
+             * prestes a ser apagado e a conta podia continuar de pé.
+             */
+            await UsuarioAPI.deletar(idUsuario)
+
+            toaster.create(mensagensToastSucesso.excluirUsuario)
+            logout()
+            navigate("/");
         } catch (erro) {
-            console.error(mensagensErroConsole.excluirAventureiro, erro);
+            console.error(
+                mensagensErroConsole.excluirAventureiro,
+                mensagemDeErroDaApi(erro) ?? erro
+            );
             toaster.create(mensagensToastErro.excluirUsuario)
         }
     }
@@ -433,8 +569,22 @@ export function CadastroAventureiro() {
                                 imagem={imagem}
                                 onChange={(file, preview) => {
                                     setArquivoImagem(file);
-                                    setImagem(preview);
+
+                                    /*
+                                     * Libera a URL da pré-visualização
+                                     * anterior: cada createObjectURL
+                                     * segura o arquivo em memória até
+                                     * ser revogado.
+                                     */
+                                    setPreviewImagem(anterior => {
+                                        if (anterior?.startsWith("blob:")) {
+                                            URL.revokeObjectURL(anterior);
+                                        }
+                                        return preview;
+                                    });
                                 }}
+                                onRemover={editando ? onRemoverImagem : undefined}
+                                removendo={removendoImagem}
                             />
                         </Flex>
                     </Grid>

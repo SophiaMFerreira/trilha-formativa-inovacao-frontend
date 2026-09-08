@@ -36,6 +36,20 @@ export type ResultadoValidacaoUsuario = {
     imagemArquivo: boolean
 };
 
+/**
+ * Regra única de e-mail da aplicação.
+ *
+ * Ficava repetida no cadastro/edição de aventureiro e nas duas telas
+ * de recuperação de senha, o que já tinha produzido divergência entre
+ * elas. Centralizar evita que uma tela aceite o que a outra recusa.
+ */
+export function validarCorreioEletronico(correioEletronico: unknown): boolean {
+    return typeof correioEletronico === "string" &&
+        correioEletronico.trim().length > 0 &&
+        correioEletronico.trim().length <= 255 &&
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correioEletronico.trim());
+}
+
 export function validarUsuario({
     idUsuario,
     nomeUsuario,
@@ -74,12 +88,8 @@ export function validarUsuario({
         nomeAventureiro.trim().length > 0 &&
         nomeAventureiro.trim().length <= 255;
 
-        // EMAIL
-    const emailValido =
-        typeof correioEletronico === "string" &&
-        correioEletronico.trim().length > 0 &&
-        correioEletronico.trim().length <= 255 &&
-        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correioEletronico.trim());
+    // EMAIL
+    const emailValido = validarCorreioEletronico(correioEletronico)
 
     // DATA NASCIMENTO
     const dataNascimentoValida = validacaoData(dataNascimento, dataAtual)

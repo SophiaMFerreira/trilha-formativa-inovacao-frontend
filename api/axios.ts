@@ -1,7 +1,14 @@
 import axios from "axios";
 
+/**
+ * Endereço da API. Exportado para que os recursos servidos como
+ * arquivo estático (imagens de perfil, por exemplo) montem a URL a
+ * partir da mesma origem, em vez de repetir o host em cada módulo.
+ */
+export const BASE_URL_API = "http://localhost:8000/";
+
 export const api = axios.create({
-  baseURL: "http://localhost:8000/",
+  baseURL: BASE_URL_API,
 });
 
 api.interceptors.request.use((config) => {

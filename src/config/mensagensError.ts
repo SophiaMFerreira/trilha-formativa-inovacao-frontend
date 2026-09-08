@@ -94,6 +94,9 @@ export const mensagensErroConsole = {
     excluirAventureiro:
         "Erro ao excluir o aventureiro. ",
 
+    removerFotoPerfil:
+        "Erro ao remover a foto de perfil. ",
+
     calcularRespostas:
         "Erro ao calcular respostas do quiz/tarefa. ",
 

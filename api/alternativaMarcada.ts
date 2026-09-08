@@ -15,6 +15,11 @@ export const AlternativaMarcadaAPI = {
         return api.get(`api/v1/usuarios/${idUsuario}/alternativas/${idAlternativa}`);
     },
 
+    /**
+     * Idempotente por (usuário, alternativa): marcar de novo a mesma
+     * alternativa substitui a resposta anterior, o que é o esperado
+     * quando o usuário refaz o quiz ou a tarefa.
+     */
     salvar(alternativamarcada: AlternativaMarcadaDTO) {
         return api.post("api/v1/usuarios/alternativas-marcadas", alternativamarcada);
     },
@@ -24,6 +29,7 @@ export const AlternativaMarcadaAPI = {
     },
 
     deletar(idUsuario: number, idAlternativa: number) {
-        return api.get(`api/v1/usuarios/${idUsuario}/alternativas/${idAlternativa}`);
+        /* Estava usando api.get: a marcação nunca era removida. */
+        return api.delete(`api/v1/usuarios/${idUsuario}/alternativas/${idAlternativa}`);
     },
 }

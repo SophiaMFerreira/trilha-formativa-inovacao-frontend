@@ -19,31 +19,40 @@ export async function corrigirRespostas(
   questoes: QuestaoProp[],
   userId: number,
 ): Promise<ResultadoCorrecao> {
-  const valorQuestao = valorAtividade / questoes.length
-
-  //const alternativasResponse = await AlternativaMarcadaAPI.listarPorUsuario(userId);
-  const alternativasResponse = await AlternativaMarcadaAPI.listar();
-  if (!alternativasResponse.data) return {
+  const resultadoVazio: ResultadoCorrecao = {
     pontos: 0,
     corretas: [],
     parciais: [],
     incorretas: [],
   };
-  const alt = alternativasResponse.data as AlternativaMarcada[]
-  const altUsuario = alt.filter(ar => ar.usuario.id === userId)
 
- // const alternativas = alternativasResponse.data as AlternativaMarcada[];
+  /* Sem questões não há o que corrigir — e a divisão abaixo daria NaN. */
+  if (!Array.isArray(questoes) || questoes.length === 0) {
+    return resultadoVazio;
+  }
 
-  /*const idsAlternativasQuestao = new Set(questoes.flatMap(q =>
-    q.alternativas.map(a => a.id!)
-  ));*/
+  const valorQuestao = valorAtividade / questoes.length
 
-  const idsAlternativasQuestao = new Set(
+  /*
+   * Somente as marcações DESTE usuário.
+   *
+   * A versão anterior chamava listar(), que traz as marcações de todos
+   * os usuários da plataforma, e filtrava no navegador. O custo cresce
+   * com a base inteira a cada correção de quiz.
+   */
+  const alternativasResponse =
+    await AlternativaMarcadaAPI.listarPorUsuario(userId);
+
+  if (!Array.isArray(alternativasResponse.data)) return resultadoVazio;
+
+  const marcacoesDoUsuario = alternativasResponse.data as AlternativaMarcada[]
+
+  const idsQuestoesDaMissao = new Set(
     questoes.map(q => q.id)
   );
 
-  const respostasDaMissao = altUsuario.filter(a =>
-    idsAlternativasQuestao.has(a.alternativa.idQuestao)
+  const respostasDaMissao = marcacoesDoUsuario.filter(a =>
+    a?.alternativa && idsQuestoesDaMissao.has(a.alternativa.idQuestao)
   );
 
   const respostasPorQuestao =
@@ -71,6 +80,15 @@ export async function corrigirRespostas(
     const respostas =
       respostasPorQuestao.get(questao.id) ?? [];
 
+    /*
+     * Questão sem alternativas cadastradas: contabiliza como não
+     * respondida em vez de estourar em alternativas[0].
+     */
+    if (!questao.alternativas?.length) {
+      incorretas.push({ questao, alternativas: respostas });
+      return;
+    }
+
     if (respostas.length === 0) {
       incorretas.push({
         questao,
@@ -83,9 +101,14 @@ export async function corrigirRespostas(
 
     if ("subtipo" in questao.alternativas[0] &&
       questao.alternativas[0].subtipo === SubtipoAlternativa.MULTIPLAS_CORRETAS) {
-      valorAlternativa = valorQuestao / questao.alternativas.filter(
+      const quantidadeCorretas = questao.alternativas.filter(
         alternativa => alternativa.correta
       ).length
+
+      /* Sem gabarito não há divisor: a questão não pontua. */
+      valorAlternativa = quantidadeCorretas > 0
+        ? valorQuestao / quantidadeCorretas
+        : 0
     }
     if (questao.alternativas[0].tipoAlternativa !== TipoAlternativa.MULTIPLA_ESCOLHA) {
       valorAlternativa = valorQuestao / questao.alternativas.length

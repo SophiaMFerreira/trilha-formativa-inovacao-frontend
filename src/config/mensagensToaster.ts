@@ -20,6 +20,25 @@ export const mensagemToasterConquista = (
     }
 };
 
+/**
+ * Limite de missões de uma trilha atingido.
+ *
+ * É função porque a mensagem precisa nomear a trilha e o limite: o
+ * usuário tem de saber quantas posições o mapa oferece, não apenas
+ * que "não foi possível salvar".
+ */
+export const mensagemLimiteMissoesTrilha = (
+    nomeTrilha: string,
+    limite: number
+) => ({
+    title: "Limite de missões da trilha atingido",
+    description:
+        `A trilha ${nomeTrilha} tem espaço para ${limite} missões no mapa e todas já estão ocupadas. Exclua uma missão existente antes de cadastrar outra.`,
+    type: "warning",
+    closable: true,
+    duration: 9000,
+});
+
 export const mensagensToastErro = {
     // =========================
     // CARREGAMENTO
@@ -404,6 +423,15 @@ export const mensagensToastErro = {
         duration: 7000,
     },
 
+    removerFotoPerfil: {
+        title: "Falha ao remover a foto",
+        description:
+            "Não foi possível remover sua foto de perfil. Tente novamente.",
+        type: "error",
+        closable: true,
+        duration: 7000,
+    },
+
     // =========================
     // VALIDAÇÔES
     // =========================
@@ -415,6 +443,8 @@ export const mensagensToastErro = {
         closable: true,
         duration: 7000,
     },
+
+    limiteMissoesTrilha: mensagemLimiteMissoesTrilha,
 
     validarMissaoAtividade: {
         title: "Não foi possível salvar a missão atividade",
@@ -478,6 +508,42 @@ export const mensagensToastErro = {
         duration: 7000,
     },
 
+    validarEmailRecSenha: {
+        title: "E-mail inválido",
+        description:
+            "Informe um endereço de e-mail válido para receber o link de redefinição.",
+        type: "warning",
+        closable: true,
+        duration: 7000,
+    },
+
+    validarNovaSenha: {
+        title: "Não foi possível redefinir a senha",
+        description:
+            "Verifique os campos destacados e corrija as informações antes de continuar.",
+        type: "warning",
+        closable: true,
+        duration: 7000,
+    },
+
+    linkRecSenhaInvalido: {
+        title: "Link de redefinição inválido ou expirado",
+        description:
+            "Este link não vale mais. Solicite um novo e-mail de redefinição para cadastrar sua senha.",
+        type: "warning",
+        closable: true,
+        duration: 9000,
+    },
+
+    linkRecSenhaAusente: {
+        title: "Link de redefinição incompleto",
+        description:
+            "Abra o link exatamente como ele chegou no seu e-mail, sem cortar nenhuma parte do endereço.",
+        type: "warning",
+        closable: true,
+        duration: 9000,
+    },
+
 } as const;
 
 export const mensagensToastSucesso = {
@@ -521,6 +587,33 @@ export const mensagensToastSucesso = {
         duration: 7000,
     },
 
+    salvarAventureiro: {
+        title: "Cadastro concluído!",
+        description:
+            "Seu aventureiro foi criado. Boas-vindas à trilha!",
+        type: "success",
+        closable: true,
+        duration: 7000,
+    },
+
+    editarAventureiro: {
+        title: "Dados atualizados com sucesso!",
+        description:
+            "As alterações do seu aventureiro foram salvas.",
+        type: "success",
+        closable: true,
+        duration: 7000,
+    },
+
+    removerFotoPerfil: {
+        title: "Foto removida!",
+        description:
+            "Sua foto de perfil foi removida. Você voltou a usar o avatar padrão.",
+        type: "success",
+        closable: true,
+        duration: 7000,
+    },
+
     recuperarSenha: {
         title: "Senha recuperada com sucesso!",
         description:
@@ -534,6 +627,15 @@ export const mensagensToastSucesso = {
         title: "Email enviado com sucesso!",
         description:
             "Enviamos um link para o seu e-mail. Acesse-o para continuar a recuperação da sua senha.",
+        type: "success",
+        closable: true,
+        duration: 7000,
+    },
+
+    emailRecuperarSenhaReenviado: {
+        title: "Novo link enviado!",
+        description:
+            "Enviamos um link novo para o seu e-mail. O link anterior deixou de valer.",
         type: "success",
         closable: true,
         duration: 7000,

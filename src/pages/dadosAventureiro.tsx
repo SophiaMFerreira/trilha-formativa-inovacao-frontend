@@ -10,6 +10,8 @@ import { Usuario } from "@/types_consts/usuario";
 import { toaster } from "@/components/commons/toaster";
 import { mensagensToastErro } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
+import { urlDaFotoDePerfil } from "@/utils/fotoPerfil";
+import { mensagemDeErroDaApi } from "@/utils/erroApi";
 
 export default function DadosAventureiro() {
     const navigate = useNavigate();
@@ -17,7 +19,14 @@ export default function DadosAventureiro() {
     const { pontuacao, distintivos } = useGame()
 
     const [usuario, setUsuario] = useState<Usuario>()
-    const [imagem, setImagem] = useState<string | undefined>();
+
+    /*
+     * A URL da foto é derivada do usuário já carregado. Antes havia um
+     * segundo useEffect só para montar essa string: ele não fazia
+     * requisição alguma, mas provocava uma renderização extra e a
+     * imagem só aparecia no segundo passe.
+     */
+    const imagem = urlDaFotoDePerfil(usuario);
 
     useEffect(() => {
         if (!user) return;
@@ -32,35 +41,14 @@ export default function DadosAventureiro() {
                 setUsuario(usuario)
             } catch (erro) {
                 toaster.create(mensagensToastErro.carregarUsuario)
-                console.error(mensagensErroConsole.buscarAventureiro, erro);
+                console.error(
+                    mensagensErroConsole.buscarAventureiro,
+                    mensagemDeErroDaApi(erro) ?? erro
+                );
             }
         }
         carregarDados();
     }, [user?.id]);
-
-    useEffect(() => {
-        async function carregarImagem() {
-            try {
-                if (!user) return;
-                if (!usuario?.fotoPerfil) return;
-
-                const nomeImagem = usuario.fotoPerfil.split("/").pop();
-                if (!nomeImagem) return;
-
-                const fotoPerfilResponse = await UsuarioAPI.buscarImagemPerfil(usuario.id, usuario.nomeAventureiro, nomeImagem);
-                setImagem(fotoPerfilResponse);
-
-                /*if (fotoPerfilResponse.data) {
-                    const url = URL.createObjectURL(fotoPerfilResponse.data);
-                    setImagem(url);
-                }*/
-            } catch (erro) {
-                toaster.create(mensagensToastErro.carregarFotoPerfil)
-                console.error(mensagensErroConsole.buscarFotoPerfil, erro);
-            }
-        }
-        carregarImagem();
-    }, [usuario?.id, usuario?.fotoPerfil]);
 
     if(!usuario) return
 

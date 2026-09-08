@@ -1,4 +1,4 @@
-import { api } from "./axios";
+import { api, BASE_URL_API } from "./axios";
 import { Login, UsuarioDTO } from "../src/types_consts/usuario";
 
 export const UsuarioAPI = {
@@ -7,13 +7,29 @@ export const UsuarioAPI = {
         return api.post("api/v1/login", login)
     },
 
+    /**
+     * Monta a URL do arquivo estático da foto. Não faz requisição:
+     * quem consome deve entregar a URL ao <img>/Avatar.
+     *
+     * Para partir do usuário (tratando ausência de foto), use
+     * urlDaFotoDePerfil em src/utils/fotoPerfil.ts.
+     */
     buscarImagemPerfil(idUsauario: number, usuario: string, imagemPerfil: string) {
-        //return api.get(`image/upload/perfil/${String(idUsauario)}_${usuario}/${imagemPerfil}`);
-        return `http://localhost:8000/image/upload/perfil/${String(idUsauario)}_${usuario}/${imagemPerfil}`
+        return `${BASE_URL_API}image/upload/perfil/${String(idUsauario)}_${usuario}/${imagemPerfil}`
     },
 
     salvarImagemPerfil(idUsauario: number, imagemPerfil: FormData) {
         return api.post(`api/v1/usuarios/${idUsauario}/foto`, imagemPerfil);
+    },
+
+    /**
+     * Remove a imagem de perfil: apaga o arquivo no servidor e limpa a
+     * referência no banco, devolvendo fotoPerfil nulo.
+     */
+    removerImagemPerfil(idUsuario: number) {
+        return api.delete<{ mensagem: string; fotoPerfil: null }>(
+            `api/v1/usuarios/${idUsuario}/foto`
+        );
     },
 
     listar() {
@@ -33,7 +49,8 @@ export const UsuarioAPI = {
     },
 
     deletar(idUsauario: number) {
-        return api.get(`api/v1/usuarios/${idUsauario}`);
+        /* Estava usando api.get: a exclusão nunca chegava ao backend. */
+        return api.delete(`api/v1/usuarios/${idUsauario}`);
     },
 
 }

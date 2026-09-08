@@ -4,6 +4,7 @@ import { Box, Button, createListCollection, Dialog, Em, Field, Grid, GridItem, H
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { obterNomeTematica, TematicaDTO } from "@/types_consts/tematica";
+import { avaliarCapacidadeDaTrilha } from "@/utils/limiteDeMissoes";
 import { Missao, MissaoAtividade, MissaoDTO, MissaoTarefa, TipoAtividade, TipoAtividadeLabel } from "@/types_consts/missao";
 import { TematicaAPI } from "../../api/tematica";
 import { QuestaoProp } from "@/types_consts/questao";
@@ -35,6 +36,8 @@ export default function CadastroMissoesAtividade() {
     const [questoes, setQuestoes] = useState<QuestaoProp[]>([])
 
     const [tematicas, setTematicas] = useState<TematicaDTO[]>([])
+    /* Missões já cadastradas, para conferir o limite de posições da trilha. */
+    const [missoesExistentes, setMissoesExistentes] = useState<Missao[] | null>(null)
     const [tematicasCollection, setTematicasCollection] = useState<ListCollection>(createListCollection({
         items: [
             {
@@ -140,10 +143,19 @@ export default function CadastroMissoesAtividade() {
                 const [
                     tematicaResponse,
                     distintivosResponse,
+                    missoesResponse,
                 ] = await Promise.all([
                     TematicaAPI.listar(),
                     DistintivoAPI.listar(),
+                    MissaoAPI.listar(),
                 ]);
+
+                setMissoesExistentes(
+                    Array.isArray(missoesResponse.data)
+                        ? missoesResponse.data as Missao[]
+                        : []
+                )
+
                 if (!tematicaResponse.data) {
                     toaster.create(mensagensToastErro.carregarTematicas)
                     return
@@ -190,6 +202,20 @@ export default function CadastroMissoesAtividade() {
         carregarDados();
     }, [idMissao]);
 
+    const tituloTrilhaSelecionada =
+        tematicas.find(t => t.id === idTrilha)?.titulo ?? ""
+
+    /*
+     * Situação da trilha selecionada: quantas posições existem no mapa
+     * e quantas já estão ocupadas. A missão em edição não conta contra
+     * o próprio limite.
+     */
+    const capacidade = avaliarCapacidadeDaTrilha(
+        missoesExistentes,
+        tituloTrilhaSelecionada,
+        idMissao ? idMissaoAtividade : undefined
+    )
+
     const onSubmit = async () => {
         const resultado = validarAtividade({
             titulo,
@@ -213,6 +239,21 @@ export default function CadastroMissoesAtividade() {
             setValidacaoDistintivo(!resultado.distintivo);
 
             toaster.create(mensagensToastErro.validarMissaoAtividade)
+            return;
+        }
+
+        /*
+         * O mapa da trilha tem um número fixo de posições. Sem este
+         * limite, a missão excedente era gravada e ficava sem lugar no
+         * mapa da tela secundária.
+         */
+        if (capacidade.atingiuLimite) {
+            toaster.create(
+                mensagensToastErro.limiteMissoesTrilha(
+                    obterNomeTematica(tituloTrilhaSelecionada) || tituloTrilhaSelecionada,
+                    capacidade.capacidade
+                )
+            )
             return;
         }
 
@@ -373,6 +414,27 @@ export default function CadastroMissoesAtividade() {
                                     >
                                         A temática não pode ser alterada durante a edição
                                     </Field.ErrorText>
+                                )}
+                                {/*
+                                  * Ocupação do mapa da trilha, visível
+                                  * ANTES de o usuário preencher o resto
+                                  * do formulário: o limite é uma
+                                  * característica da imagem da trilha,
+                                  * não uma surpresa no momento de salvar.
+                                  */}
+                                {capacidade.possuiLimite && (
+                                    <Field.HelperText
+                                        textStyle="inputPlaceholder"
+                                        color={
+                                            capacidade.atingiuLimite
+                                                ? "brand.secondaryRed"
+                                                : "brand.neutral"
+                                        }
+                                    >
+                                        {capacidade.atingiuLimite
+                                            ? `Esta trilha já usa as ${capacidade.capacidade} posições do mapa. Exclua uma missão antes de cadastrar outra.`
+                                            : `${capacidade.ocupadas} de ${capacidade.capacidade} posições do mapa em uso nesta trilha.`}
+                                    </Field.HelperText>
                                 )}
                             </Field.Root>
                         </GridItem>

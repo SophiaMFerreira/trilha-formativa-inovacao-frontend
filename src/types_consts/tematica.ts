@@ -42,3 +42,28 @@ export function obterNomeTematicaRota(titulo: string) {
 export function obterNomeTematicaBanco(titulo: string) {
   return tematicaRotaLabel[titulo as keyof typeof tematicaRotaLabel]?.toLocaleLowerCase() ?? ""
 }
+/**
+ * Parâmetro de rota da trilha, a partir do parâmetro de rota OU do
+ * título gravado no banco.
+ *
+ * `obterNomeTematicaRota` só aceitava o parâmetro de rota; faltava o
+ * caminho inverso, necessário para as telas que trabalham com o título
+ * vindo da API.
+ */
+export function obterRotaTematica(trilha: string): TematicaRota | undefined {
+  const valor = trilha?.trim().toLocaleLowerCase();
+
+  if (!valor) return undefined;
+
+  const porRota = Object.values(TematicaRota).find(
+    rota => rota.toLocaleLowerCase() === valor
+  );
+
+  if (porRota) return porRota;
+
+  const porTitulo = (
+    Object.entries(tematicaRotaLabel) as [TematicaRota, string][]
+  ).find(([, label]) => label.toLocaleLowerCase() === valor);
+
+  return porTitulo?.[0];
+}

@@ -1,13 +1,13 @@
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Box, Button, Dialog, Flex, Heading, HStack, Image, Portal, Progress, SimpleGrid, Skeleton, Stack, Text, } from "@chakra-ui/react";
 import { FaAward } from "react-icons/fa";
 
 import trilhaFormativa from "@/assets/images/Regional.jpg"
 
-import { Missao, MissaoAtividade, MissaoConteudo, MissaoTarefa, ProgressoMissao, ProgressoMissaoAtividade, TipoAtividade } from "@/types_consts/missao";
+import { Missao, MissaoAtividade, MissaoConteudo, MissaoTarefa, ProgressoMissao, TipoAtividade } from "@/types_consts/missao";
 
 import { MissaoAPI } from "../../api/missao";
 import { useGame } from "@/hooks/useGame";
@@ -17,6 +17,8 @@ import MapaRegional from "@/components/commons/mapaRegional";
 import { mensagensErroConsole } from "@/config/mensagensError";
 import { toaster } from "@/components/commons/toaster";
 import { mensagensToastErro } from "@/config/mensagensToaster";
+import { limitarPercentual } from "@/utils/pontuacao";
+import { mensagemDeErroDaApi } from "@/utils/erroApi";
 
 
 export function TelaRegional() {
@@ -26,117 +28,141 @@ export function TelaRegional() {
     const { progressoMissoes, progressoPontosTematicas, distintivos } = useGame()
 
     const trilha = obterNomeTematicaBanco(ParamTrilha!)
-    const [distintivosTrilha, setDistintivosTrilha] = useState<Distintivo[]>([])
-    const [missoesTematica, setMissoesTematica] = useState<ProgressoMissao[]>([])
-    const [missoesPendentes, setMissoesPendentes] = useState<Missao[]>([])
-    const [missaoSelecionada, setMissaoSelecionada] = useState<Missao | null>(null);
-    const [tituloMissao, setTituloMissao] = useState<"Leitura" | "Vídeo" | "Quiz" | "Tarefa" | "Tarefa Final">("Leitura");
-    const [rota, setRota] = useState<string>("");
+
+    /*
+     * Só as missões da trilha vêm da API. Tudo o que depende de
+     * progresso e distintivos é DERIVADO do GameProvider.
+     *
+     * A versão anterior calculava missoesTematica, missoesPendentes e
+     * distintivosTrilha dentro do efeito, que dependia de
+     * [ParamTrilha, distintivos] e lia progressoMissoes por closure
+     * SEM declará-lo. Duas consequências:
+     *
+     *  - na primeira execução progressoMissoes ainda estava vazio, e o
+     *    mapa e a lista de pendentes ficavam vazios sem nunca recalcular;
+     *  - "distintivos" é um array novo a cada recarga do provider, e
+     *    cada troca de identidade refazia o GET de todas as missões.
+     */
+    const [missoesTrilha, setMissoesTrilha] = useState<Missao[] | null>(null)
+    const [missaoEscolhida, setMissaoEscolhida] = useState<Missao | null>(null);
+    const [open, setOpen] = useState(false);
+    const [loaded, setLoaded] = useState(false)
 
     const pontos = progressoPontosTematicas.get(trilha)?.pontuacao ?? 0
     const progresso = progressoPontosTematicas.get(trilha)?.progresso ?? 0
 
-    const [loaded, setLoaded] = useState(false)
-    const [open, setOpen] = useState(false);
-
-    function calcularTituloMissaoSelecionada(missao: Missao) {
-        if (!missao) return
-
-        if ("tipoMaterial" in missao) {
-            const missaoMaterial = missao as MissaoConteudo
-            setTituloMissao(
-                missaoMaterial.tipoMaterial === "texto"
-                    ? "Leitura"
-                    : "Vídeo")
-
-            setRota(`/trilhaFormativaInovacao/${ParamTrilha}/material/${missaoMaterial.id}`)
-
-        } else {
-            const missaoAtividade = missao as MissaoAtividade
-
-            if (missaoAtividade.tipoAtividade === TipoAtividade.QUIZ) {
-                setTituloMissao("Quiz")
-                setRota(`/trilhaFormativaInovacao/${ParamTrilha}/quiz/${missaoAtividade.id}`)
-            }
-
-            if (missaoAtividade.tipoAtividade === TipoAtividade.TAREFA) {
-                setTituloMissao("Tarefa")
-                setRota(`/trilhaFormativaInovacao/${ParamTrilha}/tarefa/${missaoAtividade.id}`)
-            }
-        }
-    }
     useEffect(() => {
-        if (missaoSelecionada) {
-            calcularTituloMissaoSelecionada(missaoSelecionada)
-        }
-    }, [missaoSelecionada]);
+        let ativo = true;
 
-    useEffect(() => {
-        async function carregarDados() {
+        async function carregarMissoes() {
             try {
                 const missoesResponse = await MissaoAPI.listar()
-                const listaMissoes = missoesResponse.data as Missao[]
+
+                if (!ativo) return;
+
+                const listaMissoes = Array.isArray(missoesResponse.data)
+                    ? missoesResponse.data as Missao[]
+                    : null
 
                 if (!listaMissoes) {
                     navigate(`/trilhaFormativaInovacao`);
                     return
                 }
-                const missoesTrilha = listaMissoes.filter(m => m.tematica.titulo === trilha)
 
-                if (missoesTrilha.length === 0) {
+                const daTrilha = listaMissoes.filter(
+                    m => m.tematica?.titulo === trilha
+                )
+
+                if (daTrilha.length === 0) {
                     toaster.create(mensagensToastErro.nenhumaMissao)
                     navigate("/trilhaFormativaInovacao")
+                    return
                 }
 
-                const missoesT = progressoMissoes.filter(p =>
-                    missoesTrilha.find(
-                        m => p.missao.id === m.id
-                    ))
-                setMissoesTematica(missoesT)
-
-                const pendentes = missoesTrilha.filter(m => {
-                    const progressoM = progressoMissoes.find(
-                        p => p.missao.id === m.id
-                    );
-
-                    if (!progressoM) return false;
-                    return progressoM?.progresso === 0;
-                });
-
-                setMissoesPendentes([...pendentes].slice(0, 3))
-                setMissaoSelecionada(pendentes[0])
-                calcularTituloMissaoSelecionada(pendentes[0])
-
-                if (pendentes.length === 0) {
-                    setMissaoSelecionada(missoesTrilha[0])
-                    calcularTituloMissaoSelecionada(missoesTrilha[0])
-                }
-
-                const distintivosTrilha = missoesTrilha.flatMap(missao => {
-                    if (!("tipoAtividade" in missao)) return [];
-
-                    if (missao.tipoAtividade === TipoAtividade.QUIZ) return [];
-                    const tarefa = missao as MissaoTarefa
-
-                    const distintivo = distintivos.find(
-                        d => d.id === tarefa.distintivo.id
-                    );
-
-                    return distintivo ? [distintivo] : [];
-                });
-
-                setDistintivosTrilha(distintivosTrilha);
-
-
+                setMissoesTrilha(daTrilha)
             } catch (erro) {
+                if (!ativo) return;
+
                 toaster.create(mensagensToastErro.carregarMissoes)
-                console.error(mensagensErroConsole.buscarMissoes, erro);
+                console.error(
+                    mensagensErroConsole.buscarMissoes,
+                    mensagemDeErroDaApi(erro) ?? erro
+                );
             }
         }
-        carregarDados();
 
+        carregarMissoes();
 
-    }, [ParamTrilha, distintivos]);
+        return () => { ativo = false };
+    }, [trilha, navigate]);
+
+    /** Progressos das missões desta trilha, na ordem das missões. */
+    const missoesTematica = useMemo<ProgressoMissao[]>(() => {
+        if (!missoesTrilha) return [];
+
+        const progressoPorMissao = new Map(
+            progressoMissoes
+                .filter(p => p?.missao?.id !== undefined)
+                .map(p => [p.missao.id, p])
+        );
+
+        return missoesTrilha
+            .map(missao => progressoPorMissao.get(missao.id))
+            .filter((p): p is ProgressoMissao => p !== undefined);
+    }, [missoesTrilha, progressoMissoes]);
+
+    /** Missões da trilha ainda não iniciadas. */
+    const pendentes = useMemo<Missao[]>(() => {
+        if (!missoesTrilha) return [];
+
+        const progressoPorMissao = new Map(
+            progressoMissoes
+                .filter(p => p?.missao?.id !== undefined)
+                .map(p => [p.missao.id, p])
+        );
+
+        return missoesTrilha.filter(missao => {
+            const progressoMissao = progressoPorMissao.get(missao.id);
+
+            if (!progressoMissao) return false;
+
+            return Number(progressoMissao.progresso) === 0;
+        });
+    }, [missoesTrilha, progressoMissoes]);
+
+    const missoesPendentes = useMemo(() => pendentes.slice(0, 3), [pendentes]);
+
+    /*
+     * A missão em foco é a escolhida pelo usuário; sem escolha, a
+     * primeira pendente; sem pendentes, a primeira da trilha.
+     */
+    const missaoSelecionada = missaoEscolhida
+        ?? pendentes[0]
+        ?? missoesTrilha?.[0]
+        ?? null;
+
+    /* Título e rota são função pura da missão em foco. */
+    const { tituloMissao, rota } = useMemo(
+        () => descreverMissao(missaoSelecionada, ParamTrilha),
+        [missaoSelecionada, ParamTrilha]
+    );
+
+    const distintivosTrilha = useMemo<Distintivo[]>(() => {
+        if (!missoesTrilha) return [];
+
+        return missoesTrilha.flatMap(missao => {
+            if (!("tipoAtividade" in missao)) return [];
+            if (missao.tipoAtividade === TipoAtividade.QUIZ) return [];
+
+            const tarefa = missao as MissaoTarefa
+
+            const distintivo = distintivos.find(
+                d => d.id === tarefa.distintivo?.id
+            );
+
+            return distintivo ? [distintivo] : [];
+        });
+    }, [missoesTrilha, distintivos]);
 
     if (!user) {
         return <Navigate to="/login" replace />
@@ -204,7 +230,7 @@ export function TelaRegional() {
                                 <Box
                                     key={missao.id}
                                     onClick={() => {
-                                        setMissaoSelecionada(missao);
+                                        setMissaoEscolhida(missao);
                                         setOpen(true);
                                     }}
                                 >
@@ -221,7 +247,15 @@ export function TelaRegional() {
                     w="100%"
                 >
                     <Progress.Root
-                        defaultValue={Math.round(progresso)}
+                        /*
+                         * "value", não "defaultValue": como componente
+                         * não controlado, a barra ficava presa no
+                         * primeiro valor (zero, antes de os progressos
+                         * chegarem) e nunca acompanhava a temática.
+                         */
+                        value={limitarPercentual(progresso)}
+                        min={0}
+                        max={100}
                         rounded="full"
                         w="100%"
                         size="lg"
@@ -424,4 +458,52 @@ function ItemMissao({
             </HStack>
         </Flex>
     );
+}
+
+type DescricaoMissao = {
+    tituloMissao: "Leitura" | "Vídeo" | "Quiz" | "Tarefa" | "Tarefa Final"
+    rota: string
+}
+
+/**
+ * Título e rota da missão em foco.
+ *
+ * Era um par de setState disparado por um useEffect sobre
+ * missaoSelecionada, além de uma chamada direta dentro do efeito de
+ * carregamento — dois caminhos escrevendo o mesmo estado, com uma
+ * renderização extra a cada troca de missão. Como o resultado depende
+ * apenas da missão, virou função pura.
+ */
+function descreverMissao(
+    missao: Missao | null,
+    paramTrilha: string | undefined
+): DescricaoMissao {
+    if (!missao) {
+        return { tituloMissao: "Leitura", rota: "" };
+    }
+
+    const base = `/trilhaFormativaInovacao/${paramTrilha}`;
+
+    if ("tipoMaterial" in missao) {
+        const conteudo = missao as MissaoConteudo;
+
+        return {
+            tituloMissao: conteudo.tipoMaterial === "texto" ? "Leitura" : "Vídeo",
+            rota: `${base}/material/${conteudo.id}`,
+        };
+    }
+
+    const atividade = missao as MissaoAtividade;
+
+    if (atividade.tipoAtividade === TipoAtividade.TAREFA) {
+        return {
+            tituloMissao: "Tarefa",
+            rota: `${base}/tarefa/${atividade.id}`,
+        };
+    }
+
+    return {
+        tituloMissao: "Quiz",
+        rota: `${base}/quiz/${atividade.id}`,
+    };
 }

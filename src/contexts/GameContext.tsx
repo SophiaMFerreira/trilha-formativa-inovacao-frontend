@@ -13,7 +13,12 @@ export type GameContextType = {
     atualizar(): Promise<void>;
     atualizarDistintivos: () => Promise<void>
     atualizarProgresso: () => Promise<void>
-    atualizarPontuacaoProgressoTotal: () => void
+    /*
+     * atualizarPontuacaoProgressoTotal saiu do contrato: pontuacao e
+     * progressoTotal são derivados de progressoMissoes e tematicas, e
+     * não mais estado que precisa ser sincronizado à mão. Nenhuma tela
+     * chamava essa função.
+     */
 }
 
 export const GameContext = createContext<GameContextType>(

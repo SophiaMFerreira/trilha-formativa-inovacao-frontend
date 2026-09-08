@@ -1,3 +1,5 @@
+import { obterRotaTematica, TematicaRota } from "@/types_consts/tematica";
+
 export const posicoesItensLegislacao = [
   {
     id: 1,
@@ -298,3 +300,57 @@ export const posicaoTarefaFinal = {
   top: "60.4%",
   left: "40.25%",
 };
+// ---------------------------------------------------------------
+// Capacidade visual de cada trilha
+// ---------------------------------------------------------------
+
+/**
+ * Posição de um item sobre a imagem do mapa, em porcentagem.
+ */
+export type PosicaoItemMapa = {
+  id: number
+  top: string
+  left: string
+}
+
+/**
+ * Posições disponíveis em cada mapa, indexadas pelo parâmetro de rota
+ * da trilha.
+ *
+ * A associação estava escrita como um switch dentro de mapaRegional.
+ * Trazê-la para cá deixa uma única fonte da verdade: o mapa usa para
+ * posicionar os ícones e o cadastro de missões usa para saber quantas
+ * missões cabem na trilha.
+ */
+export const posicoesPorTrilha: Record<TematicaRota, PosicaoItemMapa[]> = {
+  [TematicaRota.LEGISLACAO]: posicoesItensLegislacao,
+  [TematicaRota.TRANFERENCIA_TECNOLOGICA]: posicoesItensTransferenciaTecnologica,
+  [TematicaRota.PROPRIEDADE_INTELECTUAL]: posicoesItensPropriedadeIntelectual,
+  [TematicaRota.AMBIENTES_INOVACAO]: posicoesItensAmbientesInovacao,
+};
+
+/**
+ * Posições da trilha informada.
+ *
+ * Aceita tanto o parâmetro de rota ("legislacao") quanto o título
+ * gravado no banco ("legislação"), porque as telas trabalham com um ou
+ * com o outro.
+ */
+export function posicoesDaTrilha(trilha: string): PosicaoItemMapa[] {
+  const rota = obterRotaTematica(trilha);
+
+  if (!rota) return [];
+
+  return posicoesPorTrilha[rota] ?? [];
+}
+
+/**
+ * Quantidade de missões que a imagem da trilha consegue representar.
+ *
+ * Devolve 0 quando a trilha não é uma das quatro mapeadas. Nesse caso
+ * não existe limite conhecido, e quem chama deve tratar 0 como
+ * "sem limite a aplicar" — nunca como "não cabe nenhuma missão".
+ */
+export function capacidadeDaTrilha(trilha: string): number {
+  return posicoesDaTrilha(trilha).length;
+}

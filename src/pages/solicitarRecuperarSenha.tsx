@@ -1,4 +1,4 @@
-import { Button, Field, InputGroup, Link, Stack } from "@chakra-ui/react";
+import { Button, Field, InputGroup, Link, Stack, Text } from "@chakra-ui/react";
 
 import { useState } from "react";
 import { AppInput } from "@/components/commons/AppInput";
@@ -7,30 +7,54 @@ import { toaster } from "@/components/commons/toaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
 import CardCustomizado from "@/components/commons/cardCustomizado";
 import { RecuperarSenhaAPI } from "../../api/recuperarSenha";
+import { validarCorreioEletronico } from "@/utils/validations/usuario";
+import { CHAVE_EMAIL_RECUPERACAO } from "@/types_consts/recuperarSenha";
 
 export default function SolicitarRecuperarSenha() {
-    const [correioEletronico, setCorreioEletronico] = useState("")
-    const [validarCorreioEletronico, setValidarCorreioEletronico] = useState(false)
+    /*
+     * Quem chega aqui a partir da tela de link expirado já informou o
+     * e-mail antes: aproveitamos o valor guardado para não obrigá-lo a
+     * digitar de novo.
+     */
+    const [correioEletronico, setCorreioEletronico] = useState(
+        () => localStorage.getItem(CHAVE_EMAIL_RECUPERACAO) ?? ""
+    )
+    const [correioEletronicoInvalido, setCorreioEletronicoInvalido] = useState(false)
+    const [enviando, setEnviando] = useState(false)
+    const [solicitacaoEnviada, setSolicitacaoEnviada] = useState(false)
 
     const onSubmitEmail = async () => {
-        const invalido = typeof correioEletronico === "string" &&
-            correioEletronico.trim().length > 0 &&
-            correioEletronico.trim().length <= 255 &&
-            /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correioEletronico.trim());
+        if (enviando) return;
 
-        if (invalido) {
-            setValidarCorreioEletronico(false)
+        if (!validarCorreioEletronico(correioEletronico)) {
+            setCorreioEletronicoInvalido(true)
+            toaster.create(mensagensToastErro.validarEmailRecSenha);
+            return
         }
+
+        setCorreioEletronicoInvalido(false)
+        setEnviando(true)
 
         try {
             await RecuperarSenhaAPI.solicitar(correioEletronico)
-            setValidarCorreioEletronico(true)
-            toaster.create(mensagensToastSucesso.emailRecuperarSenha);
 
-            localStorage.setItem("correioEletronico", JSON.stringify(correioEletronico))
+            /*
+             * Guardado antes de sinalizar sucesso: a tela de nova senha
+             * usa este valor para reenviar o link sem pedir o e-mail
+             * outra vez.
+             */
+            localStorage.setItem(
+                CHAVE_EMAIL_RECUPERACAO,
+                correioEletronico.trim()
+            )
+
+            setSolicitacaoEnviada(true)
+            toaster.create(mensagensToastSucesso.emailRecuperarSenha);
         } catch (e) {
             console.error(mensagensErroConsole.enviarEmailRecuperacao, e);
             toaster.create(mensagensToastErro.enviarEmailRecSenha);
+        } finally {
+            setEnviando(false)
         }
     }
 
@@ -49,7 +73,7 @@ export default function SolicitarRecuperarSenha() {
                     e.preventDefault();
                     onSubmitEmail();
                 }}>
-                    <Field.Root required invalid={validarCorreioEletronico}>
+                    <Field.Root required invalid={correioEletronicoInvalido}>
                         <Field.Label
                             textStyle="emphasis"
                             color="brand.primaryDark"
@@ -64,10 +88,15 @@ export default function SolicitarRecuperarSenha() {
                                 value={correioEletronico}
                                 placeholder="alunoInovacoes@gmail.com"
                                 size="md"
-                                onChange={(e) => setCorreioEletronico(e.target.value)}
+                                onChange={(e) => {
+                                    setCorreioEletronico(e.target.value)
+                                    if (correioEletronicoInvalido) {
+                                        setCorreioEletronicoInvalido(false)
+                                    }
+                                }}
                             />
                         </InputGroup>
-                        {!validarCorreioEletronico && (
+                        {correioEletronicoInvalido && (
                             <Field.ErrorText
                                 textStyle="inputPlaceholder"
                                 color="brand.secondaryRed"
@@ -76,6 +105,17 @@ export default function SolicitarRecuperarSenha() {
                             </Field.ErrorText>
                         )}
                     </Field.Root>
+                    {solicitacaoEnviada && (
+                        <Text
+                            mt="4"
+                            textStyle="bodyText"
+                            color="brand.primaryDark"
+                            textAlign="justify"
+                        >
+                            Se este e-mail estiver cadastrado, o link de redefinição
+                            já está a caminho. Verifique também a caixa de spam.
+                        </Text>
+                    )}
                     <Button
                         flex={1}
                         w="100%"
@@ -83,8 +123,10 @@ export default function SolicitarRecuperarSenha() {
                         type="submit"
                         size="md"
                         mt="10"
+                        loading={enviando}
+                        loadingText="Enviando..."
                     >
-                        Enviar email
+                        {solicitacaoEnviada ? "Enviar novamente" : "Enviar email"}
                     </Button>
                 </form>
                 <Link

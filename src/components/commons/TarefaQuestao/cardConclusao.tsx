@@ -10,9 +10,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { ConcluirAtividadeProps, concluirMissao, RetornoConclusao } from "@/utils/concluirMissao";
 import { ProgressoMissao, TipoAtividade } from "@/types_consts/missao";
 import { AlternativaMarcadaDTO } from "@/types_consts/alternativa";
+import { DistintivoDTO } from "@/types_consts/distintivo";
 import { ResultadoQuestao } from "@/utils/calcularRespostas";
 import { useGame } from "@/hooks/useGame";
 import { mensagensErroConsole } from "@/config/mensagensError";
+import { mensagemDeErroDaApi } from "@/utils/erroApi";
 import { toaster } from "../toaster";
 import { mensagensToastErro } from "@/config/mensagensToaster";
 
@@ -20,7 +22,8 @@ type ConclusaoProps = {
     valorMissao: number
     idMissao: number
     tipoAtividade: TipoAtividade
-    idDistintivo?: number
+    /** Distintivo vinculado à missão do tipo tarefa. */
+    distintivo?: DistintivoDTO
     questoes: QuestaoProp[]
     respostas: AlternativaMarcadaDTO[][]
     tentativas: number
@@ -41,7 +44,7 @@ export default function ConclusaoMissao({
     valorMissao,
     idMissao,
     tipoAtividade,
-    idDistintivo,
+    distintivo,
     questoes,
     respostas,
     tentativas,
@@ -63,7 +66,7 @@ export default function ConclusaoMissao({
     } | null>(null);
 
     const { user } = useAuth()
-    const { atualizarDistintivos, atualizarProgresso } = useGame()
+    const { atualizarDistintivos, atualizarProgresso, distintivos } = useGame()
     const conclusaoExecutada = useRef(false);
 
     const [open, setOpen] = useState(false)
@@ -73,7 +76,15 @@ export default function ConclusaoMissao({
         idMissao: idMissao,
         tipoMaterial: "atividade",
         tipoAtividade: tipoAtividade,
-        idDistintivo: idDistintivo,
+        distintivo: distintivo,
+        /*
+         * Distintivos que o usuário já possui: evita reenviar uma
+         * concessão que o backend recusaria e evita anunciar como nova
+         * uma conquista antiga.
+         */
+        distintivosAdquiridos: distintivos
+            .filter(d => d.adquirido)
+            .map(d => d.id),
         questoes: questoes,
         respostas: respostas,
         tentativas: tentativas,
@@ -100,13 +111,26 @@ export default function ConclusaoMissao({
                 if (!retorno) return;
 
                 setRetornoConclusao(retorno);
-
-                atualizarProgresso();
-                atualizarDistintivos();
-
                 setTentativas(retorno.tentativas)
+
+                /*
+                 * As atualizações são AGUARDADAS. Sem o await, o
+                 * usuário podia voltar para a tela secundária antes de
+                 * o estado global refletir a conclusão, e o ícone da
+                 * missão no mapa continuava como não concluído até um
+                 * novo login ou um recarregamento manual da página.
+                 *
+                 * Rodam em paralelo porque são independentes entre si.
+                 */
+                await Promise.all([
+                    atualizarProgresso(),
+                    atualizarDistintivos(),
+                ]);
             } catch (erro) {
-                console.error(mensagensErroConsole.calcularRespostas, erro);
+                console.error(
+                    mensagensErroConsole.calcularRespostas,
+                    mensagemDeErroDaApi(erro) ?? erro
+                );
                 toaster.create(mensagensToastErro.falhaAoEnviarRespostas);
             }
         }

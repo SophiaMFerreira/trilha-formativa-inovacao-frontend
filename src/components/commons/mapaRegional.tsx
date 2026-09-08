@@ -2,7 +2,7 @@ import { Box, Heading, HStack, IconButton, Image, Skeleton, } from "@chakra-ui/r
 import { useState } from "react";
 import CustomTooltip from "./customTooltip";
 import { FaArrowLeft, FaBook, FaGamepad, FaPencilAlt, FaPlayCircle, } from "react-icons/fa";
-import { obterNomeTematicaRota, TematicaRota } from "@/types_consts/tematica";
+import { obterNomeTematicaRota } from "@/types_consts/tematica";
 
 import mapaLegislacao from "@/assets/images/Mapas/legislacao.png";
 import mapaTransferenciaTecnologica from "@/assets/images/Mapas/transferenciaTecnologica.png";
@@ -10,7 +10,7 @@ import mapaPropriedadeIntelectual from "@/assets/images/Mapas/propriedadeIntelec
 import mapaAmbientesInovacao from "@/assets/images/Mapas/ambientesInovacao.png";
 
 import { MissaoAtividade, MissaoConteudo, ProgressoMissao, TipoAtividade } from "@/types_consts/missao";
-import { posicoesItensAmbientesInovacao, posicoesItensLegislacao, posicoesItensPropriedadeIntelectual, posicoesItensTransferenciaTecnologica } from "@/config/itensRegional";
+import { posicoesDaTrilha } from "@/config/itensRegional";
 
 type mapaRegionalProps = {
     tematica: string
@@ -131,21 +131,22 @@ function IconeMissao({
         tentativas = false
     }
 
-    let posicao = posicoesItensLegislacao[index]
-    switch (paramTrilha) {
-        case TematicaRota.LEGISLACAO:
-            posicao = posicoesItensLegislacao[index]
-            break
-        case TematicaRota.AMBIENTES_INOVACAO:
-            posicao = posicoesItensAmbientesInovacao[index]
-            break
-        case TematicaRota.PROPRIEDADE_INTELECTUAL:
-            posicao = posicoesItensPropriedadeIntelectual[index]
-            break
-        case TematicaRota.TRANFERENCIA_TECNOLOGICA:
-            posicao = posicoesItensTransferenciaTecnologica[index]
-            break
-    }
+    /*
+     * A associação trilha -> posições virou uma única fonte em
+     * config/itensRegional (era um switch aqui dentro), usada também
+     * pelo cadastro para limitar quantas missões cabem na trilha.
+     */
+    const posicoes = posicoesDaTrilha(paramTrilha)
+    const posicao = posicoes[index]
+
+    /*
+     * Mais missões do que posições no mapa: o índice excedente
+     * devolvia undefined e a leitura de posicao.top derrubava a tela
+     * inteira. Enquanto o limite do cadastro não estiver aplicado nos
+     * dados já existentes, a missão sem posição deixa de ser
+     * desenhada em vez de quebrar o mapa.
+     */
+    if (!posicao) return null
 
     let rota = `/trilhaFormativaInovacao/${paramTrilha}/material/${missao.missao.id}`
     let distintivo = <FaBook size={20} />

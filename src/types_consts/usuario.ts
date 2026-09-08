@@ -38,7 +38,12 @@ export type Usuario = {
     dataNascimento: string
     possuiConhecimento: boolean
     primeiroAcesso: boolean
-    fotoPerfil?: string
+    /*
+     * A coluna FotoPerfil é NOT NULL, então "sem foto" chega da API
+     * como string vazia; a remoção devolve null. Os três casos
+     * significam a mesma coisa e urlDaFotoDePerfil trata todos.
+     */
+    fotoPerfil?: string | null
     ocupacao: OcupacaoDTO
 }
 

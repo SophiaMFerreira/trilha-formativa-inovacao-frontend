@@ -14,6 +14,8 @@ import { UsuarioAPI } from "../../api/usuario";
 import { toaster } from "@/components/commons/toaster";
 import { mensagensToastErro } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
+import { urlDaFotoDePerfil } from "@/utils/fotoPerfil";
+import { mensagemDeErroDaApi } from "@/utils/erroApi";
 
 
 export default function TelaPrincipal() {
@@ -22,8 +24,13 @@ export default function TelaPrincipal() {
     const { progressoTotal, progressoPontosTematicas, distintivos } = useGame()
 
     const [usuario, setUsuario] = useState<Usuario>()
-    const [imagem, setImagem] = useState<string | undefined>();
 
+    /*
+     * URL da foto derivada do usuário carregado. Havia um segundo
+     * useEffect apenas para montar essa string, custando uma
+     * renderização extra sem fazer requisição alguma.
+     */
+    const imagem = urlDaFotoDePerfil(usuario);
 
     useEffect(() => {
         if (!user) return;
@@ -38,40 +45,25 @@ export default function TelaPrincipal() {
                 setUsuario(usuario)
             } catch (erro) {
                 toaster.create(mensagensToastErro.carregarUsuario)
-                console.error(mensagensErroConsole.buscarAventureiro, erro);
+                console.error(
+                    mensagensErroConsole.buscarAventureiro,
+                    mensagemDeErroDaApi(erro) ?? erro
+                );
             }
         }
         carregarDados();
     }, [user?.id]);
 
-    useEffect(() => {
-        async function carregarImagem() {
-            try {
-                if (!user) return;
-                if (!usuario?.fotoPerfil) return;
-
-                const nomeImagem = usuario.fotoPerfil.split("/").pop();
-                if (!nomeImagem) return;
-
-                const fotoPerfilResponse = await UsuarioAPI.buscarImagemPerfil(usuario.id, usuario.nomeAventureiro, nomeImagem);
-                setImagem(fotoPerfilResponse);
-
-                /*if (fotoPerfilResponse.data) {
-                    const url = URL.createObjectURL(fotoPerfilResponse.data);
-                    setImagem(url);
-                }*/
-            } catch (erro) {
-                toaster.create(mensagensToastErro.carregarFotoPerfil)
-                console.error(mensagensErroConsole.buscarFotoPerfil, erro);
-            }
-        }
-        carregarImagem();
-    }, [usuario?.id, usuario?.fotoPerfil]);
-
     if (!user) {
         return <Navigate to="/login" replace />
     }
-    if (!usuario) return
+
+    /*
+     * A tela NÃO espera mais o GET do usuário para renderizar.
+     * O dado só alimenta o avatar; segurar mapa, distintivos, barra de
+     * progresso e ranking por causa dele atrasava a tela inteira por
+     * uma requisição que nem é necessária na primeira pintura.
+     */
 
     return (
         <SimpleGrid
@@ -134,7 +126,15 @@ export default function TelaPrincipal() {
                         content={`Progresso total: ${Math.round(progressoTotal)}%`}
                     >
                         <Progress.Root
-                            defaultValue={progressoTotal}
+                            /*
+                             * "value", não "defaultValue": com
+                             * defaultValue o componente fica não
+                             * controlado e a barra continuava em zero
+                             * depois de o progresso chegar da API.
+                             */
+                            value={progressoTotal}
+                            min={0}
+                            max={100}
                             rounded="full"
                             w="100%"
                             ml="10"

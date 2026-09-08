@@ -1,5 +1,5 @@
 import { api } from "./axios";
-import { QuestaoDTO } from "../src/types_consts/questao";
+import { QuestaoDTO, RetornoSalvarQuestao } from "../src/types_consts/questao";
 
 export const QuestaoAPI = {
 
@@ -15,8 +15,16 @@ export const QuestaoAPI = {
         return api.get(`api/v1/missoes/${idMissao}/questoes/${idQuestao}`);
     },
 
+    /**
+     * Responde 201 com o ID da questão criada em `id` (e a questão
+     * completa em `questao`). Esse ID é a fonte oficial para salvar as
+     * alternativas em seguida — não é preciso relistar as questões.
+     */
     salvar(idMissao: number, questao: QuestaoDTO) {
-        return api.post(`api/v1/missoes/${idMissao}/questoes`, questao);
+        return api.post<RetornoSalvarQuestao>(
+            `api/v1/missoes/${idMissao}/questoes`,
+            questao
+        );
     },
 
     atualizar(idMissao: number, idQuestao: number, questao: QuestaoDTO) {

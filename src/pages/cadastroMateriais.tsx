@@ -8,6 +8,7 @@ import { TematicaAPI } from "../../api/tematica";
 import { obterNomeTematica, TematicaDTO } from "@/types_consts/tematica";
 import { Missao, MissaoConteudo, MissaoDTO, tipoMaterialLabel } from "@/types_consts/missao";
 import { validarConteudo } from "@/utils/validations/missaoConteudo";
+import { avaliarCapacidadeDaTrilha } from "@/utils/limiteDeMissoes";
 import { toaster } from "@/components/commons/toaster";
 import { mensagensToastErro, mensagensToastSucesso } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
@@ -29,6 +30,8 @@ export default function CadastroMateriais() {
     const [pontuacao, setPontuacao] = useState<number>(0)
 
     const [tematicas, setTematicas] = useState<TematicaDTO[]>([])
+    /* Missões já cadastradas, para conferir o limite de posições da trilha. */
+    const [missoesExistentes, setMissoesExistentes] = useState<Missao[] | null>(null)
     const [tematicasCollection, setTematicasCollection] = useState<ListCollection>(createListCollection({
         items: [
             {
@@ -52,7 +55,17 @@ export default function CadastroMateriais() {
     useEffect(() => {
         async function carregarDados() {
             try {
-                const tematicaResponse = await TematicaAPI.listar()
+                const [tematicaResponse, missoesResponse] = await Promise.all([
+                    TematicaAPI.listar(),
+                    MissaoAPI.listar(),
+                ])
+
+                setMissoesExistentes(
+                    Array.isArray(missoesResponse.data)
+                        ? missoesResponse.data as Missao[]
+                        : []
+                )
+
                 if (!tematicaResponse.data) {
                     toaster.create(mensagensToastErro.carregarTematicas)
                     return
@@ -112,6 +125,19 @@ export default function CadastroMateriais() {
     }, [idMissao]);
 
 
+    const tituloTrilhaSelecionada =
+        tematicas.find(t => t.id === idTrilha)?.titulo ?? ""
+
+    /*
+     * Missões de conteúdo também ocupam posição no mapa da trilha, e
+     * por isso entram no mesmo limite das missões de atividade.
+     */
+    const capacidade = avaliarCapacidadeDaTrilha(
+        missoesExistentes,
+        tituloTrilhaSelecionada,
+        idMissao ? idMissaoMaterial : undefined
+    )
+
     const onSubmit = async () => {
         const resultado = validarConteudo({
             titulo,
@@ -136,6 +162,17 @@ export default function CadastroMateriais() {
             toaster.create(mensagensToastErro.validarConteudo)
             return;
         }
+
+        if (capacidade.atingiuLimite) {
+            toaster.create(
+                mensagensToastErro.limiteMissoesTrilha(
+                    obterNomeTematica(tituloTrilhaSelecionada) || tituloTrilhaSelecionada,
+                    capacidade.capacidade
+                )
+            )
+            return;
+        }
+
         try {
             const missaoPayload = {
                 titulo: titulo,
@@ -288,6 +325,21 @@ export default function CadastroMateriais() {
                                 >
                                     Selecione uma temática para o conteúdo.
                                 </Field.ErrorText>
+                            )}
+                            {/* Ocupação do mapa da trilha, antes de salvar. */}
+                            {capacidade.possuiLimite && (
+                                <Field.HelperText
+                                    textStyle="inputPlaceholder"
+                                    color={
+                                        capacidade.atingiuLimite
+                                            ? "brand.secondaryRed"
+                                            : "brand.neutral"
+                                    }
+                                >
+                                    {capacidade.atingiuLimite
+                                        ? `Esta trilha já usa as ${capacidade.capacidade} posições do mapa. Exclua uma missão antes de cadastrar outra.`
+                                        : `${capacidade.ocupadas} de ${capacidade.capacidade} posições do mapa em uso nesta trilha.`}
+                                </Field.HelperText>
                             )}
                         </Field.Root>
                         <Fieldset.Root invalid={validacaoTipoMaterial}>

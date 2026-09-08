@@ -1,141 +1,265 @@
-import { Box, Button, Field, InputGroup, Link, Stack, Text, } from "@chakra-ui/react";
+import { Button, Field, HStack, InputGroup, Link, Spinner, Stack, Text, } from "@chakra-ui/react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppInput } from "@/components/commons/AppInput";
-import { useAuth } from "@/hooks/useAuth";
 import { mensagensToastErro, mensagensToastSucesso } from "@/config/mensagensToaster";
 import { toaster } from "@/components/commons/toaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
 import CardCustomizado from "@/components/commons/cardCustomizado";
 import { RecuperarSenhaAPI } from "../../api/recuperarSenha";
-import { RecuperarSenhaDTO, retornoValidarToken } from "@/types_consts/recuperarSenha";
+import {
+    RecuperarSenhaDTO,
+    SituacaoTokenRecuperacao,
+} from "@/types_consts/recuperarSenha";
 import { validarRecuperacaoSenha } from "@/utils/validations/recuperacaoSenha";
+import { erroDeValidacaoDaApi, mensagemDeErroDaApi } from "@/utils/erroApi";
 
 export default function RecuperarSenha() {
     const navigate = useNavigate();
-    const { login } = useAuth();
 
     const [searchParams] = useSearchParams();
-
     const token = searchParams.get("token");
+
     const [senha, setSenha] = useState("")
     const [confirmarSenha, setConfirmarSenha] = useState("")
 
     const [validarSenha, setValidarSenha] = useState(false)
     const [validarConfirmarSenha, setValidarConfirmarSenha] = useState(false)
 
-    const TEMPO_EXPIRACAO = 30 * 60;
+    const [salvando, setSalvando] = useState(false)
 
-    const [tempo, setTempo] = useState(() => {
-        const chaveExpiracao = "recuperacaoSenhaExpiraEm";
-        const expiraEm = localStorage.getItem(chaveExpiracao);
+    /*
+     * A situação do link é guardada junto com o token que a produziu.
+     * Assim, se o token da URL mudar, a tela volta sozinha para
+     * "verificando" durante a renderização, sem precisar de um
+     * setState dentro do efeito para desfazer o estado anterior.
+     */
+    const [resultadoToken, setResultadoToken] = useState<{
+        token: string | null
+        situacao: SituacaoTokenRecuperacao
+        expiraEm: number | null
+    }>({ token: null, situacao: "verificando", expiraEm: null })
 
-        if (!expiraEm) {
-            const novaExpiracao = Date.now() + TEMPO_EXPIRACAO * 1000;
+    const [agora, setAgora] = useState(() => Date.now())
 
-            localStorage.setItem(chaveExpiracao, String(novaExpiracao));
-            return TEMPO_EXPIRACAO;
-        }
+    const situacaoToken: SituacaoTokenRecuperacao =
+        resultadoToken.token === token ? resultadoToken.situacao : "verificando"
 
-        return Math.max(
-            Math.ceil((Number(expiraEm) - Date.now()) / 1000),
-            0
-        );
-    });
+    const expiraEm = resultadoToken.token === token ? resultadoToken.expiraEm : null
+
+    /*
+     * A validade do link é a que o backend informa (DataExpiracao do
+     * registro em recuperacao_senha), não uma contagem de 30 minutos
+     * iniciada quando a tela abre: o link pode ter sido emitido muito
+     * antes de o usuário clicar nele.
+     */
+    const tempo = expiraEm === null
+        ? 0
+        : Math.max(Math.ceil((expiraEm - agora) / 1000), 0);
+
+    /* Link válido cujo prazo terminou com a tela aberta. */
+    const situacao: SituacaoTokenRecuperacao =
+        situacaoToken === "valido" && expiraEm !== null && tempo <= 0
+            ? "invalido"
+            : situacaoToken;
 
     useEffect(() => {
-        const chaveExpiracao = "recuperacaoSenhaExpiraEm";
+        let ativo = true;
 
-        const atualizarTempo = () => {
-            const expiraEm = localStorage.getItem(chaveExpiracao);
-
-            if (!expiraEm) {
-                setTempo(0);
+        async function verificarToken() {
+            if (!token || token.trim().length === 0) {
+                if (!ativo) return;
+                setResultadoToken({ token, situacao: "invalido", expiraEm: null });
+                toaster.create(mensagensToastErro.linkRecSenhaAusente);
                 return;
             }
 
-            const restante = Math.max(Math.ceil((Number(expiraEm) - Date.now()) / 1000), 0);
-            setTempo(restante);
-        };
+            try {
+                const resposta = await RecuperarSenhaAPI.validar(token);
 
-        atualizarTempo();
-        const intervalo = setInterval(atualizarTempo, 1000);
-        return () => clearInterval(intervalo);
-    }, []);
+                if (!ativo) return;
 
-    const reenviarCodigo = async () => {
-        try {
-            const correioEletronico = localStorage.getItem("correioEletronico");
-            if (!correioEletronico) {
-                navigate("/recuperarSenha");
-                return
+                if (resposta.data?.valido) {
+                    setResultadoToken({
+                        token,
+                        situacao: "valido",
+                        expiraEm: new Date(resposta.data.expiraEm).getTime(),
+                    });
+                    return;
+                }
+
+                setResultadoToken({ token, situacao: "invalido", expiraEm: null });
+                toaster.create(mensagensToastErro.linkRecSenhaInvalido);
+            } catch (e) {
+                if (!ativo) return;
+
+                console.error(
+                    mensagensErroConsole.validarCodigoRecuperacao,
+                    mensagemDeErroDaApi(e) ?? e
+                );
+
+                setResultadoToken({ token, situacao: "invalido", expiraEm: null });
+
+                toaster.create(
+                    erroDeValidacaoDaApi(e)
+                        ? mensagensToastErro.linkRecSenhaInvalido
+                        : mensagensToastErro.carregarGenerico
+                );
             }
-            const invalido = typeof correioEletronico === "string" &&
-                correioEletronico.trim().length > 0 &&
-                correioEletronico.trim().length <= 255 &&
-                /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correioEletronico.trim());
-
-            if (invalido) {
-                navigate("/recuperarSenha");
-                return
-            }
-
-            await RecuperarSenhaAPI.solicitar(correioEletronico)
-
-            const novaExpiracao = Date.now() + TEMPO_EXPIRACAO * 1000;
-
-            localStorage.setItem("recuperacaoSenhaExpiraEm", String(novaExpiracao));
-
-            setTempo(TEMPO_EXPIRACAO);
-        } catch (e) {
-            console.error(mensagensErroConsole.calcularTempoCodigoRecuperacao, e);
-            toaster.create(mensagensToastErro.validarCodigoRecSenha);
         }
-    };
+
+        verificarToken();
+
+        return () => { ativo = false };
+    }, [token]);
+
+    /* Um único relógio move a contagem regressiva, e só enquanto ela existe. */
+    useEffect(() => {
+        if (expiraEm === null) return;
+
+        const intervalo = setInterval(() => setAgora(Date.now()), 1000);
+
+        return () => clearInterval(intervalo);
+    }, [expiraEm]);
+
+    const tempoFormatado = useMemo(
+        () => `${String(Math.floor(tempo / 60)).padStart(2, "0")}:${String(tempo % 60).padStart(2, "0")}`,
+        [tempo]
+    );
+
+    const solicitarNovoLink = useCallback(
+        () => navigate("/recuperarSenha"),
+        [navigate]
+    );
 
     const onSubmitNovaSenha = async () => {
-        const invalido = validarRecuperacaoSenha(tempo, senha, confirmarSenha, token)
+        if (salvando) return;
 
-        if (!invalido.invalido) {
-            if (!invalido.tempo || !invalido.token) {
+        if (situacao !== "valido" || !token) {
+            toaster.create(mensagensToastErro.linkRecSenhaInvalido);
+            return;
+        }
+
+        const validacao = validarRecuperacaoSenha(tempo, senha, confirmarSenha, token)
+
+        if (validacao.invalido) {
+            setValidarSenha(validacao.senha)
+            setValidarConfirmarSenha(validacao.confirmarSenha)
+
+            if (validacao.tempo || validacao.token) {
                 toaster.create(mensagensToastErro.validarCodigoRecSenhaTempo)
                 return
             }
-            
-            setValidarSenha(invalido.confirmarSenha)
-            setValidarConfirmarSenha(invalido.confirmarSenha)
 
-            toaster.create(mensagensToastErro.validarCodigoRecSenha)
+            toaster.create(mensagensToastErro.validarNovaSenha)
             return
         }
 
-        try {
-            const validacaoTokenResponse = await RecuperarSenhaAPI.validar(token!)
-            if (!validacaoTokenResponse.data) return
-
-            const validacaoToken = validacaoTokenResponse.data as retornoValidarToken
-            if (!validacaoToken.valido) {
-                toaster.create(mensagensToastErro.validarCodigoRecSenhaTempo)
-            }
-        } catch (e) {
-            console.error(mensagensErroConsole.validarCodigoRecuperacao, e);
-            toaster.create(mensagensToastErro.validarCodigoRecSenhaTempo)
-        }
+        setValidarSenha(false)
+        setValidarConfirmarSenha(false)
+        setSalvando(true)
 
         try {
+            /*
+             * O próprio /redefinir revalida e consome o token. Chamar
+             * /validar antes seria uma requisição a mais sem ganho, e
+             * abriria uma janela entre a checagem e o uso.
+             */
             await RecuperarSenhaAPI.redefinir({
-                token: token,
+                token,
                 novaSenha: senha,
-                novaSenhaRepeticao: confirmarSenha
-            } as RecuperarSenhaDTO)
+                novaSenhaRepeticao: confirmarSenha,
+            } satisfies RecuperarSenhaDTO)
 
-            navigate("/login");
             toaster.create(mensagensToastSucesso.recuperarSenha);
+            navigate("/login");
         } catch (e) {
-            console.error(mensagensErroConsole.recuperarSenha, e);
-            toaster.create(mensagensToastErro.enviarRecuperacaoSenha);
+            const mensagemApi = mensagemDeErroDaApi(e);
+
+            console.error(mensagensErroConsole.recuperarSenha, mensagemApi ?? e);
+
+            if (!erroDeValidacaoDaApi(e)) {
+                toaster.create(mensagensToastErro.enviarRecuperacaoSenha);
+                return;
+            }
+
+            /*
+             * A API recusou. Se o motivo foi o token, a tela precisa
+             * mudar de estado — insistir no formulário não levaria a
+             * nada.
+             */
+            if (mensagemApi?.toLowerCase().includes("token")) {
+                setResultadoToken({ token, situacao: "invalido", expiraEm: null });
+                toaster.create(mensagensToastErro.linkRecSenhaInvalido);
+                return;
+            }
+
+            setValidarSenha(true);
+            setValidarConfirmarSenha(true);
+            toaster.create(mensagensToastErro.validarNovaSenha);
+        } finally {
+            setSalvando(false)
         }
+    }
+
+    if (situacao === "verificando") {
+        return (
+            <CardCustomizado
+                key="cardVerificandoLink"
+                titulo="Redefinir senha "
+                mensagem="Estamos verificando o seu link de redefinição."
+            >
+                <HStack mt="9" gap="3" justify="center">
+                    <Spinner size="md" color="brand.primaryDark" />
+                    <Text textStyle="bodyText" color="brand.neutral">
+                        Verificando o link...
+                    </Text>
+                </HStack>
+            </CardCustomizado>
+        );
+    }
+
+    if (situacao === "invalido") {
+        return (
+            <CardCustomizado
+                key="cardLinkInvalido"
+                titulo="Link não disponível "
+                mensagem="Este link de redefinição não vale mais: ele pode ter expirado ou já ter sido usado."
+            >
+                <Stack mt="9" w="100%" gap="5">
+                    <Text
+                        textStyle="bodyText"
+                        color="brand.neutral"
+                        textAlign="justify"
+                    >
+                        Solicite um novo e-mail de redefinição. Cada link vale
+                        uma única vez e expira depois de alguns minutos.
+                    </Text>
+                    <Button
+                        w="100%"
+                        variant="solid"
+                        size="md"
+                        onClick={solicitarNovoLink}
+                    >
+                        Solicitar novo link
+                    </Button>
+                    <Link
+                        alignSelf="flex-end"
+                        href="/login"
+                        variant="underline"
+                        color="brand.link"
+                        _hover={{
+                            color: "brand.primaryDark",
+                            textDecoration: "none",
+                        }}
+                        textStyle="bodyText"
+                    >
+                        Retornar para tela de login
+                    </Link>
+                </Stack>
+            </CardCustomizado>
+        );
     }
 
     return (
@@ -196,24 +320,22 @@ export default function RecuperarSenha() {
                             color="brand.neutral"
                             textAlign="start"
                         >
-                            O código expira em {`${String(Math.floor(tempo / 60)).padStart(2, "0")}:${String(tempo % 60).padStart(2, "0")}`}
+                            O link expira em {tempoFormatado}
                         </Text>
-                        <Box flex={1} textAlign="end">
-                            <Button
-                                variant="plain"
-                                size="sm"
-                                p="1"
-                                textStyle="bodyText"
-                                color="brand.primaryDark"
-                                _hover={{
-                                    background: "#2f9e411f",
-                                    textDecoration: "none",
-                                }}
-                                onClick={reenviarCodigo}
-                            >
-                                Enviar novamente o código
-                            </Button>
-                        </Box>
+                        <Button
+                            variant="plain"
+                            size="sm"
+                            p="1"
+                            textStyle="bodyText"
+                            color="brand.primaryDark"
+                            _hover={{
+                                background: "#2f9e411f",
+                                textDecoration: "none",
+                            }}
+                            onClick={solicitarNovoLink}
+                        >
+                            Solicitar novo link
+                        </Button>
                     </Stack>
                     <Field.Root required invalid={validarConfirmarSenha}>
                         <Field.Label
@@ -249,6 +371,8 @@ export default function RecuperarSenha() {
                         type="submit"
                         size="md"
                         mt="3"
+                        loading={salvando}
+                        loadingText="Salvando..."
                     >
                         Fazer login com a nova senha
                     </Button>

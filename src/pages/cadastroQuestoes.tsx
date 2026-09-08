@@ -7,7 +7,8 @@ import { Box, Button, createListCollection, Dialog, Em, Field, Grid, Heading, HS
 import { FaExclamationCircle, FaSearch, FaTimes } from "react-icons/fa";
 import CustomTooltip from "@/components/commons/customTooltip";
 import { obterNomeTematica, TematicaDTO } from "@/types_consts/tematica";
-import { Alternativa, AlternativaAssociacao, AlternativaAssociacaoDTO, AlternativaAssociadaDTO, AlternativaAssociadaPutDTO, AlternativaDTO, AlternativaMultiplaEscolha, AlternativaMultiplaEscolhaDTO, AlternativaOrdenacao, AlternativaOrdenacaoDTO, SubtipoAlternativa, SubtipoAlternativaLabel, TipoAlternativa, TipoAlternativaLabel } from "@/types_consts/alternativa";
+import { Alternativa, AlternativaAssociacao, AlternativaAssociacaoDTO, AlternativaAssociadaPostDTO, AlternativaAssociadaPutDTO, AlternativaDTO, AlternativaMultiplaEscolha, AlternativaMultiplaEscolhaDTO, AlternativaOrdenacao, AlternativaOrdenacaoDTO, SubtipoAlternativa, SubtipoAlternativaLabel, TipoAlternativa, TipoAlternativaLabel } from "@/types_consts/alternativa";
+import { mensagemDeErroDaApi } from "@/utils/erroApi";
 import { Missao, MissaoAtividade, TipoAtividade, TipoAtividadeLabel } from "@/types_consts/missao";
 import { TematicaAPI } from "../../api/tematica";
 import { QuestaoDTO, QuestaoProp } from "@/types_consts/questao";
@@ -161,7 +162,7 @@ export default function CadastroQuestoes() {
         switch (tipoAlternativa) {
             case TipoAlternativa.ASSOCIACAO:
                 setAlternativas(
-                    Array.from({ length: 4 }, (_, i) => {
+                    Array.from({ length: 4 }, (_, i): AlternativaAssociacao => {
                         const idA = -(i * 2 + 1)
                         const idB = -(i * 2 + 2)
 
@@ -172,10 +173,20 @@ export default function CadastroQuestoes() {
                             alternativaAssociada: {
                                 id: idB,
                                 texto: "Conteúdo da alternativa associada",
-                                correta: true
+                                /*
+                                 * O campo faltava aqui e validarAlternativas()
+                                 * exige tipoAlternativa na associada. Toda
+                                 * questão de Associação era reprovada na
+                                 * validação e nunca chegava a ser enviada:
+                                 * era essa a mensagem de "não foi possível
+                                 * salvar". O "correta: true" que existia no
+                                 * lugar não é lido por ninguém — a correção
+                                 * da associação é feita pelo par, no backend.
+                                 */
+                                tipoAlternativa: TipoAlternativa.ASSOCIACAO,
                             },
                         }
-                    }) as AlternativaAssociacao[]
+                    })
                 )
                 setTipoAlternativaLabel(TipoAlternativaLabel[tipoAlternativa])
                 break;
@@ -406,6 +417,59 @@ export default function CadastroQuestoes() {
     const [validacaoTipoAtividadeMantido, setValidacaoTipoAtividadeMantido] = useState(false);
     const [validacaoAlternativas, setValidacaoAlternativas] = useState(false);
 
+    /**
+     * Seleciona a missão-atividade e deriva dela a trilha e o tipo.
+     *
+     * A trilha e o tipo de atividade são propriedades DA MISSÃO: pedir
+     * que o usuário os escolha de novo, à mão, é duplicar uma
+     * informação que o sistema já tem — e abre espaço para gravar uma
+     * questão com trilha diferente da trilha da missão, o que a
+     * validação depois rejeita sem explicar o motivo.
+     *
+     * Uma trilha já correta não é sobrescrita: se a missão pertence à
+     * trilha que está selecionada, nada muda.
+     */
+    function selecionarMissaoAtividade(idMissaoSelecionada: number) {
+        if (!Number.isInteger(idMissaoSelecionada) || idMissaoSelecionada <= 0) {
+            return
+        }
+
+        setIdAtividade(idMissaoSelecionada)
+
+        const missao = missoes.find(m => m.id === idMissaoSelecionada)
+
+        if (!missao) return
+
+        const tituloTrilha = missao.tematica?.titulo
+
+        if (tituloTrilha && tituloTrilha !== tematica) {
+            setTematica(tituloTrilha)
+        }
+
+        if (missao.tipoAtividade && missao.tipoAtividade !== tipoAtividade) {
+            setTipoAtividade(missao.tipoAtividade)
+        }
+    }
+
+    /**
+     * Troca a trilha selecionada, mantendo o estado coerente.
+     *
+     * Se a missão que estava escolhida não pertence à nova trilha, a
+     * seleção é limpa: deixá-la ali produziria uma questão cuja trilha
+     * contradiz a missão, exatamente o que a validação recusa.
+     */
+    function alterarTrilhaSelecionada(novaTrilha: string) {
+        setTematica(novaTrilha)
+
+        if (idAtividade === -1) return
+
+        const missaoSelecionada = missoes.find(m => m.id === idAtividade)
+
+        if (missaoSelecionada && missaoSelecionada.tematica?.titulo !== novaTrilha) {
+            setIdAtividade(-1)
+        }
+    }
+
     const onSubmit = async () => {
 
         const resultado = validarQuestao({
@@ -430,7 +494,8 @@ export default function CadastroQuestoes() {
             setValidacaoTematica(resultado.trilha);
             setValidacaoTrilhaMantida(resultado.trilhaMantida);
             setValidacaoIdAtividade(resultado.idAtividade);
-            setValidacaoIdAtividadeMantido(resultado.tipoAtividade);
+            /* Estava recebendo resultado.tipoAtividade — campo trocado. */
+            setValidacaoIdAtividadeMantido(resultado.idAtividadeMantido);
             setValidacaoTipoAtividade(resultado.tipoAtividade);
             setValidacaoTipoAtividadeMantido(resultado.tipoAtividadeMantido);
             setValidacaoAlternativas(resultado.alternativas);
@@ -452,11 +517,16 @@ export default function CadastroQuestoes() {
                         id: alternativa.id,
                         texto: alternativa.texto,
                         tipoAlternativa: alternativa.tipoAlternativa,
+                        /*
+                         * O ID da associada existente vai no payload
+                         * para que o backend ATUALIZE o par em vez de
+                         * criar outro.
+                         */
                         alternativaAssociada: {
                             idAlternativaAssociada: alternativa.alternativaAssociada.id,
                             texto: alternativa.alternativaAssociada.texto,
-                            tipoAlternativa: alternativa.alternativaAssociada.tipoAlternativa,
-                        } as AlternativaAssociadaPutDTO
+                            tipoAlternativa: TipoAlternativa.ASSOCIACAO,
+                        } satisfies AlternativaAssociadaPutDTO
                     })
                 )
             }
@@ -488,48 +558,67 @@ export default function CadastroQuestoes() {
             try {
                 await QuestaoAPI.atualizar(idAtividade, id, questaoPayload)
 
-                try {
-                    await Promise.all(
-                        alternativasPayload
-                            .map(alternativa =>
-                                AlternativaAPI.atualizar(id, alternativa.id!, alternativa as AlternativaDTO)
-                            )
-                    )
-                } catch (erroAlternativasUpdate) {
-                    toaster.create(mensagensToastErro.editarQuestao)
-                    console.error(mensagensErroConsole.editarQuestao, erroAlternativasUpdate)
+                /*
+                 * Sequencial pelo mesmo motivo do cadastro: cada PUT
+                 * recarrega e regrava todas as alternativas da questão
+                 * no backend, então requisições concorrentes competem
+                 * entre si.
+                 */
+                for (const alternativa of alternativasPayload) {
+                    const idAlternativa = Number(alternativa.id)
+
+                    if (!Number.isInteger(idAlternativa) || idAlternativa <= 0) {
+                        /*
+                         * Alternativa sem ID válido é nova: precisa de
+                         * POST, não de PUT. Antes ia para o PUT com
+                         * "id!" e o backend recusava a atualização de
+                         * uma alternativa inexistente.
+                         */
+                        await AlternativaAPI.salvar(id, alternativa)
+                        continue
+                    }
+
+                    await AlternativaAPI.atualizar(id, idAlternativa, alternativa)
                 }
 
+                /*
+                 * O toaster de sucesso só aparece depois de as
+                 * alternativas terem sido salvas. Antes ele era exibido
+                 * mesmo quando a atualização delas falhava, junto com
+                 * o toaster de erro.
+                 */
                 toaster.create(mensagensToastSucesso.editarQuestao)
 
             } catch (erroQuestaoUpdate) {
                 toaster.create(mensagensToastErro.editarQuestao)
-                console.error(mensagensErroConsole.editarQuestao, erroQuestaoUpdate)
+                console.error(
+                    mensagensErroConsole.editarQuestao,
+                    mensagemDeErroDaApi(erroQuestaoUpdate) ?? erroQuestaoUpdate
+                )
+                return
             }
 
         } else {
             try {
-                /*const questaoResponse = await QuestaoAPI.salvar(idAtividade, questaoPayload)
-                
-                if (!questaoResponse.data) return // MENSAGEM DE ERRO
-                const questao = questaoResponse.data
-                */
-                await QuestaoAPI.salvar(idAtividade, questaoPayload)
+                /*
+                 * O POST responde 201 com o ID da questão criada. Esse
+                 * ID é a fonte oficial para salvar as alternativas:
+                 * antes, o código listava TODAS as questões e procurava
+                 * a recém-criada por enunciado + missão + mensagem, o
+                 * que carregava a base inteira e podia casar com a
+                 * questão errada.
+                 */
+                const questaoResponse = await QuestaoAPI.salvar(idAtividade, questaoPayload)
 
-                const questaoResponse = await QuestaoAPI.listar()
+                const idQuestaoCriada = Number(questaoResponse.data?.id)
 
-                if (!questaoResponse.data) {
-                    toaster.create(mensagensToastErro.carregarQuestoes)
-                    return
-                }
-                const questoes = questaoResponse.data as QuestaoProp[]
-
-                const questao = questoes.find(q => (
-                    q.enunciado === enunciado &&
-                    q.idMissao === idAtividade &&
-                    q.mensagemCorrecao === mensagemCorrecao))
-                if (!questao) {
-                    toaster.create(mensagensToastErro.carregarQuestoes)
+                if (!Number.isInteger(idQuestaoCriada) || idQuestaoCriada <= 0) {
+                    toaster.create(mensagensToastErro.salvarQuestao)
+                    console.error(
+                        mensagensErroConsole.salvarQuestao,
+                        "POST da questão não devolveu um ID válido:",
+                        questaoResponse.data
+                    )
                     return
                 }
 
@@ -539,10 +628,14 @@ export default function CadastroQuestoes() {
                         (alternativa): AlternativaAssociacaoDTO => ({
                             texto: alternativa.texto,
                             tipoAlternativa: TipoAlternativa.ASSOCIACAO,
+                            /*
+                             * Sem ID: o par ainda não existe e é criado
+                             * pelo backend junto com o vínculo.
+                             */
                             alternativaAssociada: {
                                 texto: alternativa.alternativaAssociada.texto,
-                                correta: true
-                            } as AlternativaAssociadaDTO
+                                tipoAlternativa: TipoAlternativa.ASSOCIACAO,
+                            } satisfies AlternativaAssociadaPostDTO
                         })
                     )
                 }
@@ -570,30 +663,50 @@ export default function CadastroQuestoes() {
                 }
 
                 try {
-                    await Promise.all(
-                        alternativasPayload
-                            .map(alternativa =>
-                                AlternativaAPI.salvar(questao.id, alternativa as AlternativaDTO)
-                            )
-                    )
-
-                    toaster.create(mensagensToastSucesso.salvarQuestao)
-                    
-                } catch (erroAlternativas) {
-                    toaster.create(mensagensToastErro.editarQuestao)
-                    console.error(mensagensErroConsole.editarQuestao, erroAlternativas)
-
-                    try {
-                        await QuestaoAPI.deletar(questao.idMissao, questao.id)
-                    } catch (erroDeleteQuestao) {
-                        console.error(mensagensErroConsole.editarQuestao, erroDeleteQuestao)
+                    /*
+                     * Sequencial, não Promise.all: cada POST de
+                     * alternativa faz o backend recarregar a questão
+                     * inteira, anexar a nova e regravar todas. Em
+                     * paralelo, as requisições leem o mesmo estado
+                     * antigo e disputam as validações de texto
+                     * duplicado — a causa de falhas intermitentes ao
+                     * salvar alternativas.
+                     */
+                    for (const alternativa of alternativasPayload) {
+                        await AlternativaAPI.salvar(idQuestaoCriada, alternativa)
                     }
 
-                    throw erroAlternativas;
+                    toaster.create(mensagensToastSucesso.salvarQuestao)
+
+                } catch (erroAlternativas) {
+                    toaster.create(mensagensToastErro.salvarQuestao)
+                    console.error(
+                        mensagensErroConsole.salvarAlternativa,
+                        mensagemDeErroDaApi(erroAlternativas) ?? erroAlternativas
+                    )
+
+                    /*
+                     * A questão sem alternativas não serve para nada:
+                     * desfaz a criação para não deixar lixo na base.
+                     */
+                    try {
+                        await QuestaoAPI.deletar(idAtividade, idQuestaoCriada)
+                    } catch (erroDeleteQuestao) {
+                        console.error(
+                            mensagensErroConsole.excluirQuestao,
+                            mensagemDeErroDaApi(erroDeleteQuestao) ?? erroDeleteQuestao
+                        )
+                    }
+
+                    return
                 }
             } catch (erroSalvarQuestao) {
-                toaster.create(mensagensToastErro.editarQuestao)
-                console.error(mensagensErroConsole.editarQuestao, erroSalvarQuestao)
+                toaster.create(mensagensToastErro.salvarQuestao)
+                console.error(
+                    mensagensErroConsole.salvarQuestao,
+                    mensagemDeErroDaApi(erroSalvarQuestao) ?? erroSalvarQuestao
+                )
+                return
             }
         }
 
@@ -654,7 +767,7 @@ export default function CadastroQuestoes() {
                                     value={tematica}
                                     onValueChange={(details) => {
                                         if (details.value !== null) {
-                                            setTematica(details.value);
+                                            alterarTrilhaSelecionada(details.value);
                                         }
                                     }}
                                     disabled={idQuestao ? true : false}
@@ -919,7 +1032,7 @@ export default function CadastroQuestoes() {
                                     collection={missoesFiltradasCollection}
                                     value={idAtividade !== -1 ? [idAtividade.toString()] : []}
                                     onValueChange={({ value }) => {
-                                        setIdAtividade(Number(value[0]));
+                                        selecionarMissaoAtividade(Number(value[0]));
                                     }}
                                     disabled={idQuestao ? true : false}
                                 >
@@ -1551,10 +1664,28 @@ function ExibirTipoAlternativa({
     }
 
     function alterarRespostaAssociacao(colunasAssociadas: colunasAssociadas) {
+        const indice = colunasAssociadas.index
+
+        /*
+         * Sem índice não há linha para alterar. A guarda existe porque
+         * um onChange sem índice fazia esta função ler colunaA[undefined]
+         * e estourar em itemA.id, derrubando a tela de cadastro.
+         */
+        if (
+            indice === undefined ||
+            !Number.isInteger(indice) ||
+            indice < 0 ||
+            indice >= alternativas.length
+        ) {
+            return
+        }
+
         const novasAlternativas = [...alternativas] as AlternativaAssociacao[]
 
-        const itemA = colunasAssociadas.colunaA[colunasAssociadas.index!]
-        const itemB = colunasAssociadas.colunaB[colunasAssociadas.index!]
+        const itemA = colunasAssociadas.colunaA[indice]
+        const itemB = colunasAssociadas.colunaB[indice]
+
+        if (!itemA || !itemB) return
 
         const alternativaAssociacaoNova = {
             id: itemA.id,
@@ -1567,7 +1698,7 @@ function ExibirTipoAlternativa({
             }
         } as AlternativaAssociacao
 
-        novasAlternativas[colunasAssociadas.index!] = alternativaAssociacaoNova
+        novasAlternativas[indice] = alternativaAssociacaoNova
         setAlternativas(novasAlternativas)
     }
 

@@ -217,13 +217,14 @@ export function AssociacaoCadastroQuiz({ alternativas, onChange }: AssociacaoCad
                     </Box>
                 ))}
             </Stack>
-            <Stack gap="5"
-                onChange={() => onChange({
-                    colunaA: colunaA,
-                    colunaB: colunaB
-                } as colunasAssociadas
-                )}
-            >
+            {/*
+              * Sem onChange no Stack: o evento change do input interno
+              * borbulhava até aqui e chamava onChange SEM o índice da
+              * linha, fazendo o consumidor ler colunaA[undefined] e
+              * estourar ao acessar .id. Quem notifica a alteração é o
+              * Editable.Root de cada célula, que sabe o índice.
+              */}
+            <Stack gap="5">
                 {colunaB.map((alternativa, index) => (
                     <Box
                         key={alternativa.id}

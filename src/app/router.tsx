@@ -164,6 +164,15 @@ export const router = createBrowserRouter([
       }, {
         path: "recuperarSenha/enviarNovaSenha",
         element: <RecuperarSenha />
+      }, {
+        /*
+         * Endereço que o backend coloca no e-mail de redefinição
+         * (EmailService::montarLinkDeRedefinicao). Sem esta rota o
+         * clique no link cai no ErrorPage e o fluxo morre no passo do
+         * token.
+         */
+        path: "redefinir-senha",
+        element: <RecuperarSenha />
       },
     ],
   },
