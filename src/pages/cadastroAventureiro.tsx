@@ -14,7 +14,7 @@ import { urlDaFotoDePerfil } from "@/utils/fotoPerfil";
 import { mensagemDeErroDaApi } from "@/utils/erroApi";
 import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/contexts/AuthContext";
-import { FaRegCalendarAlt } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaRegCalendarAlt } from "react-icons/fa";
 import { validarUsuario } from "@/utils/validations/usuario";
 import { informouNovaSenha } from "@/utils/validations/senha";
 import { toaster } from "@/components/commons/toaster";
@@ -59,6 +59,10 @@ export function CadastroAventureiro() {
             },
         ]
     }));
+
+    const [mostrarSenhaAtual, setMostrarSenhaAtual] = useState(false);
+    const [mostrarSenha, setMostrarSenha] = useState(false);
+    const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false);
 
     const [idUsuario, setIdUsuario] = useState(-1)
     const [nomeUsuario, setNomeUsuario] = useState("")
@@ -859,16 +863,37 @@ export function CadastroAventureiro() {
                                 Confirmar senha atual
                                 <Field.RequiredIndicator color="brand.secondaryRed" />
                             </Field.Label>
-                            <InputGroup>
+
+                            <InputGroup
+                                endElement={
+                                    <Button
+                                        variant="plain"
+                                        size="sm"
+                                        onClick={() => setMostrarSenhaAtual(!mostrarSenhaAtual)}
+                                        aria-label={
+                                            mostrarSenhaAtual
+                                                ? "Ocultar senha"
+                                                : "Mostrar senha"
+                                        }
+                                    >
+                                        {mostrarSenhaAtual ? (
+                                            <FaEyeSlash />
+                                        ) : (
+                                            <FaEye />
+                                        )}
+                                    </Button>
+                                }
+                            >
                                 <AppInput
                                     name="senha"
                                     value={confirmarSenhaAtual}
-                                    type="password"
+                                    type={mostrarSenhaAtual ? "text" : "password"}
                                     placeholder="*************"
                                     size="md"
                                     onChange={(e) => setConfirmarSenhaAtual(e.target.value)}
                                 />
                             </InputGroup>
+
                             {validarSenhaAtual && (
                                 <Field.ErrorText
                                     textStyle="inputPlaceholder"
@@ -887,16 +912,29 @@ export function CadastroAventureiro() {
                             {user ? "Nova senha" : "Senha"}
                             <Field.RequiredIndicator color="brand.secondaryRed" />
                         </Field.Label>
-                        <InputGroup>
+
+                        <InputGroup
+                            endElement={
+                                <Button
+                                    variant="plain"
+                                    size="sm"
+                                    onClick={() => setMostrarSenha(!mostrarSenha)}
+                                    aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
+                                >
+                                    {mostrarSenha ? <FaEyeSlash /> : <FaEye />}
+                                </Button>
+                            }
+                        >
                             <AppInput
                                 name="senha"
                                 value={senha}
-                                type="password"
+                                type={mostrarSenha ? "text" : "password"}
                                 placeholder="*************"
                                 size="md"
                                 onChange={(e) => setSenha(e.target.value)}
                             />
                         </InputGroup>
+
                         {validarSenha && (
                             <Field.ErrorText
                                 textStyle="inputPlaceholder"
@@ -914,16 +952,35 @@ export function CadastroAventureiro() {
                             {user ? "Confirmar nova senha" : "Confirmar senha"}
                             <Field.RequiredIndicator color="brand.secondaryRed" />
                         </Field.Label>
-                        <InputGroup>
+
+                        <InputGroup
+                            endElement={
+                                <Button
+                                    variant="plain"
+                                    size="sm"
+                                    onClick={() =>
+                                        setMostrarConfirmarSenha(!mostrarConfirmarSenha)
+                                    }
+                                    aria-label={
+                                        mostrarConfirmarSenha
+                                            ? "Ocultar senha"
+                                            : "Mostrar senha"
+                                    }
+                                >
+                                    {mostrarConfirmarSenha ? <FaEyeSlash /> : <FaEye />}
+                                </Button>
+                            }
+                        >
                             <AppInput
                                 name="confirmarSenha"
                                 value={confirmarSenha}
-                                type="password"
+                                type={mostrarConfirmarSenha ? "text" : "password"}
                                 placeholder="*************"
                                 size="md"
                                 onChange={(e) => setConfirmarSenha(e.target.value)}
                             />
                         </InputGroup>
+
                         {validarConfirmarSenha && (
                             <Field.ErrorText
                                 textStyle="inputPlaceholder"

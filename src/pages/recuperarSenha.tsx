@@ -14,6 +14,7 @@ import {
 } from "@/types_consts/recuperarSenha";
 import { validarRecuperacaoSenha } from "@/utils/validations/recuperacaoSenha";
 import { erroDeValidacaoDaApi, mensagemDeErroDaApi } from "@/utils/erroApi";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 export default function RecuperarSenha() {
     const navigate = useNavigate();
@@ -23,6 +24,9 @@ export default function RecuperarSenha() {
 
     const [senha, setSenha] = useState("")
     const [confirmarSenha, setConfirmarSenha] = useState("")
+
+    const [mostrarSenha, setMostrarSenha] = useState(false);
+    const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false);
 
     const [validarSenha, setValidarSenha] = useState(false)
     const [validarConfirmarSenha, setValidarConfirmarSenha] = useState(false)
@@ -278,6 +282,7 @@ export default function RecuperarSenha() {
                     w="100%"
                     gap="5"
                 >
+
                     <Field.Root required invalid={validarSenha}>
                         <Field.Label
                             textStyle="emphasis"
@@ -286,11 +291,23 @@ export default function RecuperarSenha() {
                             Nova senha
                             <Field.RequiredIndicator color="brand.secondaryRed" />
                         </Field.Label>
-                        <InputGroup>
+
+                        <InputGroup
+                            endElement={
+                                <Button
+                                    variant="plain"
+                                    size="sm"
+                                    onClick={() => setMostrarSenha(!mostrarSenha)}
+                                    aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
+                                >
+                                    {mostrarSenha ? <FaEyeSlash /> : <FaEye />}
+                                </Button>
+                            }
+                        >
                             <AppInput
                                 name="senha"
                                 value={senha}
-                                type="password"
+                                type={mostrarSenha ? "text" : "password"}
                                 placeholder="*************"
                                 size="md"
                                 onChange={(e) => setSenha(e.target.value)}
@@ -337,24 +354,43 @@ export default function RecuperarSenha() {
                             Solicitar novo link
                         </Button>
                     </Stack>
-                    <Field.Root required invalid={validarConfirmarSenha}>
+                    <Field.Root required={!user} invalid={validarConfirmarSenha}>
                         <Field.Label
                             textStyle="emphasis"
                             color="brand.primaryDark"
                         >
-                            Confirmar nova senha
+                            {user ? "Confirmar nova senha" : "Confirmar senha"}
                             <Field.RequiredIndicator color="brand.secondaryRed" />
                         </Field.Label>
-                        <InputGroup>
+
+                        <InputGroup
+                            endElement={
+                                <Button
+                                    variant="plain"
+                                    size="sm"
+                                    onClick={() =>
+                                        setMostrarConfirmarSenha(!mostrarConfirmarSenha)
+                                    }
+                                    aria-label={
+                                        mostrarConfirmarSenha
+                                            ? "Ocultar senha"
+                                            : "Mostrar senha"
+                                    }
+                                >
+                                    {mostrarConfirmarSenha ? <FaEyeSlash /> : <FaEye />}
+                                </Button>
+                            }
+                        >
                             <AppInput
                                 name="confirmarSenha"
                                 value={confirmarSenha}
-                                type="password"
+                                type={mostrarConfirmarSenha ? "text" : "password"}
                                 placeholder="*************"
                                 size="md"
                                 onChange={(e) => setConfirmarSenha(e.target.value)}
                             />
                         </InputGroup>
+
                         {validarConfirmarSenha && (
                             <Field.ErrorText
                                 textStyle="inputPlaceholder"

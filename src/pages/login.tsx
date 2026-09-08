@@ -11,6 +11,7 @@ import { validarLogin } from "@/utils/validations/login";
 import { mensagensToastErro } from "@/config/mensagensToaster";
 import { toaster } from "@/components/commons/toaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 export function Login() {
     const navigate = useNavigate();
@@ -22,6 +23,7 @@ export function Login() {
     const [senha, setSenha] = useState("")
 
     const [valido, setValido] = useState(false)
+    const [mostrarSenha, setMostrarSenha] = useState(false);
 
     const onSubmit = async () => {
         const valido = validarLogin({ email, senha })
@@ -193,7 +195,7 @@ export function Login() {
                                     />
                                 </InputGroup>
                             </Field.Root>
-                            <Field.Root invalid={valido}>
+                            <Field.Root required invalid={valido}>
                                 <Field.Label
                                     textStyle="emphasis"
                                     color="brand.primaryDark"
@@ -201,11 +203,22 @@ export function Login() {
                                     Senha
                                     <Field.RequiredIndicator color="brand.secondaryRed" />
                                 </Field.Label>
-                                <InputGroup>
+                                <InputGroup
+                                    endElement={
+                                        <Button
+                                            variant="plain"
+                                            size="sm"
+                                            onClick={() => setMostrarSenha(!mostrarSenha)}
+                                            aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
+                                        >
+                                            {mostrarSenha ? <FaEyeSlash /> : <FaEye />}
+                                        </Button>
+                                    }
+                                >
                                     <AppInput
                                         name="senha"
                                         value={senha}
-                                        type="password"
+                                        type={mostrarSenha ? "text" : "password"}
                                         placeholder="*************"
                                         size="md"
                                         onChange={(e) => setSenha(e.target.value)}
