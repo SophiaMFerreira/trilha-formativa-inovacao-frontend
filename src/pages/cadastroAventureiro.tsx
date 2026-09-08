@@ -201,12 +201,6 @@ export function CadastroAventureiro() {
 
                 setPossuiConhecimento(usuario.possuiConhecimento)
 
-                /*
-                 * A condição estava invertida ("ocupacao" in usuario):
-                 * o erro era disparado justamente quando a ocupação
-                 * VINHA na resposta, e seguia adiante quando ela
-                 * faltava.
-                 */
                 const idOcupacaoUsuario = Number(usuario.ocupacao?.id)
 
                 if (!Number.isInteger(idOcupacaoUsuario) || idOcupacaoUsuario <= 0) {
@@ -219,13 +213,6 @@ export function CadastroAventureiro() {
                     return
                 }
 
-                /*
-                 * O Select casa o valor pelo ID vindo da lista. Se a
-                 * ocupação do usuário não estiver entre as opções, o
-                 * campo apareceria em branco e a validação recusaria um
-                 * valor que está correto no banco — então a opção é
-                 * acrescentada à coleção.
-                 */
                 const ocupacaoNaLista = listaOcupacoes.some(
                     o => Number(o.id) === idOcupacaoUsuario
                 )
@@ -255,12 +242,6 @@ export function CadastroAventureiro() {
             }
         }
 
-        /*
-         * As ocupações são carregadas ANTES dos dados do usuário: a
-         * segunda etapa precisa da lista para conferir se a ocupação
-         * gravada está entre as opções do Select. As duas chamadas
-         * eram disparadas soltas, sem ordem nem await.
-         */
         carregarOcupacoes().then(carregarDadosUsuario)
 
         return () => { ativo = false };
@@ -294,7 +275,7 @@ export function CadastroAventureiro() {
             edicao: idUsuario !== -1 ? true : false
         })
 
-        if (!resultado.valido) {
+        if (resultado.valido) {
             setValidarNomeUsuario(resultado.nomeUsuario);
             setValidarNomeAventureiro(resultado.nomeAventureiro);
             setValidarCorreioEletronico(resultado.correioEletronico);
@@ -305,7 +286,7 @@ export function CadastroAventureiro() {
             setValidarConfirmarSenha(resultado.confirmarSenha);
             setValidarSenhaAtual(resultado.confirmarSenhaAtual);
 
-            if (!resultado.imagemArquivo) {
+            if (resultado.imagemArquivo) {
                 toaster.create(mensagensToastErro.validarImagemArquivo)
             }
 
@@ -335,7 +316,7 @@ export function CadastroAventureiro() {
             edicao: idUsuario !== -1 ? true : false
         })
 
-        if (!resultado.valido) {
+        if (resultado.valido) {
             setValidarNomeUsuario(resultado.nomeUsuario);
             setValidarNomeAventureiro(resultado.nomeAventureiro);
             setValidarCorreioEletronico(resultado.correioEletronico);
@@ -346,7 +327,7 @@ export function CadastroAventureiro() {
             setValidarConfirmarSenha(resultado.confirmarSenha);
             setValidarSenhaAtual(resultado.confirmarSenhaAtual);
 
-            if (!resultado.imagemArquivo) {
+            if (resultado.imagemArquivo) {
                 toaster.create(mensagensToastErro.validarImagemArquivo)
             }
 
@@ -355,7 +336,6 @@ export function CadastroAventureiro() {
             return;
         }
 
-        /* Trocar a senha é opcional na edição: só vale se ele digitou. */
         const alterarSenha = informouNovaSenha(senha, confirmarSenha)
 
         try {
@@ -367,15 +347,6 @@ export function CadastroAventureiro() {
                     ...(dataNascimento && { dataNascimento: `${dataNascimento[0].year}-${String(dataNascimento[0].month).padStart(2, "0")}-${String(dataNascimento[0].day).padStart(2, "0")}` }),
                     possuiConhecimento: possuiConhecimento,
                     primeiroAcesso: !editando,
-                    /*
-                     * A nova senha vai no payload SOMENTE quando o
-                     * usuário digitou uma. Antes, quando ele não queria
-                     * trocar, a tela mandava a senha ATUAL em claro no
-                     * campo de nova senha e o backend gerava um hash
-                     * novo para a mesma senha — além de tornar
-                     * impossível editar qualquer dado sem redigitar
-                     * uma senha completa.
-                     */
                     ...(alterarSenha && {
                         novaSenha: senha,
                         novaSenhaRepeticao: confirmarSenha,
@@ -402,7 +373,6 @@ export function CadastroAventureiro() {
 
                     await UsuarioAPI.salvarImagemPerfil(idUsuario, formData);
                 }
-
                 updateUser(novoUser)
                 toaster.create(mensagensToastSucesso.editarAventureiro)
             } else {
@@ -444,10 +414,6 @@ export function CadastroAventureiro() {
 
             navigate("/trilhaFormativaInovacao");
         } catch (erro) {
-            /*
-             * O erro só ia para o console: a tela ficava parada, sem
-             * navegar e sem dizer nada ao usuário.
-             */
             console.error(
                 user?.id
                     ? mensagensErroConsole.editarAventureiro
@@ -466,12 +432,6 @@ export function CadastroAventureiro() {
     const onExclude = async () => {
         try {
             if (!user) return
-
-            /*
-             * A exclusão precisa terminar antes do logout e da
-             * navegação: sem o await, a requisição saía com o token
-             * prestes a ser apagado e a conta podia continuar de pé.
-             */
             await UsuarioAPI.deletar(idUsuario)
 
             toaster.create(mensagensToastSucesso.excluirUsuario)

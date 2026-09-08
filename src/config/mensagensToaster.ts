@@ -474,7 +474,7 @@ export const mensagensToastErro = {
     },
 
     validarAventureiro: {
-        title: "Imagem de perfil inválida",
+        title: "Dados inválidos",
         description:
             "Para continuar, preencha corretamente seus dados de aventureiro.",
         type: "warning",
