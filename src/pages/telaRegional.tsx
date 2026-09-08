@@ -20,6 +20,12 @@ import { mensagensToastErro } from "@/config/mensagensToaster";
 import { limitarPercentual } from "@/utils/pontuacao";
 import { mensagemDeErroDaApi } from "@/utils/erroApi";
 
+import conectorSolucoes from "@/assets/images/distintivos/DistintivoConectorDeSolucoes.svg"
+import doutorLegal from "@/assets/images/distintivos/DistintivoDoutorLegal.svg"
+import impulsionadorPossibilidades from "@/assets/images/distintivos/DistintivoImpulsionadorDePossibilidades.svg"
+import mestreCriatividade from "@/assets/images/distintivos/DistintivoMestreDaCriatividade.svg"
+import trofeuFinal from "@/assets/images/distintivos/TrofeuFinal.svg"
+import DistintivoImagem from "@/components/commons/distintivo";
 
 export function TelaRegional() {
     const navigate = useNavigate();
@@ -50,6 +56,15 @@ export function TelaRegional() {
 
     const pontos = progressoPontosTematicas.get(trilha)?.pontuacao ?? 0
     const progresso = progressoPontosTematicas.get(trilha)?.progresso ?? 0
+
+    const imagensDistintivos: Record<string, string> = {
+        "Conector de Soluções": conectorSolucoes,
+        "Doutor Legal": doutorLegal,
+        "Impulsionador de Inovações": impulsionadorPossibilidades,
+        "Mestre da Criatividade": mestreCriatividade,
+        "Troféu Final": trofeuFinal,
+    };
+
 
     useEffect(() => {
         let ativo = true;
@@ -311,7 +326,14 @@ export function TelaRegional() {
                             }
                             onClick={() => navigate(`/distintivos`)}
                         >
-                            <FaAward size={60} />
+                            <DistintivoImagem
+                                imagem={
+                                    imagensDistintivos[
+                                    distintivo.titulo ?? ""
+                                    ]}
+                                titulo={distintivo.titulo}
+                                adquirido={distintivo.adquirido}
+                            />
                         </Box>
                     )}
                 </HStack>

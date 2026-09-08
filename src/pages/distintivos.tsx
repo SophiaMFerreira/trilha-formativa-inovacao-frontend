@@ -1,14 +1,20 @@
 import { Navigate, useNavigate, } from "react-router-dom";
 import { useEffect, useState } from "react";
-
 import { Box, Button, Card, CloseButton, Dialog, Grid, Heading, Portal, Stack, Text } from "@chakra-ui/react"
-import { FaAward, FaTrophy } from "react-icons/fa";
+import { FaTrophy } from "react-icons/fa";
 import { useAuth } from "@/hooks/useAuth";
 import { useGame } from "@/hooks/useGame";
 import { UsuarioAPI } from "../../api/usuario";
 import { toaster } from "@/components/commons/toaster";
 import { mensagensToastErro } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
+
+import conectorSolucoes from "@/assets/images/distintivos/DistintivoConectorDeSolucoes.svg"
+import doutorLegal from "@/assets/images/distintivos/DistintivoDoutorLegal.svg"
+import impulsionadorPossibilidades from "@/assets/images/distintivos/DistintivoImpulsionadorDePossibilidades.svg"
+import mestreCriatividade from "@/assets/images/distintivos/DistintivoMestreDaCriatividade.svg"
+import trofeuFinal from "@/assets/images/distintivos/TrofeuFinal.svg"
+import DistintivoImagem from "@/components/commons/distintivo";
 
 export default function Distintivos() {
     const navigate = useNavigate();
@@ -21,6 +27,15 @@ export default function Distintivos() {
     if (!user) {
         return <Navigate to="/login" replace />
     }
+
+    const imagensDistintivos: Record<string, string> = {
+        "Conector de Soluções": conectorSolucoes,
+        "Doutor Legal": doutorLegal,
+        "Impulsionador de Inovações": impulsionadorPossibilidades,
+        "Mestre da Criatividade": mestreCriatividade,
+        "Troféu Final": trofeuFinal,
+    };
+
     useEffect(() => {
         if (!user) return;
 
@@ -79,7 +94,6 @@ export default function Distintivos() {
                     </Stack>
                 </Card.Header>
                 <Card.Body
-                    textStyle="bodyTextBold"
                     mt="4"
                     mx="2"
                 >
@@ -93,87 +107,73 @@ export default function Distintivos() {
                         mb="8"
                         w="100%"
                     >
-                        <Stack
-                            gridColumn="1"
-                            gridRow="1"
-                            align="center"
-                            gap="2"
-                        >
-                            <Box
-                                color={distintivos.at(0)?.adquirido ? "brand.primaryDark" : "gray.300"}
-                            >
-                                <FaAward size={46} />
-                            </Box>
-                            {distintivos.at(0)?.adquirido && (
-                                <Text color="brand.primaryDark">
-                                    {distintivos.at(0)?.titulo}
-                                </Text>
-                            )}
-                        </Stack>
-                        <Stack
-                            gridColumn="1"
-                            gridRow="2"
-                            align="center"
-                            gap="2"
-                        >
-                            <Box
-                                color={distintivos.at(1)?.adquirido ? "brand.primaryDark" : "gray.300"}
-                            >
-                                <FaAward size={46} />
-                            </Box> 
-                            {distintivos.at(1)?.adquirido && (
-                                <Text color="brand.primaryDark">
-                                    {distintivos.at(1)?.titulo}
-                                </Text>
-                            )}
-                        </Stack>
+                        <Box gridColumn="1" gridRow="1">
+                            <DistintivoImagem
+                                imagem={
+                                    imagensDistintivos[
+                                    distintivos.at(0)?.titulo ??
+                                    "Conector de Soluções"
+                                    ]
+                                }
+                                titulo={distintivos.at(0)?.titulo}
+                                adquirido={distintivos.at(0)?.adquirido ?? false}
+                            />
+                        </Box>
+
+                        <Box gridColumn="1" gridRow="2">
+                            <DistintivoImagem
+                                imagem={
+                                    imagensDistintivos[
+                                    distintivos.at(1)?.titulo ??
+                                    "Doutor Legal"
+                                    ]
+                                }
+                                titulo={distintivos.at(1)?.titulo}
+                                adquirido={distintivos.at(1)?.adquirido ?? false}
+                            />
+                        </Box>
                         <Box
                             gridColumn="2"
                             gridRow="1 / span 2"
-                            color={progressoTotal === 100 ? "brand.primaryDark" : "gray.300"}
-                            cursor={progressoTotal === 100 ? "pointer" : "not-allowed"}
-                            onClick={() => {
-                                if (progressoTotal === 100) {
-                                    setOpen(true);
-                                }
-                            }}
                         >
-                            <FaTrophy size={140} />
+                            <DistintivoImagem
+                                imagem={imagensDistintivos[
+                                    distintivos.at(5)?.titulo ??
+                                    "Troféu Final"]}
+                                adquirido={progressoTotal === 100}
+                                trofeu
+                                tamanho={180}
+                                onClick={() => {
+                                    if (progressoTotal === 100) {
+                                        setOpen(true);
+                                    }
+                                }}
+                            />
                         </Box>
-                        <Stack
-                            gridColumn="3"
-                            gridRow="1"
-                            align="center"
-                            gap="2"
-                        >
-                            <Box
-                                color={distintivos.at(2)?.adquirido ? "brand.primaryDark" : "gray.300"}
-                            >
-                                <FaAward size={46} />
-                            </Box>
-                            {distintivos.at(2)?.adquirido && (
-                                <Text color="brand.primaryDark">
-                                    {distintivos.at(2)?.titulo}
-                                </Text>
-                            )}
-                        </Stack>
-                        <Stack
-                            gridColumn="3"
-                            gridRow="2"
-                            align="center"
-                            gap="2"
-                        >
-                            <Box
-                                color={distintivos.at(3)?.adquirido ? "brand.primaryDark" : "gray.300"}
-                            >
-                                <FaAward size={46} />
-                            </Box>
-                            {distintivos.at(3)?.adquirido && (
-                                <Text color="brand.primaryDark">
-                                    {distintivos.at(3)?.titulo}
-                                </Text>
-                            )}
-                        </Stack>
+                        <Box gridColumn="3" gridRow="1">
+                            <DistintivoImagem
+                                imagem={
+                                    imagensDistintivos[
+                                    distintivos.at(3)?.titulo ??
+                                    "Impulsionador de Inovações"
+                                    ]
+                                }
+                                titulo={distintivos.at(2)?.titulo}
+                                adquirido={distintivos.at(2)?.adquirido ?? false}
+                            />
+                        </Box>
+                        <Box gridColumn="3" gridRow="2">
+                            <DistintivoImagem
+                                imagem={
+                                    imagensDistintivos[
+                                    distintivos.at(4)?.titulo ??
+                                    "Mestre da Criatividade"
+                                    ]
+                                }
+                                titulo={distintivos.at(3)?.titulo}
+                                adquirido={distintivos.at(3)?.adquirido ?? false}
+                            />
+                        </Box>
                     </Grid>
                     <Button
                         flex={1}
@@ -208,7 +208,19 @@ export default function Distintivos() {
                                     <Box
                                         color="brand.primaryDark"
                                     >
-                                        <FaTrophy size={200} />
+                                        <DistintivoImagem
+                                            imagem={imagensDistintivos[
+                                                distintivos.at(5)?.titulo ??
+                                                "trofeu_final.png"]}
+                                            adquirido={progressoTotal === 100}
+                                            trofeu
+                                            tamanho={140}
+                                            onClick={() => {
+                                                if (progressoTotal === 100) {
+                                                    setOpen(true);
+                                                }
+                                            }}
+                                        />
                                     </Box>
                                     <Heading
                                         as="h2"
