@@ -145,6 +145,7 @@ export default function Material() {
                             textStyle="headingXL"
                             color="brand.primaryDark"
                             textAlign="center"
+                            overflowWrap="anywhere"
                         >
                             {titulo}
                         </Heading>
@@ -172,6 +173,7 @@ export default function Material() {
                                 variant="plain"
                                 display="flex"
                                 alignItems="center"
+                                overflowWrap="anywhere"
                                 gap="2"
                                 onClick={() => setClicouLink(true)}
                             >
