@@ -75,7 +75,7 @@ export function validarSenhas(
         );
 
     return {
-        senha: desejaAlterarSenha ? senhaValida : false,
+        senha: desejaAlterarSenha ? senhaValida : true,
         confirmarSenha: desejaAlterarSenha ? confirmarSenhaValida : true,
         confirmarSenhaAtual: senhaAtualValida,
     };
