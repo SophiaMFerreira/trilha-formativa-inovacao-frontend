@@ -18,6 +18,7 @@ export function calcularProgresso(
   if (!Number.isFinite(pontos) || pontos <= 0) return 0;
 
   const taxaAcerto = (pontos * 100) / valor;
+  //return taxaAcerto >= 60 ? 100 : 0;
 
-  return taxaAcerto >= 60 ? 100 : 0;
+  return taxaAcerto !== 0 ? 100 : 0;
 }
