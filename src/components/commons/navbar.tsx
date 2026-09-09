@@ -8,6 +8,7 @@ import {
 import { FaBars } from "react-icons/fa"
 import logoIFSudesteHorizontal from "@/assets/logo/logoIFSudeste_horizontalCompacta.svg"
 import logoIFSudesteVertival from "@/assets/logo/logoIFSudeste_vertical.svg"
+import logoTrilhaFormativaInovacoes from "@/assets/logo/logoTrilhaFormativaInvacoes.svg"
 
 import { getMenuItens } from "@/config/menuConfig"
 import type { ItemMenu } from "@/types_consts/menu"
@@ -19,6 +20,7 @@ export default function Navbar() {
   const { progressoTotal } = useGame()
   const role = user?.role
 
+  const [loadedLogoIF, setLoadedLogoIF] = useState(false)
   const [loadedLogo, setLoadedLogo] = useState(false)
   const [loadedLogoPequena, setLoadedLogoPequena] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -59,69 +61,100 @@ export default function Navbar() {
         justify="space-between"
         px={{
           base: "4",
-          lg: "5",
+          lg: "8",
         }}
         maxW="1440px"
         mx="auto"
       >
-        <NavLink to="/">
-          <Box
-            display={{
-              base: "none",
-              sm: "flex",
-            }}
-            alignItems="center"
-            flexShrink={0}
-            minW="220px"
-            asChild
-            _hover={{
-              textDecoration: "none",
-            }}
-          >
-            <Skeleton
-              loading={!loadedLogo}
-              w="auto"
-              h="64px"
+        <HStack
+          gap={{ base: "3", md: "5" }}
+          align="center"
+          flexShrink={0}
+        >
+          <NavLink to="/">
+            <Box
+              display={{
+                base: "none",
+                sm: "flex",
+              }}
+              alignItems="center"
+              _hover={{
+                textDecoration: "none",
+              }}
             >
-              <Image
-                src={logoIFSudesteHorizontal}
-                alt="Instituto Federal Sudeste MG"
-                h="64px"
+              <Skeleton
+                loading={!loadedLogo}
+                h="72px"
                 w="auto"
-                display="block"
-                objectFit="contain"
-                onLoad={() => setLoadedLogo(true)}
-              />
-            </Skeleton>
-          </Box>
-          <Box
-            display={{
-              base: "flex",
-              sm: "none",
-            }}
-            alignItems="center"
-            justifyContent="center"
-            flexShrink={0}
-            minW="60px"
-          >
-            <Skeleton
-              loading={!loadedLogoPequena}
-              h="80px"
-              w="auto"
+              >
+                <Image
+                  src={logoTrilhaFormativaInovacoes}
+                  alt="Trilha Formativa Gamificada em Inovações"
+                  h="72px"
+                  w="auto"
+                  display="block"
+                  objectFit="contain"
+                  onLoad={() => setLoadedLogo(true)}
+                />
+              </Skeleton>
+            </Box>
+          </NavLink>
+
+          <NavLink to="https://www.ifsudestemg.edu.br/juizdefora">
+            <Box
+              display={{
+                base: "none",
+                sm: "flex",
+              }}
+              alignItems="center"
+              _hover={{
+                textDecoration: "none",
+              }}
             >
-              <Image
-                src={logoIFSudesteVertival}
-                alt="Instituto Federal Sudeste MG"
+              <Skeleton
+                loading={!loadedLogoIF}
+                h="72px"
+                w="auto"
+              >
+                <Image
+                  src={logoIFSudesteHorizontal}
+                  alt="Instituto Federal Sudeste MG"
+                  h="72px"
+                  w="auto"
+                  display="block"
+                  objectFit="contain"
+                  onLoad={() => setLoadedLogoIF(true)}
+                />
+              </Skeleton>
+            </Box>
+
+            <Box
+              display={{
+                base: "flex",
+                sm: "none",
+              }}
+              alignItems="center"
+              justifyContent="center"
+              flexShrink={0}
+            >
+              <Skeleton
+                loading={!loadedLogoPequena}
                 h="80px"
                 w="auto"
-                minH="80px"
-                display="block"
-                objectFit="contain"
-                onLoad={() => setLoadedLogoPequena(true)}
-              />
-            </Skeleton>
-          </Box>
-        </NavLink>
+              >
+                <Image
+                  src={logoIFSudesteVertival}
+                  alt="Instituto Federal Sudeste MG"
+                  h="80px"
+                  w="auto"
+                  display="block"
+                  objectFit="contain"
+                  onLoad={() => setLoadedLogoPequena(true)}
+                />
+              </Skeleton>
+            </Box>
+          </NavLink>
+        </HStack>
         <HStack
           as="nav"
           gap="2"
