@@ -6,7 +6,7 @@ import { AvatarUsuario } from "@/components/AvatarUsuario";
 import { AppInput } from "@/components/commons/AppInput";
 import CardSimples from "@/components/commons/cardCustomizado";
 
-import { Usuario, UsuarioDTO } from "@/types_consts/usuario";
+import { obterNomeOcupacao, Usuario, UsuarioDTO } from "@/types_consts/usuario";
 import { OcupacaoDTO } from "@/types_consts/ocupacao";
 import { UsuarioAPI } from "../../api/usuario";
 import { OcupacaoAPI } from "../../api/ocupacao";
@@ -163,7 +163,7 @@ export function CadastroAventureiro() {
                             },
                             ]
                             : ocupacoes.map(item => ({
-                                label: item.titulo,
+                                label: obterNomeOcupacao(item.titulo) || item.titulo,
                                 value: String(item.id),
                             })),
                 })
@@ -227,7 +227,7 @@ export function CadastroAventureiro() {
                     setOcupacoes(ocupacoesComAAtual)
                     setOcupacaoCollection(createListCollection({
                         items: ocupacoesComAAtual.map(item => ({
-                            label: item.titulo,
+                            label: obterNomeOcupacao(item.titulo) || item.titulo,
                             value: String(item.id),
                         })),
                     }))
