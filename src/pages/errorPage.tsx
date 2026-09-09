@@ -47,11 +47,6 @@ export default function ErrorPage() {
                     w="100%"
                     variant="outline"
                     onClick={() => {
-                        user ? (
-                            user.role === "admin" ?
-                                navigate("/banco-materiais") :
-                                navigate("/trilhaFormativaInovacao")
-                        ) :
                             navigate("/")
                     }}
                 >
