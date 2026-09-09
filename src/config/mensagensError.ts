@@ -120,4 +120,7 @@ export const mensagensErroConsole = {
 
     recuperarSenha:
         "Erro ao recuperar a senha. ",
+
+    primeiroAcesso:
+        "Erro: primeiro acesso não foi alterado. ",
 } as const;

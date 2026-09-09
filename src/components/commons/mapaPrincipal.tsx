@@ -93,7 +93,7 @@ function IconeTrilha({
             content={
                 tematica
                     ? tematicaRotaLabel[tematica]
-                    : "Tarefa final"
+                    : "Tarefa Final"
             }
         >
             <Button

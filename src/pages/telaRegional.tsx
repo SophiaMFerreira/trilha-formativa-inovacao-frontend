@@ -3,9 +3,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useMemo, useState } from "react";
 
 import { Box, Button, Dialog, Flex, Heading, HStack, Image, Portal, Progress, SimpleGrid, Skeleton, Stack, Text, } from "@chakra-ui/react";
-import { FaAward } from "react-icons/fa";
-
-import trilhaFormativa from "@/assets/images/Regional.jpg"
 
 import { Missao, MissaoAtividade, MissaoConteudo, MissaoTarefa, ProgressoMissao, TipoAtividade } from "@/types_consts/missao";
 
@@ -388,7 +385,7 @@ export function TelaRegional() {
                                             rounded="md"
                                         >
                                             <Image
-                                                src={trilhaFormativa}
+                                                //src={trilhaFormativa}
                                                 alt={`Missão ${missaoSelecionada.titulo}`}
                                                 h="40"
                                                 w="96"
