@@ -1,9 +1,9 @@
-import { Box, Button, Card, Field, Flex, Heading, Image, InputGroup, Link, SimpleGrid, Skeleton, Stack, Text, Toaster } from "@chakra-ui/react";
+import { Box, Button, Card, Field, Flex, Heading, HStack, Image, InputGroup, Link, SimpleGrid, Skeleton, Stack, Text, Toaster } from "@chakra-ui/react";
 import { NavLink, useNavigate } from "react-router-dom";
 
-import trilhaFormativa from "@/assets/images/Regional.jpg"
+import trilhaFormativa from "@/assets/images/trilhaLogin.png"
+import logoTrilhaFormativaInovacoes from "@/assets/logo/logoTrilhaFormativaInvacoes.svg"
 import logoIFSudesteHorizontal from "@/assets/logo/logoIFSudeste_horizontalCompacta.svg"
-import logoIFSudesteVertival from "@/assets/logo/logoIFSudeste_vertical.svg"
 import { useState } from "react";
 import { AppInput } from "@/components/commons/AppInput";
 import { useAuth } from "@/hooks/useAuth";
@@ -18,6 +18,8 @@ export function Login() {
     const { login } = useAuth();
 
     const [loaded, setLoaded] = useState(false)
+    const [loadedLogoIF, setLoadedLogoIF] = useState(false)
+    const [loadedLogo, setLoadedLogo] = useState(false)
 
     const [email, setEmail] = useState("")
     const [senha, setSenha] = useState("")
@@ -95,57 +97,54 @@ export function Login() {
                 py={10}
                 gap={8}
             >
-                <Link
-                    asChild
-                    _hover={{
-                        textDecoration: "none",
-                    }}
+                <HStack
+                    gap="4"
+                    align="center"
+                    flexShrink={0}
                 >
                     <NavLink to="/">
-                        <Box
-                            display={{
-                                base: "none",
-                                sm: "flex",
-                            }}
-                            alignItems="center"
-                            flexShrink={0}
-                            minW="220px"
+                        <Skeleton
+                            loading={!loadedLogo}
+                            h="76px"
+                            w="auto"
                         >
-                            <img
+                            <Image
+                                src={logoTrilhaFormativaInovacoes}
+                                alt="Trilha Formativa Gamificada em Inovações"
+                                h="76px"
+                                w="auto"
+                                display="block"
+                                objectFit="contain"
+                                onLoad={() => setLoadedLogo(true)}
+                            />
+                        </Skeleton>
+                    </NavLink>
+
+                    <Box
+                        h="44px"
+                        w="1px"
+                        bg="brand.primaryDark"
+                        opacity={0.25}
+                    />
+
+                    <NavLink to="https://www.ifsudestemg.edu.br/juizdefora">
+                        <Skeleton
+                            loading={!loadedLogoIF}
+                            h="64px"
+                            w="auto"
+                        >
+                            <Image
                                 src={logoIFSudesteHorizontal}
                                 alt="Instituto Federal Sudeste MG"
-                                style={{
-                                    height: "64px",
-                                    width: "auto",
-                                    display: "block",
-                                    objectFit: "contain",
-                                }}
+                                h="64px"
+                                w="auto"
+                                display="block"
+                                objectFit="contain"
+                                onLoad={() => setLoadedLogoIF(true)}
                             />
-                        </Box>
-                        <Box
-                            display={{
-                                base: "flex",
-                                sm: "none",
-                            }}
-                            alignItems="center"
-                            justifyContent="center"
-                            flexShrink={0}
-                            minW="60px"
-                        >
-                            <img
-                                src={logoIFSudesteVertival}
-                                alt="Instituto Federal Sudeste MG"
-                                style={{
-                                    height: "80px",
-                                    width: "auto",
-                                    minHeight: "80px",
-                                    display: "block",
-                                    objectFit: "contain",
-                                }}
-                            />
-                        </Box>
+                        </Skeleton>
                     </NavLink>
-                </Link>
+                </HStack>
                 <Box
                     w="100%"
                     gap={4}

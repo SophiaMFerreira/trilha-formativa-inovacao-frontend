@@ -1,12 +1,15 @@
 import { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import { Box, Button, Card, Carousel, Center, Em, Grid, Heading, IconButton, Image, Link, Skeleton, Stack, Text } from "@chakra-ui/react";
 import { FaAngleLeft, FaAngleRight, FaExternalLinkAlt, FaGamepad } from "react-icons/fa";
 
 import { carrosselConteudo } from "@/config/carrosselConfig";
 import CustomTooltip from "@/components/commons/customTooltip";
-import trilhaFormativa from "@/assets/images/Regional.jpg"
+import trilhaFormativaTopo from "@/assets/images/trilhaTopoLandingPage.png"
+import trilhaFormativaGamificacao from "@/assets/images/trilhaLandingPageGamificacao.png"
+import logoTrilhaFormativaGamificacao from "@/assets/logo/logoTrilhaFormativaInvacoes.svg"
+
 import { useAuth } from "@/hooks/useAuth";
 
 export default function LandingPage() {
@@ -19,7 +22,7 @@ export default function LandingPage() {
     if (user) {
         logout();
     }
-    
+
     return (
         <Box
             //minH="calc(100vh - 88px)"
@@ -47,7 +50,7 @@ export default function LandingPage() {
                         h="80"
                     >
                         <Image
-                            src={trilhaFormativa}
+                            src={trilhaFormativaTopo}
                             alt="Trilha Formativa em Inovações"
                             w="100%"
                             h="80"
@@ -310,8 +313,13 @@ export default function LandingPage() {
                     scrollSnapAlign="start"
                 >
                     <Card.Root
-                        bg="brand.primaryLight"
-                        border="none"
+                        //bg="brand.primaryLight"
+                        //border="none"
+                        borderWidth="2px"
+                        borderColor="brand.primaryDark"
+                        bg="brand.white"
+                        shadow="card"
+
                         px="10"
                         py="6"
                         rounded="2xl"
@@ -346,21 +354,25 @@ export default function LandingPage() {
                                     </Text>
                                 </Card.Body>
                             </Box>
-                            <Box w="100%">
+                            <Box
+                                w="100%"
+                                h="100%"
+                            >
                                 <Skeleton
                                     loading={!loadedGamificacao}
                                     maxW="500px"
                                     mb="10"
                                     h="80"
+                                    rounded="xl"
                                 >
                                     <Image
-                                        src={trilhaFormativa}
+                                        src={trilhaFormativaGamificacao}
                                         alt="Trilha Formativa em Inovações"
                                         w="100%"
                                         h="320px"
                                         objectFit="cover"
                                         onLoad={() => setLoadedGamificacao(true)}
-                                        rounded="xl"
+                                        rounded="2xl"
                                     />
                                 </Skeleton>
                             </Box>
@@ -384,15 +396,25 @@ export default function LandingPage() {
                                 gap="5"
                                 textDecoration="none"
                             >
-                                <FaGamepad
-                                    size={120}
-                                />
+
+                                {loadedGamificacao ? (
+                                    <Image
+                                        src={logoTrilhaFormativaGamificacao}
+                                        alt="Logo trilha Formativa em Inovações"
+                                        w="100%"
+                                        h="150px"
+                                        objectFit="cover"
+                                        rounded="2xl"
+                                    />
+                                ) : (
+                                    <FaGamepad size={120} />
+                                )}
                                 <Stack
                                     gap="-1"
                                 >
                                     <Text
                                         textAlign="center"
-                                        textStyle="headingSM"
+                                        textStyle="headingMD"
                                     >
                                         Vamos
                                     </Text>
@@ -400,7 +422,7 @@ export default function LandingPage() {
                                         textAlign="center"
                                         fontStyle="normal"
                                         fontFamily="body"
-                                        fontSize="30px"
+                                        fontSize="40px"
                                         fontWeight="700"
                                         color="brand.primaryLight"
                                         style={{
