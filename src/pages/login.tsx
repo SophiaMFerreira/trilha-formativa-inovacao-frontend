@@ -176,7 +176,7 @@ export function Login() {
                             w="100%"
                             gap="4"
                         >
-                            <Field.Root invalid={valido}>
+                            <Field.Root required invalid={valido}>
                                 <Field.Label
                                     textStyle="emphasis"
                                     color="brand.primaryDark"
