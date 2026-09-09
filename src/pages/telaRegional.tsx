@@ -2,9 +2,10 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useMemo, useState } from "react";
 
-import { Box, Button, Dialog, Flex, Heading, HStack, Image, Portal, Progress, SimpleGrid, Skeleton, Stack, Text, } from "@chakra-ui/react";
+import { Box, Button, Dialog, Flex, Heading, HStack, Portal, Progress, SimpleGrid, Stack, Text, } from "@chakra-ui/react";
 
 import { Missao, MissaoAtividade, MissaoConteudo, MissaoTarefa, ProgressoMissao, TipoAtividade } from "@/types_consts/missao";
+import { FaBook, FaGamepad, FaPencilAlt, FaPlayCircle, } from "react-icons/fa";
 
 import { MissaoAPI } from "../../api/missao";
 import { useGame } from "@/hooks/useGame";
@@ -380,20 +381,18 @@ export function TelaRegional() {
                                         </HStack>
                                     </Stack>
                                     <Flex justify="center" w="100%">
-                                        <Skeleton
-                                            loading={!loaded}
-                                            rounded="md"
+                                        <Box
+                                            w="100px"
+                                            h="100px"
+                                            borderRadius="full"
+                                            bg="brand.primaryDark"
+                                            color="white"
+                                            display="flex"
+                                            alignItems="center"
+                                            justifyContent="center"
                                         >
-                                            <Image
-                                                //src={trilhaFormativa}
-                                                alt={`Missão ${missaoSelecionada.titulo}`}
-                                                h="40"
-                                                w="96"
-                                                objectFit="cover"
-                                                rounded="md"
-                                                onLoad={() => setLoaded(true)}
-                                            />
-                                        </Skeleton>
+                                            {obterIconeMissao(missaoSelecionada)}
+                                        </Box>
                                     </Flex>
                                 </Stack>
                             </Dialog.Body>
@@ -525,4 +524,26 @@ function descreverMissao(
         tituloMissao: "Quiz",
         rota: `${base}/quiz/${atividade.id}`,
     };
+}
+
+function obterIconeMissao(missao: Missao | null) {
+    if (!missao) {
+        return <FaBook size={24} />;
+    }
+
+    if ("tipoMaterial" in missao) {
+        return missao.tipoMaterial === "texto"
+            ? <FaBook size={24} />
+            : <FaPlayCircle size={28} />;
+    }
+
+    if (missao.tipoAtividade === TipoAtividade.QUIZ) {
+        return <FaGamepad size={28} />;
+    }
+
+    if (missao.tipoAtividade === TipoAtividade.TAREFA) {
+        return <FaPencilAlt size={24} />;
+    }
+
+    return <FaBook size={24} />;
 }
