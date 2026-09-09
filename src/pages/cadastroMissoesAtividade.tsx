@@ -171,7 +171,7 @@ export default function CadastroMissoesAtividade() {
                                 },
                             ]
                             : tematicas.map(item => ({
-                                label: item.titulo,
+                                label: obterNomeTematica(item.titulo) || item.titulo,
                                 value: String(item.id),
                             })),
                 })
@@ -391,7 +391,7 @@ export default function CadastroMissoesAtividade() {
                                                         item={trilha}
                                                         key={trilha.value}
                                                     >
-                                                        {obterNomeTematica(trilha.label) || trilha.label}
+                                                        {trilha.label}
                                                         <Select.ItemIndicator />
                                                     </Select.Item>
                                                 ))}

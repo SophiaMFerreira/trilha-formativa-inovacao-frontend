@@ -82,7 +82,7 @@ export default function CadastroMateriais() {
                                 },
                             ]
                             : tematicas.map(item => ({
-                                label: item.titulo,
+                                label: obterNomeTematica(item.titulo) || item.titulo,
                                 value: String(item.id),
                             })),
                 })
@@ -310,7 +310,7 @@ export default function CadastroMateriais() {
                                                     item={trilha}
                                                     key={trilha.value}
                                                 >
-                                                    {obterNomeTematica(trilha.label) || trilha.label}
+                                                    {trilha.label}
                                                     <Select.ItemIndicator />
                                                 </Select.Item>
                                             ))}
