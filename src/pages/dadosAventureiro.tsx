@@ -205,6 +205,7 @@ export default function DadosAventureiro() {
                                 direction="row"
                             >
                                 {distintivos.map(distintivo => (
+                                    distintivo.titulo !== "Troféu Final" &&
                                     <Box
                                         key={distintivo.titulo}
                                         color={

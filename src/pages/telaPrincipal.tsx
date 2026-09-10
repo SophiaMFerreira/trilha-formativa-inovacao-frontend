@@ -115,7 +115,9 @@ export default function TelaPrincipal() {
                             {imagem && <Avatar.Image src={imagem} />}
                         </Avatar.Root>
                         <HStack gap={2}>
-                            {distintivos.map((distintivo) => (
+                            {distintivos.map((distintivo) =>
+                                distintivo.titulo !== "Troféu Final" &&
+                            (
                                 distintivo.adquirido ?
                                     (
                                         <CustomTooltip

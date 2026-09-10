@@ -1,7 +1,6 @@
 import { Navigate, useNavigate, } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Box, Button, Card, CloseButton, Dialog, Grid, Heading, Portal, Stack, Text } from "@chakra-ui/react"
-import { FaTrophy } from "react-icons/fa";
 import { useAuth } from "@/hooks/useAuth";
 import { useGame } from "@/hooks/useGame";
 import { UsuarioAPI } from "../../api/usuario";
@@ -154,7 +153,7 @@ export default function Distintivos() {
                             <DistintivoImagem
                                 imagem={
                                     imagensDistintivos[
-                                    distintivos.at(3)?.titulo ??
+                                    distintivos.at(2)?.titulo ??
                                     "Impulsionador de Inovações"
                                     ]
                                 }
@@ -166,7 +165,7 @@ export default function Distintivos() {
                             <DistintivoImagem
                                 imagem={
                                     imagensDistintivos[
-                                    distintivos.at(4)?.titulo ??
+                                    distintivos.at(3)?.titulo ??
                                     "Mestre da Criatividade"
                                     ]
                                 }
@@ -211,10 +210,10 @@ export default function Distintivos() {
                                         <DistintivoImagem
                                             imagem={imagensDistintivos[
                                                 distintivos.at(5)?.titulo ??
-                                                "trofeu_final.png"]}
+                                                "Troféu Final"]}
                                             adquirido={progressoTotal === 100}
                                             trofeu
-                                            tamanho={140}
+                                            tamanho={160}
                                             onClick={() => {
                                                 if (progressoTotal === 100) {
                                                     setOpen(true);

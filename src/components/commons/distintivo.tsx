@@ -16,24 +16,27 @@ export default function DistintivoImagem({
     titulo,
     adquirido,
     trofeu = false,
-    tamanho = 80,
+    tamanho = 100,
     onClick,
 }: DistintivoProps) {
     const [imagemCarregando, setImagemCarregando] = useState(true);
     const [erroImagem, setErroImagem] = useState(false);
 
     const mostrarImagem = imagem && !erroImagem && adquirido;
+    const tamanhoCalculado = trofeu ?
+        (adquirido ? 300 : tamanho) : 
+        (adquirido ? 150 : tamanho)
 
     return (
         <Stack
             align="center"
-            gap="2"
+            gap="-2"
             cursor={onClick ? "pointer" : undefined}
             onClick={onClick}
         >
             <Box
-                w={`${tamanho}px`}
-                h={`${tamanho}px`}
+                w={`${tamanhoCalculado}px`}
+                h={`${tamanhoCalculado}px`}
                 display="flex"
                 alignItems="center"
                 justifyContent="center"
@@ -42,8 +45,8 @@ export default function DistintivoImagem({
                     <>
                         {imagemCarregando && (
                             <Skeleton
-                                w={`${tamanho}px`}
-                                h={`${tamanho}px`}
+                                w={`${tamanhoCalculado}px`}
+                                h={`${tamanhoCalculado}px`}
                                 borderRadius="full"
                             />
                         )}
@@ -51,8 +54,8 @@ export default function DistintivoImagem({
                         <Image
                             src={imagem}
                             alt={titulo ?? "Troféu final"}
-                            w={`${tamanho}px`}
-                            h={`${tamanho}px`}
+                            w={`${tamanhoCalculado}px`}
+                            h={`${tamanhoCalculado}px`}
                             objectFit="contain"
                             display={imagemCarregando ? "none" : "block"}
                             onLoad={() => setImagemCarregando(false)}
@@ -70,7 +73,7 @@ export default function DistintivoImagem({
                                 : "gray.300"
                         }
                     >
-                        <FaAward size={tamanho} />
+                        <FaAward size={adquirido ? 200 : tamanho} />
                     </Box>
                 )}
             </Box>
