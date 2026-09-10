@@ -1,12 +1,16 @@
 import { Button, Image, Skeleton, } from "@chakra-ui/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CustomTooltip from "./customTooltip";
-import { TematicaRota, tematicaRotaLabel } from "@/types_consts/tematica";
+import { obterNomeTematica, obterRotaTematica, TematicaDTO, TematicaRota, tematicaRotaLabel } from "@/types_consts/tematica";
 
 import mapaPrincipal from "@/assets/images/Mapas/trilhaFormativaInovacao.png";
 
 import { ProgressoPontosTematicaMap } from "@/types_consts/missao";
 import { posicaoTarefaFinal, posicoesTematicas } from "@/config/itensRegional";
+import { TematicaAPI } from "../../../api/tematica";
+import { toaster } from "./toaster";
+import { mensagensToastErro } from "@/config/mensagensToaster";
+import { mensagensErroConsole } from "@/config/mensagensError";
 
 type mapaPrincipalProps = {
     navigate: Function
@@ -15,9 +19,30 @@ type mapaPrincipalProps = {
 }
 
 export default function MapaPrincipal({ navigate, progressoPontosTematicas, progressoTotal }: mapaPrincipalProps) {
-
     const [loadedMapa, setLoadedMapa] = useState(false)
-    const tematicas = Object.values(TematicaRota) as TematicaRota[]
+    const [tematicas, setTematicas] = useState<TematicaDTO[]>([])
+
+    useEffect(() => {
+        async function carregarDados() {
+            try {
+                const tematicaResponse = await TematicaAPI.listar()
+
+                if (!tematicaResponse.data) {
+                    toaster.create(mensagensToastErro.carregarTematicas)
+                    return
+                }
+
+                const tematicas = tematicaResponse.data as TematicaDTO[]
+                setTematicas(tematicas)
+            } catch (erro) {
+                console.error(mensagensErroConsole.buscarTematica, erro);
+                navigate("/");
+            }
+        }
+        carregarDados();
+    }, []);
+
+    Object.values(TematicaRota) as TematicaRota[]
 
     return (
         <Skeleton
@@ -44,23 +69,15 @@ export default function MapaPrincipal({ navigate, progressoPontosTematicas, prog
             />
             {tematicas.map((tematica, index) => (
                 <IconeTrilha
-                    key={tematica}
+                    key={tematica.id}
                     index={index}
-                    tematica={tematica}
+                    tematica={tematica.titulo}
                     navigate={navigate}
-                    progresso={progressoPontosTematicas.get(tematica)?.progresso}
-                    tarefaFinal={false}
+                    progresso={progressoPontosTematicas.get(tematica.titulo)?.progresso}
+                    tarefaFinal={tematica.titulo === "tarefa final"}
                     progressoTotal={progressoTotal}
                 />
             ))}
-            <IconeTrilha
-                    key={"tarefaFinal"}
-                    navigate={navigate}
-                    index={0}
-                    progresso={7}
-                    tarefaFinal={true}
-                    progressoTotal={progressoTotal}
-                />
         </Skeleton>
     )
 }
@@ -68,7 +85,7 @@ export default function MapaPrincipal({ navigate, progressoPontosTematicas, prog
 type IconeTrilhaProps = {
     tarefaFinal: boolean
     progressoTotal: number
-    tematica?: TematicaRota
+    tematica: string
     navigate: Function
     index: number
     progresso?: number
@@ -79,22 +96,17 @@ function IconeTrilha({
     navigate,
     index,
     progresso,
-    tarefaFinal, 
+    tarefaFinal,
     progressoTotal
 }: IconeTrilhaProps) {
+
     const concluido = progresso === 100
-
-    let posicao = tematica ? posicoesTematicas[index] : posicaoTarefaFinal
-
+    let posicao = !tarefaFinal ? posicoesTematicas[index] : posicaoTarefaFinal
     const disabled = progressoTotal < 90 && tarefaFinal
 
     return (
         <CustomTooltip
-            content={
-                tematica
-                    ? tematicaRotaLabel[tematica]
-                    : "Tarefa Final"
-            }
+            content={obterNomeTematica(tematica) || tematica}
         >
             <Button
                 position="absolute"
@@ -102,23 +114,10 @@ function IconeTrilha({
                 left={posicao.left}
                 transform="translate(-50%, -50%)"
 
-                onClick={() => {
-                    if (tematica) {
-                        navigate(
-                            `/trilhaFormativaInovacao/${tematica}`
-                        );
-                    } else {
-                        navigate("/trilhaFormativaInovacao/tarefaFinal");
-                    }
-                }}
+                onClick={() => { navigate(`/trilhaFormativaInovacao/${obterRotaTematica(tematica)}`)}}
 
                 disabled={disabled}
-
-                aria-label={
-                    tematica
-                        ? tematicaRotaLabel[tematica]
-                        : "Tarefa final"
-                }
+                aria-label={obterNomeTematica(tematica) || tematica}
                 size="lg"
 
                 w="52"
