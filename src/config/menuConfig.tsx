@@ -27,7 +27,7 @@ export function getMenuItens(user: User | null): ItemMenu[] {
     },*/ {
         id: 4,
         posicao: "esquerda",
-        titulo: "Textos e Vídeo",
+        titulo: "Textos e Vídeos",
         rota: "/banco-materiais",
         icone: <FaBook size={20} color="brand.primaryDark" />,
         roles: ["admin"]
