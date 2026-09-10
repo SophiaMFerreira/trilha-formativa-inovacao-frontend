@@ -628,10 +628,6 @@ export default function CadastroQuestoes() {
                         (alternativa): AlternativaAssociacaoDTO => ({
                             texto: alternativa.texto,
                             tipoAlternativa: TipoAlternativa.ASSOCIACAO,
-                            /*
-                             * Sem ID: o par ainda não existe e é criado
-                             * pelo backend junto com o vínculo.
-                             */
                             alternativaAssociada: {
                                 texto: alternativa.alternativaAssociada.texto,
                                 tipoAlternativa: TipoAlternativa.ASSOCIACAO,

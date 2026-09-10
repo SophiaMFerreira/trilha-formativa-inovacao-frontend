@@ -1,4 +1,4 @@
-import { Checkbox, CheckboxCard, CheckboxGroup, Fieldset, Grid, Stack, Text } from "@chakra-ui/react"
+import { Box, Checkbox, CheckboxCard, CheckboxGroup, Fieldset, Grid, Stack, Text } from "@chakra-ui/react"
 import CaixaAlternativa from "./caixaAlternativa"
 import { estilosAlternativa } from "@/config/alternativasEstiloConfig"
 
@@ -39,13 +39,26 @@ export function MultiplaEscolhaVarias({ questao, value, onChange }: QuestaoProps
               <CheckboxCard.Root
                 key={alternativa.id}
                 value={String(alternativa.id)}
+                border="2px solid transparent"
+                borderRadius="sm"
+                _checked={{
+                  outline: "3px solid",
+                  outlineColor: "brand.secondary",
+                  outlineOffset: "2px",
+                }}
               >
                 <CheckboxCard.HiddenInput />
-                <CheckboxCard.Control unstyled>
-                  <CaixaAlternativa
-                    texto={alternativa.texto}
-                    estilo={estilo}
-                  />
+                <CheckboxCard.Control
+                  w="100%"
+                  h="100%"
+                  p="0"
+                >
+                  <Box w="100%" h="100%">
+                    <CaixaAlternativa
+                      texto={alternativa.texto}
+                      estilo={estilo}
+                    />
+                  </Box>
                 </CheckboxCard.Control>
               </CheckboxCard.Root>
             )
@@ -72,7 +85,7 @@ export function QuestaoCheckbox({
     () => shuffleArray([...questao.alternativas]),
     [questao.id]
   );
-  const alternativasMarcadas = value.map(v => String(v.idAlternativa)) 
+  const alternativasMarcadas = value.map(v => String(v.idAlternativa))
 
   return (
     <Fieldset.Root>
