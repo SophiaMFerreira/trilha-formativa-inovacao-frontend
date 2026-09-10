@@ -5,7 +5,7 @@ import axios from "axios";
  * arquivo estático (imagens de perfil, por exemplo) montem a URL a
  * partir da mesma origem, em vez de repetir o host em cada módulo.
  */
-export const BASE_URL_API = "https://sisgame-api.jf.ifsudestemg.edu.br/";
+export const BASE_URL_API = "http://10.0.0.166:8000/";
 
 export const api = axios.create({
   baseURL: BASE_URL_API,
