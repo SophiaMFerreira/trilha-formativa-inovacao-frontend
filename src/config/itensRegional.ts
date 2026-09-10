@@ -275,7 +275,7 @@ export const posicoesItensAmbientesInovacao = [
 export const posicoesTematicas = [
   {
     id: 1,
-    top: "43%",
+    top: "76%",
     left: "25%",
   },
   {
@@ -285,7 +285,7 @@ export const posicoesTematicas = [
   },
   {
     id: 3,
-    top: "76%",
+    top: "43%",
     left: "25%",
   },
   {
@@ -293,6 +293,7 @@ export const posicoesTematicas = [
     top: "77%",
     left: "55%",
   },
+  
 ]
 
 export const posicaoTarefaFinal = {
