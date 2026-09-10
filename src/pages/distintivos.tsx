@@ -233,9 +233,10 @@ export default function Distintivos() {
                                         textStyle="bodyTextLong"
                                         color="brand.neutral"
                                         textAlign="justify"
+                                        overflowWrap="anywhere"
                                         mx="10"
                                     >
-                                        Parabenizamos o/a aluno/a {nomeUsuario}, aliquam placerat augue orci. Curabitur mollis mattis velit ut eleifend. Maecenas in lorem nec orci commodo porta mollis in lorem. Vestibulum quis faucibus arcu, in semper orci. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc pellentesque nisl sed nibh rhoncus, sed cursus libero molestie. Integer rutrum orci at vulputate porttitor. Praesent malesuada magna eget velit ultrices, nec consequat tellus iaculis.
+                                        Parabéns, aventureiro! Você chegou ao fim da Trilha Formativa em Inovação! Que conquista incrível! Ao longo dessa jornada, você explorou novos conhecimentos, enfrentou desafios, completou missões e, passo a passo, construiu sua própria trajetória pela inovação. Cada ponto conquistado, cada desafio superado e cada distintivo colecionado representa uma parte dessa jornada. Mas chegar ao final não significa que a aventura termina por aqui. O conhecimento que você conquistou agora pode acompanhar você em novos projetos, novas ideias e novas possibilidades. Parabéns por essa conquista! Continue explorando, continue aprendendo e continue inovando.
                                     </Text>
                                 </Stack>
                             </Dialog.Body>
