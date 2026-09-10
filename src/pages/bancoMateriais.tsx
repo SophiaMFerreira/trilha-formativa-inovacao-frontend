@@ -7,7 +7,7 @@ import { AppInput } from "@/components/commons/AppInput";
 import { toaster } from "@/components/commons/toaster";
 import { FaSearch } from "react-icons/fa";
 import { Missao, MissaoConteudo } from "@/types_consts/missao";
-import { Tematica, TematicaDTO, tematicaLabel } from "@/types_consts/tematica";
+import { obterNomeTematica, Tematica, TematicaDTO, tematicaLabel } from "@/types_consts/tematica";
 import { MissaoAPI } from "../../api/missao";
 import { TematicaAPI } from "../../api/tematica";
 import { mensagensErroConsole } from "@/config/mensagensError";
@@ -69,23 +69,12 @@ export default function BancoMateriais() {
             const missoesMateriais = missoes.filter((m): m is MissaoConteudo => "tipoMaterial" in m)
 
             if (!missoesMateriais) return
-            const missoesFiltradas = tematicas.map(tematica => {
-                let t = tematica.titulo;
-                switch (t) {
-                    case Tematica.LEGISLACAO:
-                    case Tematica.AMBIENTES_INOVACAO:
-                    case Tematica.PROPRIEDADE_INTELECTUAL:
-                    case Tematica.TRANFERENCIA_TECNOLOGICA:
-                        t = tematicaLabel[t];
-                        break;
-                }
-                return {
-                    tematica: t as string,
-                    materiais: missoesMateriais.filter(missao =>
-                        missao.tematica.id === tematica.id
-                    )
-                }
-            })
+            const missoesFiltradas = tematicas.map(tematica => ({
+                tematica: obterNomeTematica(tematica.titulo) || tematica.titulo,
+                materiais: missoesMateriais.filter(
+                    missao => missao.tematica.id === tematica.id
+                )
+            }));
             setMissoesPorTematica(missoesFiltradas)
 
         } catch (erro) {
