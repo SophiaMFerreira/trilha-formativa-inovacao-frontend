@@ -216,8 +216,8 @@ export const posicoesItensPropriedadeIntelectual = [
   },
   {
     id: 13,
-    top: "85%",
-    left: "91.5%",
+    top: "86%",
+    left: "87.2%",
   },
 ]
 

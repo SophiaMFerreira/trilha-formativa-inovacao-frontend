@@ -42,8 +42,6 @@ export default function MapaPrincipal({ navigate, progressoPontosTematicas, prog
         carregarDados();
     }, []);
 
-    Object.values(TematicaRota) as TematicaRota[]
-
     return (
         <Skeleton
             loading={!loadedMapa}
@@ -151,11 +149,7 @@ function IconeTrilha({
                         : "transparent"
                 }
 
-                borderColor={
-                    concluido
-                        ? "brand.secondary"
-                        : "transparent"
-                }
+                borderColor="transparent"
 
                 _disabled={{
                     bg: "gray.200"
