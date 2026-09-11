@@ -331,7 +331,6 @@ export default function CadastroMateriais() {
                                     Selecione uma temática para o conteúdo.
                                 </Field.ErrorText>
                             )}
-                            {/* Ocupação do mapa da trilha, antes de salvar. */}
                             {capacidade.possuiLimite && (
                                 <Field.HelperText
                                     textStyle="inputPlaceholder"

@@ -173,16 +173,6 @@ export default function CadastroQuestoes() {
                             alternativaAssociada: {
                                 id: idB,
                                 texto: "Conteúdo da alternativa associada",
-                                /*
-                                 * O campo faltava aqui e validarAlternativas()
-                                 * exige tipoAlternativa na associada. Toda
-                                 * questão de Associação era reprovada na
-                                 * validação e nunca chegava a ser enviada:
-                                 * era essa a mensagem de "não foi possível
-                                 * salvar". O "correta: true" que existia no
-                                 * lugar não é lido por ninguém — a correção
-                                 * da associação é feita pelo par, no backend.
-                                 */
                                 tipoAlternativa: TipoAlternativa.ASSOCIACAO,
                             },
                         }
@@ -1182,25 +1172,22 @@ export default function CadastroQuestoes() {
                                 Object.values(TipoAlternativa).includes(tipoAlternativa as TipoAlternativa) ||
                                 Object.values(SubtipoAlternativa).includes(tipoAlternativa as SubtipoAlternativa)
                             ) &&
-                                <Box
+                                <Field.Root
                                     w="100%"
                                     textAlign="justify"
                                     color="brand.neutral"
                                     textStyle="bodyTextLong"
+                                    required
+                                    invalid={validacaoEnunciado}
                                 >
-                                    <Editable.Root
+                                    <AppInput
                                         name="enunciado"
                                         value={enunciado}
                                         placeholder="Enunciado da questão"
-                                        onValueChange={(e) => setEnunciado(e.value)}
-                                    >
-                                        <Editable.Preview />
-                                        <Editable.Input
-                                            size={75}
-                                            maxLength={254}
-                                        //required
-                                        />
-                                    </Editable.Root>
+                                        size="md"
+                                        onChange={(e) => setEnunciado(e.target.value)}
+                                        maxLength={254}
+                                    />
                                     {validacaoEnunciado && (
                                         <Text
                                             textAlign="end"
@@ -1210,7 +1197,7 @@ export default function CadastroQuestoes() {
                                             O enunciado é obrigatório e deve ter no máximo 255 caracteres.
                                         </Text>
                                     )}
-                                </Box>
+                                </Field.Root>
                             }
                             <ExibirTipoAlternativa
                                 alternativas={alternativas}
