@@ -1,12 +1,16 @@
 import { Button, Image, Skeleton, } from "@chakra-ui/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CustomTooltip from "./customTooltip";
-import { TematicaRota, tematicaRotaLabel } from "@/types_consts/tematica";
+import { obterNomeTematica, obterRotaTematica, Tematica, TematicaDTO, TematicaRota } from "@/types_consts/tematica";
 
 import mapaPrincipal from "@/assets/images/Mapas/trilhaFormativaInovacao.png";
 
 import { ProgressoPontosTematicaMap } from "@/types_consts/missao";
 import { posicaoTarefaFinal, posicoesTematicas } from "@/config/itensRegional";
+import { TematicaAPI } from "../../../api/tematica";
+import { toaster } from "./toaster";
+import { mensagensToastErro } from "@/config/mensagensToaster";
+import { mensagensErroConsole } from "@/config/mensagensError";
 
 type mapaPrincipalProps = {
     navigate: Function
@@ -15,9 +19,28 @@ type mapaPrincipalProps = {
 }
 
 export default function MapaPrincipal({ navigate, progressoPontosTematicas, progressoTotal }: mapaPrincipalProps) {
-
     const [loadedMapa, setLoadedMapa] = useState(false)
-    const tematicas = Object.values(TematicaRota) as TematicaRota[]
+    const [tematicas, setTematicas] = useState<TematicaDTO[]>([])
+
+    useEffect(() => {
+        async function carregarDados() {
+            try {
+                const tematicaResponse = await TematicaAPI.listar()
+
+                if (!tematicaResponse.data) {
+                    toaster.create(mensagensToastErro.carregarTematicas)
+                    return
+                }
+
+                const tematicas = tematicaResponse.data as TematicaDTO[]
+                setTematicas(tematicas)
+            } catch (erro) {
+                console.error(mensagensErroConsole.buscarTematica, erro);
+                navigate("/");
+            }
+        }
+        carregarDados();
+    }, []);
 
     return (
         <Skeleton
@@ -42,25 +65,30 @@ export default function MapaPrincipal({ navigate, progressoPontosTematicas, prog
                 w="100%"
                 onLoad={() => setLoadedMapa(true)}
             />
-            {tematicas.map((tematica, index) => (
-                <IconeTrilha
-                    key={tematica}
-                    index={index}
-                    tematica={tematica}
-                    navigate={navigate}
-                    progresso={progressoPontosTematicas.get(tematica)?.progresso}
-                    tarefaFinal={false}
-                    progressoTotal={progressoTotal}
-                />
-            ))}
-            <IconeTrilha
-                    key={"tarefaFinal"}
-                    navigate={navigate}
-                    index={0}
-                    progresso={7}
-                    tarefaFinal={true}
-                    progressoTotal={progressoTotal}
-                />
+            {tematicas.map((tematica, index) => {
+                const tarefaFinal = tematica.titulo === Tematica.TAREFA_FINAL;
+
+                const indiceTematica = tematicas
+                    .slice(0, index)
+                    .filter(t => t.titulo !== Tematica.TAREFA_FINAL)
+                    .length;
+
+                return (
+                    <IconeTrilha
+                        key={tematica.id}
+                        index={indiceTematica}
+                        tematica={tematica.titulo}
+                        navigate={navigate}
+                        progresso={
+                            progressoPontosTematicas
+                                .get(tematica.titulo)
+                                ?.progresso
+                        }
+                        tarefaFinal={tarefaFinal}
+                        progressoTotal={progressoTotal}
+                    />
+                );
+            })}
         </Skeleton>
     )
 }
@@ -68,7 +96,7 @@ export default function MapaPrincipal({ navigate, progressoPontosTematicas, prog
 type IconeTrilhaProps = {
     tarefaFinal: boolean
     progressoTotal: number
-    tematica?: TematicaRota
+    tematica: string
     navigate: Function
     index: number
     progresso?: number
@@ -79,22 +107,23 @@ function IconeTrilha({
     navigate,
     index,
     progresso,
-    tarefaFinal, 
+    tarefaFinal,
     progressoTotal
 }: IconeTrilhaProps) {
+
     const concluido = progresso === 100
+    const posicao = tarefaFinal
+        ? posicaoTarefaFinal
+        : posicoesTematicas[index];
 
-    let posicao = tematica ? posicoesTematicas[index] : posicaoTarefaFinal
-
-    const disabled = progressoTotal < 90 && tarefaFinal
+    if (!posicao) {
+        return null;
+    }
+    const disabled = progressoTotal < 80 && tarefaFinal
 
     return (
         <CustomTooltip
-            content={
-                tematica
-                    ? tematicaRotaLabel[tematica]
-                    : "Tarefa Final"
-            }
+            content={obterNomeTematica(tematica) || tematica}
         >
             <Button
                 position="absolute"
@@ -102,23 +131,10 @@ function IconeTrilha({
                 left={posicao.left}
                 transform="translate(-50%, -50%)"
 
-                onClick={() => {
-                    if (tematica) {
-                        navigate(
-                            `/trilhaFormativaInovacao/${tematica}`
-                        );
-                    } else {
-                        navigate("/trilhaFormativaInovacao/tarefaFinal");
-                    }
-                }}
+                onClick={() => { navigate(`/trilhaFormativaInovacao/${obterRotaTematica(tematica) || "tarefaFinal"}`) }}
 
                 disabled={disabled}
-
-                aria-label={
-                    tematica
-                        ? tematicaRotaLabel[tematica]
-                        : "Tarefa final"
-                }
+                aria-label={obterNomeTematica(tematica) || tematica}
                 size="lg"
 
                 w="52"
@@ -133,11 +149,7 @@ function IconeTrilha({
                         : "transparent"
                 }
 
-                borderColor={
-                    concluido
-                        ? "brand.secondary"
-                        : "transparent"
-                }
+                borderColor="transparent"
 
                 _disabled={{
                     bg: "gray.200"

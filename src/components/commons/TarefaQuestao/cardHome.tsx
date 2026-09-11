@@ -13,9 +13,9 @@ type HomeMissaoProps = {
 };
 export default function HomeMissao({ missao, titulo, tentativas, trilha, parametroTrilha, navigate, setEtapa }: HomeMissaoProps) {    
 
-    const mensagem = missao ? `Este quiz contém 5 perguntas sobre o conteúdo de ${trilha}.` :
+    const mensagem = missao === "quiz" ? `Este quiz contém 5 perguntas sobre o conteúdo de ${trilha}.` :
                             `Esta tarefa contém 5 perguntas sobre o conteúdo de ${trilha}.`
-    const mensagemTempo = missao ? "Tempo por pergunta: 5 min" : "Tempo da tarefa: 30 min"
+    const mensagemTempo = missao === "quiz" ? "Tempo por pergunta: 5 min" : "Tempo da tarefa: 30 min"
     return (
         <CardCustomizado
             titulo={titulo}

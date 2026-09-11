@@ -1,0 +1,351 @@
+import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+
+import { Box, Button, Stack, Text, } from "@chakra-ui/react";
+import CardCustomizado from "@/components/commons/cardCustomizado";
+import HomeMissao from "@/components/commons/TarefaQuestao/cardHome";
+import ConclusaoMissao from "@/components/commons/TarefaQuestao/cardConclusao";
+import { QuestaoRadio, QuestaoSelect } from "@/components/commons/TarefaQuestao/multiplaEscolha";
+import { QuestaoCheckbox } from "@/components/commons/TarefaQuestao/multiplaEscolhaVarias";
+import { QuestaoProp } from "@/types_consts/questao";
+import { DistintivoDTO } from "@/types_consts/distintivo";
+
+import { shuffleArray } from "@/utils/shuffle";
+import { Alternativa, AlternativaMarcadaDTO, AlternativaMultiplaEscolha, SubtipoAlternativa, TipoAlternativa } from "@/types_consts/alternativa";
+import { MissaoAPI } from "../../api/missao";
+import { useAuth } from "@/hooks/useAuth";
+import { Missao, MissaoTarefa, ProgressoMissaoAtividade, TipoAtividade } from "@/types_consts/missao";
+import { useGame } from "@/hooks/useGame";
+import { obterNomeTematica, obterNomeTematicaBanco, Tematica } from "@/types_consts/tematica";
+import { toaster } from "@/components/commons/toaster";
+import { mensagensToastErro } from "@/config/mensagensToaster";
+import { mensagensErroConsole } from "@/config/mensagensError";
+
+
+export default function TarefaFinal() {
+    const navigate = useNavigate()
+    const { user } = useAuth()
+    const { progressoMissoes } = useGame()
+
+    const [etapa, setEtapa] = useState<"home" | "tarefa" | "resultado">("home");
+
+    const [idTarefa, setIdTarefa] = useState(-1);
+    const [titulo, setTitulo] = useState("");
+    const [valorMissao, setValorMissao] = useState(0);
+    const [questoes, setQuestoes] = useState<QuestaoProp[]>(
+        Array(5).fill({
+            id: -1,
+            enunciado: "",
+            mensagemCorrecao: "",
+            idMissao: -1,
+            alternativas: Array(2).fill({
+                id: -1,
+                texto: "",
+                tipoAlternativa: TipoAlternativa.MULTIPLA_ESCOLHA,
+                correta: false,
+                subtipo: SubtipoAlternativa.MULTIPLA_ESCOLHA
+            } as Alternativa)
+        } as QuestaoProp)
+    )
+    const [carregando, setCarregando] = useState(true)
+
+    const [trilha, setTrilha] = useState("");
+
+    const [progressoTarefa, setProgressoTarefa] = useState<ProgressoMissaoAtividade>();
+    const [distintivoTarefa, setDistintivoTarefa] = useState<DistintivoDTO>();
+    const [respostas, setRespostas] = useState<AlternativaMarcadaDTO[][]>(
+        Array.from({ length: 5 }, () => [
+            {
+                idUsuario: user?.id ?? -1,
+                idAlternativa: -1,
+            }
+        ])
+    );
+
+    const [pontuacao, setPontuacao] = useState(0);
+    const [tentativas, setTentativas] = useState(0);
+
+    const [exibicaoQuestoes, setExibicaoQuestoes] = useState<("select" | "checkbox" | "radio")[]>(
+        Array(5).fill("radio")
+    )
+
+    const TEMPO_TAREFA = 30 * 60
+    const [tempo, setTempo] = useState(TEMPO_TAREFA)
+    const minutos = Math.floor(tempo / 60);
+    const segundos = tempo % 60;
+
+    useEffect(() => {
+        async function carregarDados() {
+            try {
+                const missaoResponse = await MissaoAPI.listar()
+                if (!missaoResponse.data) {
+                    toaster.create(mensagensToastErro.carregarAtividades)
+                    return
+                }
+
+                const missoes = missaoResponse.data as Missao[]
+                const missao = missoes.find(m =>
+                    m.tematica.titulo === Tematica.TAREFA_FINAL
+                )
+
+                if (!missao) {
+                    toaster.create(mensagensToastErro.carregarMissaoAtividade)
+                    return
+                }
+                if (!("tipoAtividade" in missao)) {
+                    console.error(mensagensErroConsole.tipoMissaoInvalido);
+                    navigate(`/trilhaFormativaInovacao/`);
+                    return
+                }
+
+                if (missao.tipoAtividade === TipoAtividade.QUIZ) {
+                    console.error(mensagensErroConsole.tipoMissaoInvalido);
+                    navigate(`/trilhaFormativaInovacao/`);
+                    return
+                }
+                const tarefaFinal = missao as MissaoTarefa
+
+                if (!("questoes" in tarefaFinal) ||
+                    tarefaFinal.questoes.length < 5) {
+                    toaster.create(mensagensToastErro.nenhumaQuestao);
+                    navigate(`/trilhaFormativaInovacao/`)
+                    return
+                }
+
+                setIdTarefa(tarefaFinal.id)
+                setTitulo(tarefaFinal.titulo)
+                setValorMissao(tarefaFinal.pontuacao)
+                setTrilha(obterNomeTematica(tarefaFinal.tematica.titulo))
+                setDistintivoTarefa(tarefaFinal.distintivo)
+
+                const questoesEmbaralhadas = shuffleArray(tarefaFinal.questoes);
+
+                setQuestoes(questoesEmbaralhadas);
+
+                const formatos = questoesEmbaralhadas.map((q) => {
+                    if (q.alternativas[0].tipoAlternativa === TipoAlternativa.MULTIPLA_ESCOLHA) {
+                        const alternativa = q.alternativas[0] as AlternativaMultiplaEscolha
+                        return alternativa.subtipo ===
+                            SubtipoAlternativa.MULTIPLAS_CORRETAS
+                            ? "checkbox"
+                            : Math.random() < 0.5
+                                ? "radio"
+                                : "select";
+                    }
+
+                    return "checkbox";
+                });
+
+                setExibicaoQuestoes(formatos);
+                setCarregando(false)
+
+                const progresso = progressoMissoes.find(p => p.missao.id === tarefaFinal.id)
+                if (!progresso) return;
+
+                const progressoTarefa = progresso as ProgressoMissaoAtividade
+
+                setProgressoTarefa(progressoTarefa)
+                setTentativas(progressoTarefa.tentativasRealizadas)
+            } catch (erro) {
+                toaster.create(mensagensToastErro.carregarMissaoAtividade)
+                console.error(mensagensErroConsole.buscarMissaoAtividade, erro);
+            }
+        }
+
+        carregarDados();
+    }, []);
+
+    useEffect(() => {
+        const intervalo = setInterval(() => {
+            setTempo((t) => Math.max(t - 1, 0));
+        }, 1000);
+
+        if (tempo === 0) {
+            setEtapa("resultado");
+        }
+
+        return () => clearInterval(intervalo);
+    }, []);
+
+    if (!user) {
+        return <Navigate to="/login" replace />
+    }
+
+    if (carregando) {
+        return (
+            <CardCustomizado
+                titulo=""
+                mensagem={""}
+                info="00:00"
+            >
+                <Text>Carregando tarefa...</Text>
+            </CardCustomizado>
+        )
+    }
+
+    if (!questoes ||
+        !questoes.map(q =>
+            !("alternativas" in q) ||
+            q.alternativas.length === 0 ||
+            !q.alternativas
+        )) {
+        toaster.create(mensagensToastErro.nenhumaQuestao);
+        console.error(mensagensErroConsole.buscarMissaoAtividade);
+        return <Navigate to={`/trilhaFormativaInovacao/`} replace />
+    }
+
+    function alterarRespostaMultiplaEscolha(idAlternativas: string[], idQuestao: number) {
+        const novasRespostas = [...respostas] as AlternativaMarcadaDTO[][]
+        const novaResposta = idAlternativas.map(resposta => ({
+            idUsuario: respostas[idQuestao][0].idUsuario,
+            idAlternativa: Number(resposta)
+        }))
+        novasRespostas[idQuestao] = novaResposta
+        setRespostas(novasRespostas);
+    }
+
+    return (
+        < Box
+            minH="calc(100vh - 88px)"
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            px="6"
+        >
+            {
+                etapa === "home" &&
+                <HomeMissao
+                    key={"home"}
+                    missao="tarefa"
+                    titulo={titulo}
+                    tentativas={tentativas}
+                    trilha={trilha}
+                    parametroTrilha={""}
+                    navigate={navigate}
+                    setEtapa={setEtapa}
+                />
+            } {
+                etapa === "tarefa" &&
+                <CardCustomizado
+                    key={"tarefa"}
+                    titulo={titulo}
+                    mensagem={"Você chegou à última missão! Mostre tudo o que aprendeu e conquiste essa última etapa!"}
+                    info={`${String(minutos).padStart(2, "0")}:${String(segundos).padStart(2, "0")}`}
+                >
+                    <Stack
+                        w="100%"
+                        gap="6"
+                        textStyle="bodyTextLong"
+                        color="brand.neutral"
+                        textAlign="justify"
+                        mt="8"
+                    >
+                        {questoes.map((questao, index) => (
+                            <FormatoQuestaoAleatorio
+                                key={questao.id}
+                                exibicaoQuestoes={exibicaoQuestoes}
+                                questao={questao}
+                                index={index}
+                                respostas={respostas}
+                                alterarResposta={alterarRespostaMultiplaEscolha}
+                            />
+                        ))}
+                        <Button
+                            flex={1}
+                            w="100%"
+                            variant="solid"
+                            type="submit"
+                            onClick={() => setEtapa("resultado")}
+                        >
+                            Responder tarefa
+                        </Button>
+                    </Stack>
+                </CardCustomizado>
+            } {
+                etapa === "resultado" &&
+                <ConclusaoMissao
+                    key={"resultado"}
+
+                    valorMissao={valorMissao}
+                    idMissao={idTarefa}
+                    tipoAtividade={TipoAtividade.TAREFA}
+                    distintivo={distintivoTarefa}
+                    questoes={questoes}
+                    respostas={respostas}
+                    tentativas={tentativas}
+                    progressoAtual={progressoTarefa!}
+
+                    trilha={trilha}
+                    parametroTrilha={""}
+                    setEtapa={setEtapa}
+                    setQuestoes={setQuestoes}
+                    setRespostas={setRespostas}
+                    setPontuacao={setPontuacao}
+                    setTentativas={setTentativas}
+
+                    navigate={navigate}
+                />
+            }
+        </Box>
+    )
+}
+
+
+type FormatoQuestaoAleatorioProps = {
+    exibicaoQuestoes: string[];
+    questao: QuestaoProp;
+    index: number;
+    respostas: AlternativaMarcadaDTO[][];
+    alterarResposta: (idAlternativas: string[], idQuestao: number) => void;
+};
+export function FormatoQuestaoAleatorio({
+    exibicaoQuestoes,
+    questao,
+    index,
+    respostas,
+    alterarResposta,
+}: FormatoQuestaoAleatorioProps) {
+
+    if (exibicaoQuestoes[index] === "checkbox") {
+        return (
+            <QuestaoCheckbox
+                key={questao.id}
+                questao={questao}
+                index={index}
+                value={respostas[index]}
+                onChange={alterarResposta}
+            />
+        )
+    }
+
+    /*if (questao.alternativas[0].tipoAlternativa === TipoAlternativa.ASSOCIACAO) {
+        const [colunas, setColunas] = useState(<></>)
+        // gerar colunas
+    }
+    if (questao.alternativas[0].tipoAlternativa === TipoAlternativa.ORDENACAO) {
+        const [linhas, setLinhas] = useState(<></>)
+        // gerar combinacoes
+    }*/
+
+    if (exibicaoQuestoes[index] === "radio") {
+        return (
+            <QuestaoRadio
+                key={questao.id}
+                questao={questao}
+                index={index}
+                value={String(respostas[index][0].idAlternativa) ?? ""}
+                onChange={alterarResposta}
+            />
+        )
+    } else {
+        return (
+            <QuestaoSelect
+                key={questao.id}
+                questao={questao}
+                index={index}
+                value={String(respostas[index][0].idAlternativa) ?? ""}
+                onChange={alterarResposta}
+            />
+        )
+    }
+}

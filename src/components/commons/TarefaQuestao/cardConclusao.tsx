@@ -77,11 +77,6 @@ export default function ConclusaoMissao({
         tipoMaterial: "atividade",
         tipoAtividade: tipoAtividade,
         distintivo: distintivo,
-        /*
-         * Distintivos que o usuário já possui: evita reenviar uma
-         * concessão que o backend recusaria e evita anunciar como nova
-         * uma conquista antiga.
-         */
         distintivosAdquiridos: distintivos
             .filter(d => d.adquirido)
             .map(d => d.id),
@@ -112,16 +107,7 @@ export default function ConclusaoMissao({
 
                 setRetornoConclusao(retorno);
                 setTentativas(retorno.tentativas)
-
-                /*
-                 * As atualizações são AGUARDADAS. Sem o await, o
-                 * usuário podia voltar para a tela secundária antes de
-                 * o estado global refletir a conclusão, e o ícone da
-                 * missão no mapa continuava como não concluído até um
-                 * novo login ou um recarregamento manual da página.
-                 *
-                 * Rodam em paralelo porque são independentes entre si.
-                 */
+                
                 await Promise.all([
                     atualizarProgresso(),
                     atualizarDistintivos(),

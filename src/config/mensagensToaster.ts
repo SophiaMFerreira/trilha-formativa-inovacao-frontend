@@ -1,3 +1,5 @@
+import { mensagemDeErroDaApi } from "@/utils/erroApi";
+
 export const mensagemToasterConquista = (
     pontos: number,
     distintivo?: string
@@ -19,6 +21,23 @@ export const mensagemToasterConquista = (
         }
     }
 };
+
+export function mensagemParaToaster(
+    erro: unknown
+) {
+    const mensagemApi = mensagemDeErroDaApi(erro)
+    if(mensagemApi){
+        return {
+            title: "Algo deu errado!",
+            description: mensagemApi,
+            type: "warning",
+            duration: 7000,
+        }
+    } else {
+        return undefined
+    }
+    
+}
 
 /**
  * Limite de missões de uma trilha atingido.

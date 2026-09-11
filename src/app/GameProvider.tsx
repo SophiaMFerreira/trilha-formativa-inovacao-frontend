@@ -301,7 +301,7 @@ export function GameProvider({
             /* Sem missões na temática o progresso é 0, não uma divisão por zero. */
             tematica.progresso = quantidade > 0
                 ? limitarPercentual(tematica.progresso / quantidade)
-                : 0;
+                : 100;
         }
 
         return mapa;

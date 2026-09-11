@@ -1,4 +1,4 @@
-import { createListCollection, Editable, Field, Fieldset, Grid, GridItem, List, Portal, RadioCard, RadioGroup, Select, Stack, Text } from "@chakra-ui/react"
+import { Box, createListCollection, Editable, Field, Fieldset, Grid, GridItem, List, Portal, RadioCard, RadioGroup, Select, Stack, Text } from "@chakra-ui/react"
 import CaixaAlternativa from "./caixaAlternativa"
 import { estilosAlternativa } from "@/config/alternativasEstiloConfig"
 
@@ -23,9 +23,12 @@ export function MultiplaEscolha({ questao, value, onChange }: QuestaoProps) {
 
   return (
     <RadioCard.Root
-      display="flex"
-      alignContent="center"
-      justifyContent="center"
+      value={value}
+      onValueChange={(details) => {
+        if (details.value !== null) {
+          onChange(details.value);
+        }
+      }}
     >
       <Grid
         templateColumns={{
@@ -34,38 +37,34 @@ export function MultiplaEscolha({ questao, value, onChange }: QuestaoProps) {
         }}
         gap="4"
       >
-        {alternativas.map(
-          (alternativa, i) => {
-            const estilo = estilosAlternativa[i % estilosAlternativa.length]
+        {alternativas.map((alternativa, i) => {
+          const estilo =
+            estilosAlternativa[i % estilosAlternativa.length];
 
-            return (
-              <GridItem
-                key={alternativa.id}
-              >
-                <RadioGroup.Root
-                  value={value}
-                  onValueChange={(details) => {
-                    if (details.value !== null) {
-                      onChange(details.value);
-                    }
+          return (
+            <GridItem key={alternativa.id}>
+                <RadioCard.Item
+                  value={String(alternativa.id)}
+                  border="2px solid transparent"
+                  borderRadius="sm"
+                  _checked={{
+                    outline: "3px solid",
+                    outlineColor: "brand.secondary",
+                    outlineOffset: "2px",
                   }}
                 >
-                  <RadioCard.Item
-                    value={String(alternativa.id)}
-
-                  >
-                    <RadioCard.ItemHiddenInput />
+                  <RadioCard.ItemHiddenInput />
+                  <Box w="100%" h="100%">
                     <CaixaAlternativa
                       texto={alternativa.texto}
                       estilo={estilo}
                       minH={false}
                     />
-                  </RadioCard.Item>
-                </RadioGroup.Root>
-              </GridItem>
-            )
-          }
-        )}
+                  </Box>
+                </RadioCard.Item>
+            </GridItem>
+          );
+        })}
       </Grid>
     </RadioCard.Root>
   )
@@ -264,7 +263,7 @@ export function MultiplaEscolhaCadastroQuiz({ alternativas, onClick }: MultiplaE
         (a, i) => {
           const estilo = estilosAlternativa[i % estilosAlternativa.length]
           if (!("subtipo" in a)) return
-          const alternativa = a  as AlternativaMultiplaEscolha
+          const alternativa = a as AlternativaMultiplaEscolha
 
           return (
             <GridItem
@@ -323,22 +322,22 @@ export function MultiplaEscolhaCadastroTarefa({ alternativas, onClick }: Multipl
     >
       {alternativas.map((a, i) => {
         if (!("subtipo" in a)) return
-          const alternativa = a  as AlternativaMultiplaEscolha
-          
+        const alternativa = a as AlternativaMultiplaEscolha
+
         return (
           <List.Item
             key={alternativa.id}
-            _marker={{ 
-              color: alternativa.correta ? 
-              "brand.primaryDark" : "brand.neutral" 
+            _marker={{
+              color: alternativa.correta ?
+                "brand.primaryDark" : "brand.neutral"
             }}
-            color={ 
-              alternativa.correta ? 
-              "brand.primaryDark" : "brand.neutral" 
+            color={
+              alternativa.correta ?
+                "brand.primaryDark" : "brand.neutral"
             }
             textStyle={
-              alternativa.correta ? 
-              "bodyTextBold" : "bodyTextLong"
+              alternativa.correta ?
+                "bodyTextBold" : "bodyTextLong"
             }
             onClick={(e) => onClick(alternativa)}
           >
@@ -348,7 +347,7 @@ export function MultiplaEscolhaCadastroTarefa({ alternativas, onClick }: Multipl
               value={alternativa.texto}
               onValueChange={(e) => onClick({ ...alternativa, texto: e.value })}
               placeholder="Conteúdo da alternativa"
-             >
+            >
               <Editable.Preview
                 w="100%"
               />

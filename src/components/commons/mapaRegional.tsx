@@ -30,6 +30,8 @@ export default function MapaRegional({ tematica, navigate, missoes }: mapaRegion
         ambientesInovacao: mapaAmbientesInovacao,
     };
 
+    const missoesOrdenadas = montarOrdemTrilha(missoes)   
+
     return (
         <Box
             gridColumn={{ lg: "span 9" }}
@@ -97,7 +99,7 @@ export default function MapaRegional({ tematica, navigate, missoes }: mapaRegion
                         {tematicaLabel}
                     </Heading>
                 </HStack>
-                {missoes.map((missao, index) => (
+                {missoesOrdenadas.map((missao, index) => (
                     <IconeMissao
                         key={missao.missao.id}
                         index={index}
@@ -204,3 +206,58 @@ function IconeMissao({
         </CustomTooltip >
     )
 }
+
+const montarOrdemTrilha = (
+        missoes: ProgressoMissao[]
+    ): ProgressoMissao[] => {
+
+        const conteudos: ProgressoMissao[] = [];
+        const quizzes: ProgressoMissao[] = [];
+        const tarefas: ProgressoMissao[] = [];
+
+        for (const progresso of missoes) {
+            const missao = progresso.missao;
+            if ("tipoMaterial" in missao) {
+                conteudos.push(progresso);
+                continue;
+            }
+            if (missao.tipoAtividade === TipoAtividade.QUIZ) {
+                quizzes.push(progresso);
+                continue;
+            }
+            if (missao.tipoAtividade === TipoAtividade.TAREFA) {
+                tarefas.push(progresso);
+            }
+        }
+
+        const trilha: ProgressoMissao[] = [];
+        if (quizzes.length === 0) {
+            return [...conteudos, ...tarefas];
+        }
+
+        const quantidadePorBloco = Math.ceil(
+            conteudos.length / (quizzes.length + 1)
+        );
+        let indiceConteudo = 0;
+
+        for (const quiz of quizzes) {
+            for (
+                let i = 0;
+                i < quantidadePorBloco && indiceConteudo < conteudos.length;
+                i++
+            ) {
+                trilha.push(conteudos[indiceConteudo]);
+                indiceConteudo++;
+            }
+
+            trilha.push(quiz);
+        }
+
+        while (indiceConteudo < conteudos.length) {
+            trilha.push(conteudos[indiceConteudo]);
+            indiceConteudo++;
+        }
+
+        trilha.push(...tarefas);
+        return trilha;
+    };

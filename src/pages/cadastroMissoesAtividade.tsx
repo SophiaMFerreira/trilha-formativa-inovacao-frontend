@@ -15,7 +15,7 @@ import { DistintivoAPI } from "../../api/distintivos";
 import ListagemQuestao from "@/components/listagemQuestao";
 import { DadosAtuaisProps, validarAtividade } from "@/utils/validations/missaoAtividade";
 import { toaster } from "@/components/commons/toaster";
-import { mensagensToastErro, mensagensToastSucesso } from "@/config/mensagensToaster";
+import { mensagemParaToaster, mensagensToastErro, mensagensToastSucesso } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
 
 export default function CadastroMissoesAtividade() {
@@ -166,9 +166,9 @@ export default function CadastroMissoesAtividade() {
                     items:
                         tematicas.length === 0
                             ? [{
-                                    label: "Nenhuma temática cadastrada",
-                                    value: "-1",
-                                },
+                                label: "Nenhuma temática cadastrada",
+                                value: "-1",
+                            },
                             ]
                             : tematicas.map(item => ({
                                 label: obterNomeTematica(item.titulo) || item.titulo,
@@ -280,7 +280,12 @@ export default function CadastroMissoesAtividade() {
             navigate("/banco-missoes-atividade")
 
         } catch (e) {
-            console.error(mensagensErroConsole.salvarMissaoAtividade, e);
+            const toasterMensagemApi = mensagemParaToaster(e);
+            if (toasterMensagemApi) {
+                toaster.create(toasterMensagemApi)
+            } else {
+                console.error(mensagensErroConsole.salvarMissaoAtividade, e);
+            }
         }
     };
 

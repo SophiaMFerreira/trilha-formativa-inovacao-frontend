@@ -24,6 +24,7 @@ import CadastroMissoesAtividade from "@/pages/cadastroMissoesAtividade"
 import ErrorPage from "@/pages/errorPage"
 import RecuperarSenha from "@/pages/recuperarSenha"
 import SolicitarRecuperarSenha from "@/pages/solicitarRecuperarSenha"
+import TarefaFinal from "@/pages/tarefaFinal"
 
 export const router = createBrowserRouter([
   {
@@ -139,7 +140,7 @@ export const router = createBrowserRouter([
         element: (
           <RoleRoute roles={["usuario"]}>
             <ConditionalRoute>
-              <Tarefa />
+              <TarefaFinal />
             </ConditionalRoute>
           </RoleRoute>
         )
@@ -163,15 +164,6 @@ export const router = createBrowserRouter([
         element: <SolicitarRecuperarSenha />
       }, {
         path: "recuperarSenha/enviarNovaSenha",
-        element: <RecuperarSenha />
-      }, {
-        /*
-         * Endereço que o backend coloca no e-mail de redefinição
-         * (EmailService::montarLinkDeRedefinicao). Sem esta rota o
-         * clique no link cai no ErrorPage e o fluxo morre no passo do
-         * token.
-         */
-        path: "redefinir-senha",
         element: <RecuperarSenha />
       },
     ],

@@ -18,7 +18,7 @@ import { FaEye, FaEyeSlash, FaRegCalendarAlt } from "react-icons/fa";
 import { validarUsuario } from "@/utils/validations/usuario";
 import { informouNovaSenha } from "@/utils/validations/senha";
 import { toaster } from "@/components/commons/toaster";
-import { mensagensToastErro, mensagensToastSucesso } from "@/config/mensagensToaster";
+import { mensagemParaToaster, mensagensToastErro, mensagensToastSucesso } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
 
 export function CadastroAventureiro() {
@@ -80,32 +80,9 @@ export function CadastroAventureiro() {
     const [previewImagem, setPreviewImagem] = useState<string | undefined>();
     /** Usuário carregado da API, na edição. */
     const [usuarioCarregado, setUsuarioCarregado] = useState<Usuario | null>(null);
-
-    /*
-     * A imagem exibida é a pré-visualização, quando existe, ou a foto
-     * já cadastrada — derivada do usuário carregado.
-     *
-     * A versão anterior guardava o caminho da foto em
-     * localStorage("fotoPerfil") e montava a URL num segundo useEffect
-     * que dependia de idUsuario/fotoPerfilNome, mas usava também
-     * nomeAventureiro SEM declará-lo nas dependências. Na primeira
-     * execução esses estados ainda valiam -1 e "", então a URL saía
-     * inválida e o efeito não rodava de novo quando os dados chegavam:
-     * era por isso que a foto só aparecia depois de o usuário
-     * selecionar o arquivo outra vez.
-     */
     const imagem = previewImagem ?? urlDaFotoDePerfil(usuarioCarregado);
 
     const [removendoImagem, setRemovendoImagem] = useState(false);
-
-    /**
-     * Remove a imagem de perfil.
-     *
-     * A interface só reflete a remoção depois de o backend confirmar:
-     * apaga o arquivo, limpa a referência no banco e devolve
-     * fotoPerfil nulo. Assim não sobra no registro um caminho
-     * apontando para arquivo que já não existe.
-     */
     const onRemoverImagem = async () => {
         if (!user?.id || removendoImagem) return;
 
@@ -425,11 +402,17 @@ export function CadastroAventureiro() {
                 mensagemDeErroDaApi(erro) ?? erro
             );
 
-            toaster.create(
+            const toasterMensagemApi = mensagemParaToaster(erro);
+            if(toasterMensagemApi){
+                toaster.create(toasterMensagemApi)
+            } else {
+                toaster.create(
                 user?.id
                     ? mensagensToastErro.editarAventureiro
                     : mensagensToastErro.salvarAventureiro
             )
+            }
+            
         }
     }
 

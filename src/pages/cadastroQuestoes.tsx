@@ -20,7 +20,7 @@ import { OrdenacaoCadastroQuiz, OrdenacaoCadastroTarefa } from "@/components/com
 import { QuestaoAPI } from "../../api/questao";
 import { DadosAtuaisProps, validarQuestao } from "@/utils/validations/questao";
 import { toaster } from "@/components/commons/toaster";
-import { mensagensToastErro, mensagensToastSucesso } from "@/config/mensagensToaster";
+import { mensagemParaToaster, mensagensToastErro, mensagensToastSucesso } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
 import { mensagensAjudaQuestoes, mensagensAjudaQuestoesModal } from "@/config/mensagemAjudaQuestoes";
 
@@ -370,8 +370,8 @@ export default function CadastroQuestoes() {
                         tematica: missao.tematica.titulo,
                         idAtividade: missao.id,
                         tipoAtividade: missao.tipoAtividade,
-                        tipoAlternativa: questao.alternativas[0].tipoAlternativa === TipoAlternativa.MULTIPLA_ESCOLHA ? 
-                            questao.alternativas[0].subtipo : questao.alternativas[0].tipoAlternativa 
+                        tipoAlternativa: questao.alternativas[0].tipoAlternativa === TipoAlternativa.MULTIPLA_ESCOLHA ?
+                            questao.alternativas[0].subtipo : questao.alternativas[0].tipoAlternativa
                     })
 
                 } else {
@@ -389,7 +389,6 @@ export default function CadastroQuestoes() {
                 }
 
             } catch (erro) {
-                console.error(erro);
                 console.error(mensagensErroConsole.buscarGenerico, erro);
                 navigate("/banco-questoes");
             }
@@ -590,12 +589,17 @@ export default function CadastroQuestoes() {
                 toaster.create(mensagensToastSucesso.editarQuestao)
 
             } catch (erroQuestaoUpdate) {
-                toaster.create(mensagensToastErro.editarQuestao)
-                console.error(
-                    mensagensErroConsole.editarQuestao,
-                    mensagemDeErroDaApi(erroQuestaoUpdate) ?? erroQuestaoUpdate
-                )
-                return
+                const toasterMensagemApi = mensagemParaToaster(erroQuestaoUpdate);
+                if (toasterMensagemApi) {
+                    toaster.create(toasterMensagemApi)
+                } else {
+                    toaster.create(mensagensToastErro.editarQuestao)
+                    console.error(
+                        mensagensErroConsole.editarQuestao,
+                        mensagemDeErroDaApi(erroQuestaoUpdate) ?? erroQuestaoUpdate
+                    )
+                    return
+                }
             }
 
         } else {
@@ -628,10 +632,6 @@ export default function CadastroQuestoes() {
                         (alternativa): AlternativaAssociacaoDTO => ({
                             texto: alternativa.texto,
                             tipoAlternativa: TipoAlternativa.ASSOCIACAO,
-                            /*
-                             * Sem ID: o par ainda não existe e é criado
-                             * pelo backend junto com o vínculo.
-                             */
                             alternativaAssociada: {
                                 texto: alternativa.alternativaAssociada.texto,
                                 tipoAlternativa: TipoAlternativa.ASSOCIACAO,
@@ -679,16 +679,20 @@ export default function CadastroQuestoes() {
                     toaster.create(mensagensToastSucesso.salvarQuestao)
 
                 } catch (erroAlternativas) {
-                    toaster.create(mensagensToastErro.salvarQuestao)
-                    console.error(
-                        mensagensErroConsole.salvarAlternativa,
-                        mensagemDeErroDaApi(erroAlternativas) ?? erroAlternativas
-                    )
+                    const toasterAMensagemApi = mensagemParaToaster(erroAlternativas);
+                    if (toasterAMensagemApi) {
+                        toaster.create(toasterAMensagemApi)
+                    } else {
+                        toaster.create(mensagensToastErro.salvarQuestao)
+                        console.error(
+                            mensagensErroConsole.salvarAlternativa,
+                            mensagemDeErroDaApi(erroAlternativas) ?? erroAlternativas
+                        )
 
                     /*
                      * A questão sem alternativas não serve para nada:
                      * desfaz a criação para não deixar lixo na base.
-                     */
+                     */}
                     try {
                         await QuestaoAPI.deletar(idAtividade, idQuestaoCriada)
                     } catch (erroDeleteQuestao) {

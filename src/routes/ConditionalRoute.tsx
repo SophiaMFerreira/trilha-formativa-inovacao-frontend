@@ -8,7 +8,7 @@ type Props = {
 export default function ConditionalRoute({ children }: Props) {
     const { progressoTotal } = useGame();
 
-    if (progressoTotal < 90) {
+    if (progressoTotal < 80) {
         return <Navigate to="/trilhaFormativaInovacao" replace />;
     }
 

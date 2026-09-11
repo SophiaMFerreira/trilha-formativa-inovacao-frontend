@@ -8,7 +8,7 @@ import { FaAngleLeft, FaAngleRight, FaAward } from "react-icons/fa";
 
 import { useGame } from "@/hooks/useGame";
 import MapaPrincipal from "@/components/commons/mapaPrincipal";
-import { Usuario, UsuarioDTO } from "@/types_consts/usuario";
+import { Usuario } from "@/types_consts/usuario";
 import { useEffect, useState } from "react";
 import { UsuarioAPI } from "../../api/usuario";
 import { toaster } from "@/components/commons/toaster";

@@ -5,7 +5,7 @@ import CardCustomizado from "@/components/commons/cardCustomizado";
 import { AppInput } from "@/components/commons/AppInput";
 import { FaSearch } from "react-icons/fa";
 import { Missao, MissaoAtividade } from "@/types_consts/missao";
-import { Tematica, TematicaDTO, tematicaLabel } from "@/types_consts/tematica";
+import { obterNomeTematica, Tematica, TematicaDTO, tematicaLabel } from "@/types_consts/tematica";
 import { MissaoAPI } from "../../api/missao";
 import { TematicaAPI } from "../../api/tematica";
 import ListagemMissaoAtividade from "@/components/listagemMissaoAtividade";
@@ -71,23 +71,12 @@ export default function BancoMissoesAtividade() {
             const missoesAtividade = missoes.filter((m): m is MissaoAtividade => "tipoAtividade" in m)
 
             if (!missoesAtividade) return
-            const missoesFiltradas = tematicas.map(tematica => {
-                let t = tematica.titulo;
-                switch (t) {
-                    case Tematica.LEGISLACAO:
-                    case Tematica.AMBIENTES_INOVACAO:
-                    case Tematica.PROPRIEDADE_INTELECTUAL:
-                    case Tematica.TRANFERENCIA_TECNOLOGICA:
-                        t = tematicaLabel[t];
-                        break;
-                }
-                return {
-                    tematica: t as string,
-                    atividades: missoesAtividade.filter(missao =>
-                        missao.tematica.id === tematica.id
-                    )
-                }
-            })
+            const missoesFiltradas = tematicas.map(tematica => ({
+                tematica: obterNomeTematica(tematica.titulo) || tematica.titulo,
+                atividades: missoesAtividade.filter(
+                    missao => missao.tematica.id === tematica.id
+                )
+            }));
             setMissoesPorTematica(missoesFiltradas)
 
         } catch (erro) {
@@ -101,79 +90,79 @@ export default function BancoMissoesAtividade() {
     }, []);
 
     return (
-            <CardCustomizado
-                titulo={"Banco de missões atividade"}
-                mensagem={"Faça cadastro, edição e exclusão de missões atividade para a trilha formativa."}
+        <CardCustomizado
+            titulo={"Banco de missões atividade"}
+            mensagem={"Faça cadastro, edição e exclusão de missões atividade para a trilha formativa."}
+        >
+            <Flex
+                direction="column"
+                justify="center"
+                gap="3"
+                mt={6}
             >
-                <Flex
-                    direction="column"
-                    justify="center"
-                    gap="3"
-                    mt={6}
+                <HStack
+                    justify="space-between"
+                    flex="1"
                 >
-                    <HStack
-                        justify="space-between"
-                        flex="1"
-                    >
-                        <InputGroup
-                            endElement={
-                                <Box color="brand.primaryDark">
-                                    <FaSearch />
-                                </Box>
-                            }
-                            maxW="md"
-                        >
-                            <AppInput
-                                placeholder="Pesquisar missão atividade"
-                                appVariant="filled"
-                                value={termoBusca}
-                                onChange={(e) => setTermoBusca(e.target.value)}
-
-                            />
-                        </InputGroup>
-                        <Button
-                            variant="solid"
-                            onClick={() => navigate("/cadastro-missao-atividade")}
-                        >
-                            Adicionar missão
-                        </Button>
-                    </HStack>
-                    <Stack>
-                        {materiaisFiltrados.map(groupoTematica => (
-                            <Box
-                                my={3}
-                                key={groupoTematica.tematica}
-                            >
-                                <Heading
-                                    textStyle="headingMD"
-                                    color="brand.primaryDark"
-                                    mb={1.5}
-                                >
-                                    {groupoTematica.tematica}
-                                </Heading>
-                                <Stack
-                                    gap={2}
-                                >
-                                    {groupoTematica.atividades.map(material => (
-                                        <ListagemMissaoAtividade
-                                            key={material.id}
-                                            {...material}
-                                            onExcluir={carregarDados}
-                                        />
-                                    ))}
-                                </Stack>
+                    <InputGroup
+                        endElement={
+                            <Box color="brand.primaryDark">
+                                <FaSearch />
                             </Box>
-                        ))}
-                    </Stack>
+                        }
+                        maxW="md"
+                    >
+                        <AppInput
+                            placeholder="Pesquisar missão atividade"
+                            appVariant="filled"
+                            value={termoBusca}
+                            onChange={(e) => setTermoBusca(e.target.value)}
+
+                        />
+                    </InputGroup>
                     <Button
-                        variant="outline"
-                        w="sm"
-                        alignSelf="center"
+                        variant="solid"
                         onClick={() => navigate("/cadastro-missao-atividade")}
                     >
                         Adicionar missão
                     </Button>
-                </Flex>
-            </CardCustomizado>
+                </HStack>
+                <Stack>
+                    {materiaisFiltrados.map(groupoTematica => (
+                        <Box
+                            my={3}
+                            key={groupoTematica.tematica}
+                        >
+                            <Heading
+                                textStyle="headingMD"
+                                color="brand.primaryDark"
+                                mb={1.5}
+                            >
+                                {groupoTematica.tematica}
+                            </Heading>
+                            <Stack
+                                gap={2}
+                            >
+                                {groupoTematica.atividades.map(material => (
+                                    <ListagemMissaoAtividade
+                                        key={material.id}
+                                        {...material}
+                                        onExcluir={carregarDados}
+                                    />
+                                ))}
+                            </Stack>
+                        </Box>
+                    ))}
+                </Stack>
+                <Button
+                    variant="outline"
+                    w="sm"
+                    alignSelf="center"
+                    onClick={() => navigate("/cadastro-missao-atividade")}
+                >
+                    Adicionar missão
+                </Button>
+            </Flex>
+        </CardCustomizado>
     );
 }

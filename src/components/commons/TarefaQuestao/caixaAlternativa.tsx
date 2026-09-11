@@ -19,9 +19,9 @@ export default function CaixaAlternativa({texto, estilo, minH}: AlternativaProps
 
       _hover={estilo.hover}
 
-      _focusVisible={
-        estilo.focusVisible
-      }
+      //_focusVisible={
+      //  estilo.focusVisible
+      //}
 
       display="flex"
       alignItems="center"
