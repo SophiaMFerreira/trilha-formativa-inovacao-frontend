@@ -1,7 +1,7 @@
 import { Button, Image, Skeleton, } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import CustomTooltip from "./customTooltip";
-import { obterNomeTematica, obterRotaTematica, TematicaDTO, TematicaRota, tematicaRotaLabel } from "@/types_consts/tematica";
+import { obterNomeTematica, obterRotaTematica, Tematica, TematicaDTO, TematicaRota } from "@/types_consts/tematica";
 
 import mapaPrincipal from "@/assets/images/Mapas/trilhaFormativaInovacao.png";
 
@@ -67,17 +67,30 @@ export default function MapaPrincipal({ navigate, progressoPontosTematicas, prog
                 w="100%"
                 onLoad={() => setLoadedMapa(true)}
             />
-            {tematicas.map((tematica, index) => (
-                <IconeTrilha
-                    key={tematica.id}
-                    index={index}
-                    tematica={tematica.titulo}
-                    navigate={navigate}
-                    progresso={progressoPontosTematicas.get(tematica.titulo)?.progresso}
-                    tarefaFinal={tematica.titulo === "tarefa final"}
-                    progressoTotal={progressoTotal}
-                />
-            ))}
+            {tematicas.map((tematica, index) => {
+                const tarefaFinal = tematica.titulo === Tematica.TAREFA_FINAL;
+
+                const indiceTematica = tematicas
+                    .slice(0, index)
+                    .filter(t => t.titulo !== Tematica.TAREFA_FINAL)
+                    .length;
+
+                return (
+                    <IconeTrilha
+                        key={tematica.id}
+                        index={indiceTematica}
+                        tematica={tematica.titulo}
+                        navigate={navigate}
+                        progresso={
+                            progressoPontosTematicas
+                                .get(tematica.titulo)
+                                ?.progresso
+                        }
+                        tarefaFinal={tarefaFinal}
+                        progressoTotal={progressoTotal}
+                    />
+                );
+            })}
         </Skeleton>
     )
 }
@@ -101,8 +114,14 @@ function IconeTrilha({
 }: IconeTrilhaProps) {
 
     const concluido = progresso === 100
-    let posicao = !tarefaFinal ? posicoesTematicas[index] : posicaoTarefaFinal
-    const disabled = progressoTotal < 90 && tarefaFinal
+    const posicao = tarefaFinal
+        ? posicaoTarefaFinal
+        : posicoesTematicas[index];
+
+    if (!posicao) {
+        return null;
+    }
+    const disabled = progressoTotal < 80 && tarefaFinal
 
     return (
         <CustomTooltip
@@ -114,7 +133,7 @@ function IconeTrilha({
                 left={posicao.left}
                 transform="translate(-50%, -50%)"
 
-                onClick={() => { navigate(`/trilhaFormativaInovacao/${obterRotaTematica(tematica)}`)}}
+                onClick={() => { navigate(`/trilhaFormativaInovacao/${obterRotaTematica(tematica) || "tarefaFinal"}`) }}
 
                 disabled={disabled}
                 aria-label={obterNomeTematica(tematica) || tematica}

@@ -275,25 +275,32 @@ export const posicoesItensAmbientesInovacao = [
 export const posicoesTematicas = [
   {
     id: 1,
-    top: "76%",
-    left: "25%",
+    top: "77%",
+    left: "55%",
+    //B-E
+    //AMBIENTES INOVACAO
   },
   {
     id: 2,
-    top: "44%",
-    left: "56%",
+    top: "76%",
+    left: "25%",
+    //B-D
+    //LEGISLACAO
   },
   {
     id: 3,
     top: "43%",
     left: "25%",
+    //C-E
+    //PROPRIEDADE INTELECTIAL
   },
   {
     id: 4,
-    top: "77%",
-    left: "55%",
+    top: "44%",
+    left: "56%",
+    //C-D
+    //TRANSAFERENCIA TECNOLOGICA
   },
-  
 ]
 
 export const posicaoTarefaFinal = {

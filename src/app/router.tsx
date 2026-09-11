@@ -24,6 +24,7 @@ import CadastroMissoesAtividade from "@/pages/cadastroMissoesAtividade"
 import ErrorPage from "@/pages/errorPage"
 import RecuperarSenha from "@/pages/recuperarSenha"
 import SolicitarRecuperarSenha from "@/pages/solicitarRecuperarSenha"
+import TarefaFinal from "@/pages/tarefaFinal"
 
 export const router = createBrowserRouter([
   {
@@ -139,7 +140,7 @@ export const router = createBrowserRouter([
         element: (
           <RoleRoute roles={["usuario"]}>
             <ConditionalRoute>
-              <Tarefa />
+              <TarefaFinal />
             </ConditionalRoute>
           </RoleRoute>
         )

@@ -24,7 +24,7 @@ export enum TematicaRota {
   TRANFERENCIA_TECNOLOGICA = "transferenciaTecnologica",
   PROPRIEDADE_INTELECTUAL = "propriedadeIntelectual",
   AMBIENTES_INOVACAO = "ambientesInovacao",
-  TAREFA_FINAL = "tarefaFinal"
+  //TAREFA_FINAL = "tarefaFinal"
 }
 
 export const tematicaRotaLabel = {
@@ -32,7 +32,7 @@ export const tematicaRotaLabel = {
   [TematicaRota.TRANFERENCIA_TECNOLOGICA]: "Transferência Tecnológica",
   [TematicaRota.PROPRIEDADE_INTELECTUAL]: "Propriedade Intelectual",
   [TematicaRota.AMBIENTES_INOVACAO]: "Ambientes de Inovação",
-  [TematicaRota.TAREFA_FINAL]: "Tarefa Final",
+  //[TematicaRota.TAREFA_FINAL]: "Tarefa Final",
 } as const;
 
 export function obterNomeTematica(titulo: string) {
