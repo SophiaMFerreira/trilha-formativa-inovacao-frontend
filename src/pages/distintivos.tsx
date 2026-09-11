@@ -20,7 +20,7 @@ export default function Distintivos() {
     const { user } = useAuth();
     const { distintivos, progressoTotal } = useGame()
 
-    const [open, setOpen] = useState(false)
+    const [open, setOpen] = useState(progressoTotal === 100)
     const [nomeUsuario, setNomeUsuario] = useState("")
 
     if (!user) {
@@ -236,7 +236,7 @@ export default function Distintivos() {
                                         overflowWrap="anywhere"
                                         mx="10"
                                     >
-                                        Parabéns, aventureiro! Você chegou ao fim da Trilha Formativa em Inovação! Que conquista incrível! Ao longo dessa jornada, você explorou novos conhecimentos, enfrentou desafios, completou missões e, passo a passo, construiu sua própria trajetória pela inovação. Cada ponto conquistado, cada desafio superado e cada distintivo colecionado representa uma parte dessa jornada. Mas chegar ao final não significa que a aventura termina por aqui. O conhecimento que você conquistou agora pode acompanhar você em novos projetos, novas ideias e novas possibilidades. Parabéns por essa conquista! Continue explorando, continue aprendendo e continue inovando.
+                                        Parabéns, {nomeUsuario}! Você chegou ao fim da Trilha Formativa em Inovação! Que conquista incrível! Ao longo dessa jornada, você explorou novos conhecimentos, enfrentou desafios, completou missões e, passo a passo, construiu sua própria trajetória pela inovação. Cada ponto conquistado, cada desafio superado e cada distintivo colecionado representa uma parte dessa jornada. Mas chegar ao final não significa que a aventura termina por aqui. O conhecimento que você conquistou agora pode acompanhar você em novos projetos, novas ideias e novas possibilidades. Parabéns por essa conquista! Continue explorando, continue aprendendo e continue inovando.
                                     </Text>
                                 </Stack>
                             </Dialog.Body>
