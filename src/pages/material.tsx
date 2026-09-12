@@ -31,7 +31,7 @@ export default function Material() {
     const [clicouLink, setClicouLink] = useState<boolean>(false)
     const [concluido, setCloncluido] = useState<boolean>(false)
     const conclusaoExecutada = useRef(false);
-    
+
 
     async function concluirMaterial() {
         if (!clicouLink) {
@@ -95,7 +95,7 @@ export default function Material() {
                 if (!progressoMissao) return
 
                 setProgressoConteudo(progressoMissao)
-                
+
                 if (progressoMissao.progresso === 100) {
                     setCloncluido(true)
                 }
@@ -178,7 +178,11 @@ export default function Material() {
                                 onClick={() => setClicouLink(true)}
                             >
                                 {url}
-                                <FaExternalLinkAlt />
+                                <Box
+                                    minH={15}
+                                >
+                                    <FaExternalLinkAlt />
+                                </Box>
                             </Link>
                         </Stack>
                         <Link
