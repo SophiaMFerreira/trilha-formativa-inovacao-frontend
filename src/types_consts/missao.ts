@@ -70,12 +70,12 @@ export const tipoMaterialLabel = {
 export enum TipoAtividade {
   QUIZ = "quiz",
   TAREFA = "tarefa",
-  //TAREFA_FINAL = "tarefa final",
+  TAREFA_FINAL = "tarefa final",
 }
 export const TipoAtividadeLabel = {
   [TipoAtividade.QUIZ]: "Quiz",
   [TipoAtividade.TAREFA]: "Tarefa",
-  //[TipoAtividade.TAREFA_FINAL]: "Tarefa Final",
+  [TipoAtividade.TAREFA_FINAL]: "Tarefa Final",
 }
 
 // -------------------= Missao =--------------------

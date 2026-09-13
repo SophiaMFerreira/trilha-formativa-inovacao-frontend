@@ -562,6 +562,14 @@ export const mensagensToastErro = {
         closable: true,
         duration: 9000,
     },
+    tipoAlternativaTipoAtividadeIncorreto: {
+        title: "Tipo de missão incompatível",
+        description:
+            "As missões do tipo Tarefa Final são exclusivas da trilha de tarefa final. Já as missões do tipo Quiz e Tarefa devem ser cadastradas somente nas trilhas temáticas de inovação.",
+        type: "warning",
+        closable: true,
+        duration: 9000,
+    },
 
 } as const;
 

@@ -22,7 +22,6 @@ type ConclusaoProps = {
     valorMissao: number
     idMissao: number
     tipoAtividade: TipoAtividade
-    /** Distintivo vinculado à missão do tipo tarefa. */
     distintivo?: DistintivoDTO
     questoes: QuestaoProp[]
     respostas: AlternativaMarcadaDTO[][]
@@ -107,7 +106,7 @@ export default function ConclusaoMissao({
 
                 setRetornoConclusao(retorno);
                 setTentativas(retorno.tentativas)
-                
+
                 await Promise.all([
                     atualizarProgresso(),
                     atualizarDistintivos(),
@@ -194,8 +193,12 @@ export default function ConclusaoMissao({
     return (
         <CardCustomizado
             titulo="Parabéns!"
-            mensagem={tipoAtividade === "quiz" ? `Você concluiu o quiz sobre ${trilha} — excelente trabalho!` :
-                `Você concluiu a tarefa sobre ${trilha} — excelente trabalho!`}
+            mensagem={tipoAtividade === "quiz" ?
+                `Você concluiu o quiz sobre ${trilha} — excelente trabalho!` : (
+                    tipoAtividade === "tarefa" ?
+                        `Você concluiu a tarefa sobre ${trilha} — excelente trabalho!` :
+                        `Você concluiu a tarefa final — excelente trabalho, aventureiro! Confira a aba Distintivos para ver mais uma conquista da sua jornada!`
+                )}
         >
             <Stack
                 w="full"
@@ -258,23 +261,29 @@ export default function ConclusaoMissao({
                 color="brand.neutral"
                 textStyle="bodyTextBold"
             >
-                <Button
-                    flex={1}
-                    w="100%"
-                    variant="outline"
-                    onClick={reiniciarMissao}
-                    disabled={tentativas >= 3}
-                >
-                    Refazer {tipoAtividade === "quiz" ? "quiz" : "tarefa"}
-                </Button>
+                {tipoAtividade !== TipoAtividade.TAREFA_FINAL &&
+                    <Button
+                        flex={1}
+                        w="100%"
+                        variant="outline"
+                        onClick={reiniciarMissao}
+                        disabled={tentativas >= 3}
+                    >
+                        Refazer {tipoAtividade === "quiz" ? "quiz" : "tarefa"}
+                    </Button>
+                }
                 <Button
                     flex={1}
                     w="100%"
                     variant="solid"
                     type="submit"
-                    onClick={() => navigate(`/trilhaFormativaInovacao/${parametroTrilha}`)}
+                    onClick={() => tipoAtividade !== TipoAtividade.TAREFA_FINAL ? (
+                        navigate(`/trilhaFormativaInovacao/${parametroTrilha}`)
+                    ) : (
+                        navigate("/distintivos")
+                    )}
                 >
-                    Próximo módulo
+                    {tipoAtividade !== TipoAtividade.TAREFA_FINAL ? "Próximo módulo" : "Concluir trilha"}
                 </Button>
             </HStack>
             <Text
@@ -282,7 +291,7 @@ export default function ConclusaoMissao({
                 textStyle="inputPlaceholder"
                 mt="-6"
             >
-                0{String(retornoConclusao.tentativas)}/03 tentativas restantes
+                0{String(retornoConclusao.tentativas)}/{tipoAtividade !== TipoAtividade.TAREFA_FINAL ? "03" : "01"} tentativas restantes
             </Text>
 
             <Dialog.Root

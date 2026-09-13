@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Editable, Listbox } from "@ark-ui/react";
+import { Listbox } from "@ark-ui/react";
 import { useNavigate, useParams } from "react-router-dom";
 import CardCustomizado from "@/components/commons/cardCustomizado";
 import { AppInput } from "@/components/commons/AppInput";

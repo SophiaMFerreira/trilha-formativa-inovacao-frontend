@@ -16,7 +16,7 @@ import { MissaoAPI } from "../../api/missao";
 import { useAuth } from "@/hooks/useAuth";
 import { Missao, MissaoTarefa, ProgressoMissaoAtividade, TipoAtividade } from "@/types_consts/missao";
 import { useGame } from "@/hooks/useGame";
-import { obterNomeTematica, obterNomeTematicaBanco, Tematica } from "@/types_consts/tematica";
+import { obterNomeTematica, Tematica } from "@/types_consts/tematica";
 import { toaster } from "@/components/commons/toaster";
 import { mensagensToastErro } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
@@ -84,22 +84,14 @@ export default function TarefaFinal() {
                 }
 
                 const missoes = missaoResponse.data as Missao[]
-                const missao = missoes.find(m =>
-                    m.tematica.titulo === Tematica.TAREFA_FINAL
-                )
+                const missao = missoes.find(
+                    missao =>
+                        "tipoAtividade" in missao &&
+                        missao.tipoAtividade === TipoAtividade.TAREFA_FINAL
+                );
 
                 if (!missao) {
                     toaster.create(mensagensToastErro.carregarMissaoAtividade)
-                    return
-                }
-                if (!("tipoAtividade" in missao)) {
-                    console.error(mensagensErroConsole.tipoMissaoInvalido);
-                    navigate(`/trilhaFormativaInovacao/`);
-                    return
-                }
-
-                if (missao.tipoAtividade === TipoAtividade.QUIZ) {
-                    console.error(mensagensErroConsole.tipoMissaoInvalido);
                     navigate(`/trilhaFormativaInovacao/`);
                     return
                 }
@@ -216,7 +208,7 @@ export default function TarefaFinal() {
                 etapa === "home" &&
                 <HomeMissao
                     key={"home"}
-                    missao="tarefa"
+                    missao={TipoAtividade.TAREFA_FINAL}
                     titulo={titulo}
                     tentativas={tentativas}
                     trilha={trilha}

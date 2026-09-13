@@ -3,7 +3,7 @@ import { AppInput } from "@/components/commons/AppInput";
 import { Box, Button, createListCollection, Dialog, Em, Field, Grid, GridItem, Heading, InputGroup, Listbox, ListCollection, Portal, Select, Stack, Text } from "@chakra-ui/react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { obterNomeTematica, TematicaDTO } from "@/types_consts/tematica";
+import { obterNomeTematica, Tematica, TematicaDTO } from "@/types_consts/tematica";
 import { avaliarCapacidadeDaTrilha } from "@/utils/limiteDeMissoes";
 import { Missao, MissaoAtividade, MissaoDTO, MissaoTarefa, TipoAtividade, TipoAtividadeLabel } from "@/types_consts/missao";
 import { TematicaAPI } from "../../api/tematica";
@@ -36,7 +36,6 @@ export default function CadastroMissoesAtividade() {
     const [questoes, setQuestoes] = useState<QuestaoProp[]>([])
 
     const [tematicas, setTematicas] = useState<TematicaDTO[]>([])
-    /* Missões já cadastradas, para conferir o limite de posições da trilha. */
     const [missoesExistentes, setMissoesExistentes] = useState<Missao[] | null>(null)
     const [tematicasCollection, setTematicasCollection] = useState<ListCollection>(createListCollection({
         items: [
@@ -205,11 +204,6 @@ export default function CadastroMissoesAtividade() {
     const tituloTrilhaSelecionada =
         tematicas.find(t => t.id === idTrilha)?.titulo ?? ""
 
-    /*
-     * Situação da trilha selecionada: quantas posições existem no mapa
-     * e quantas já estão ocupadas. A missão em edição não conta contra
-     * o próprio limite.
-     */
     const capacidade = avaliarCapacidadeDaTrilha(
         missoesExistentes,
         tituloTrilhaSelecionada,
@@ -242,11 +236,6 @@ export default function CadastroMissoesAtividade() {
             return;
         }
 
-        /*
-         * O mapa da trilha tem um número fixo de posições. Sem este
-         * limite, a missão excedente era gravada e ficava sem lugar no
-         * mapa da tela secundária.
-         */
         if (capacidade.atingiuLimite) {
             toaster.create(
                 mensagensToastErro.limiteMissoesTrilha(
@@ -257,626 +246,640 @@ export default function CadastroMissoesAtividade() {
             return;
         }
 
-        try {
-            const missaoPayload = {
-                titulo: titulo,
-                pontuacao: pontuacao,
-                tipoMissao: "atividade",
-                tipoAtividade: tipoAtividade,
-                idTematica: idTrilha,
-                ...(tipoAtividade !== "quiz" && { idDistintivo: idDistintivo }),
-                ...(idMissaoAtividade !== -1 && { id: idMissaoAtividade }),
-            } as unknown
+        const nomeTematica = tematicas.find(t => t.id === idTrilha)
 
-            if (idMissao) {
-                await MissaoAPI.atualizar(idMissaoAtividade, missaoPayload as MissaoDTO)
-
-                toaster.create(mensagensToastSucesso.editarMissao)
-            } else {
-                await MissaoAPI.salvar(missaoPayload as MissaoDTO)
-
-                toaster.create(mensagensToastSucesso.salvarMissao)
+        if (tipoAtividade === TipoAtividade.TAREFA_FINAL) {
+            if (nomeTematica?.titulo !== Tematica.TAREFA_FINAL) {
+                toaster.create(mensagensToastErro.tipoAlternativaTipoAtividadeIncorreto)
+                return
             }
-            navigate("/banco-missoes-atividade")
-
-        } catch (e) {
-            const toasterMensagemApi = mensagemParaToaster(e);
-            if (toasterMensagemApi) {
-                toaster.create(toasterMensagemApi)
-            } else {
-                console.error(mensagensErroConsole.salvarMissaoAtividade, e);
+        } else {
+            if (nomeTematica?.titulo === Tematica.TAREFA_FINAL) {
+                toaster.create(mensagensToastErro.tipoAlternativaTipoAtividadeIncorreto)
+                return
             }
         }
-    };
 
-    const onExclude = () => {
-        try {
-            if (!idMissao) return
-            MissaoAPI.deletar(idMissaoAtividade)
+    try {
+        const missaoPayload = {
+            titulo: titulo,
+            pontuacao: pontuacao,
+            tipoMissao: "atividade",
+            tipoAtividade: tipoAtividade,
+            idTematica: idTrilha,
+            ...(tipoAtividade !== "quiz" && { idDistintivo: idDistintivo }),
+            ...(idMissaoAtividade !== -1 && { id: idMissaoAtividade }),
+        } as unknown
 
-            toaster.create(mensagensToastSucesso.excluirMissao)
-            navigate("/banco-missoes-atividade")
+        if (idMissao) {
+            await MissaoAPI.atualizar(idMissaoAtividade, missaoPayload as MissaoDTO)
 
-        } catch (erro) {
-            console.error(mensagensErroConsole.excluirMissaoAtividade, erro)
-            toaster.create(mensagensToastErro.excluirMissao)
+            toaster.create(mensagensToastSucesso.editarMissao)
+        } else {
+            await MissaoAPI.salvar(missaoPayload as MissaoDTO)
+
+            toaster.create(mensagensToastSucesso.salvarMissao)
+        }
+        navigate("/banco-missoes-atividade")
+
+    } catch (e) {
+        const toasterMensagemApi = mensagemParaToaster(e);
+        if (toasterMensagemApi) {
+            toaster.create(toasterMensagemApi)
+        } else {
+            console.error(mensagensErroConsole.salvarMissaoAtividade, e);
         }
     }
-    return (
-        <CardCustomizado
-            titulo={`${acao} de missões atividade`}
-            mensagem={`Faça ${mensagem} missões atividade para a trilha formativa.`}
-        >
-            <form onSubmit={(e) => {
-                e.preventDefault();
-                onSubmit();
-            }}>
-                <Stack
-                    gap="4"
-                    mt={6}
+};
+
+const onExclude = () => {
+    try {
+        if (!idMissao) return
+        MissaoAPI.deletar(idMissaoAtividade)
+
+        toaster.create(mensagensToastSucesso.excluirMissao)
+        navigate("/banco-missoes-atividade")
+
+    } catch (erro) {
+        console.error(mensagensErroConsole.excluirMissaoAtividade, erro)
+        toaster.create(mensagensToastErro.excluirMissao)
+    }
+}
+return (
+    <CardCustomizado
+        titulo={`${acao} de missões atividade`}
+        mensagem={`Faça ${mensagem} missões atividade para a trilha formativa.`}
+    >
+        <form onSubmit={(e) => {
+            e.preventDefault();
+            onSubmit();
+        }}>
+            <Stack
+                gap="4"
+                mt={6}
+            >
+                <Grid
+                    templateColumns="1fr 1fr"
+                    templateRows="repeat(3, auto)"
+                    gap={6}
                 >
-                    <Grid
-                        templateColumns="1fr 1fr"
-                        templateRows="repeat(3, auto)"
-                        gap={6}
-                    >
-                        <GridItem>
-                            <Field.Root
-                                required
-                                invalid={validacaoIdTrilha || validacaoIdTrilhaMantida}
+                    <GridItem>
+                        <Field.Root
+                            required
+                            invalid={validacaoIdTrilha || validacaoIdTrilhaMantida}
+                        >
+                            <Select.Root
+                                collection={tematicasCollection}
+                                disabled={tematicas?.length === 0 || idMissao !== undefined}
+                                name="trilha"
+                                value={idTrilha !== -1 ? [String(idTrilha)] : []}
+                                onValueChange={(details) => {
+                                    setIdTrilha(Number(details.value[0]));
+                                }}
+
+                                size="md"
+                                maxW="md"
                             >
-                                <Select.Root
-                                    collection={tematicasCollection}
-                                    disabled={tematicas?.length === 0 || idMissao !== undefined}
-                                    name="trilha"
-                                    value={idTrilha !== -1 ? [String(idTrilha)] : []}
-                                    onValueChange={(details) => {
-                                        setIdTrilha(Number(details.value[0]));
-                                    }}
-
-                                    size="md"
-                                    maxW="md"
+                                <Select.HiddenSelect />
+                                <Select.Label
+                                    textStyle="bodyTextBold"
+                                    color="brand.primaryDark"
                                 >
-                                    <Select.HiddenSelect />
-                                    <Select.Label
-                                        textStyle="bodyTextBold"
-                                        color="brand.primaryDark"
+                                    Trilha
+                                    <Field.RequiredIndicator color="brand.secondaryRed" />
+                                </Select.Label>
+                                <Select.Control>
+                                    <Select.Trigger
+                                        borderWidth="1px"
+                                        borderColor="brand.neutral"
+                                        borderRadius="sm"
+                                        bg="brand.white"
                                     >
-                                        Trilha
-                                        <Field.RequiredIndicator color="brand.secondaryRed" />
-                                    </Select.Label>
-                                    <Select.Control>
-                                        <Select.Trigger
-                                            borderWidth="1px"
-                                            borderColor="brand.neutral"
-                                            borderRadius="sm"
-                                            bg="brand.white"
+                                        <Select.ValueText
+                                            placeholder="Selecione a trilha formativa"
+                                            textStyle="inputPlaceholder"
+                                            color="brand.neutral"
+
+                                            _hover={{
+                                                bg: "rgba(47,158,65,.05)",
+                                                borderColor: "brand.secondary"
+                                            }}
+                                            _focusVisible={{
+                                                borderColor: "brand.secondary",
+                                                boxShadow: "0 0 0 2px rgba(47,158,65,.18)",
+                                                color: "brand.primaryDark"
+                                            }}
+                                        />
+                                    </Select.Trigger>
+                                    <Select.IndicatorGroup>
+                                        <Select.Indicator
+                                            color="brand.neutral"
+                                        />
+                                    </Select.IndicatorGroup >
+                                </Select.Control>
+                                <Portal>
+                                    <Select.Positioner>
+                                        <Select.Content
+                                            textStyle="inputPlaceholder"
+                                            color="brand.neutral"
                                         >
-                                            <Select.ValueText
-                                                placeholder="Selecione a trilha formativa"
-                                                textStyle="inputPlaceholder"
-                                                color="brand.neutral"
+                                            {tematicasCollection.items.map((trilha) => (
+                                                <Select.Item
+                                                    _hover={{
+                                                        bg: "rgba(47,158,65,.08)"
+                                                    }}
+                                                    _highlighted={{
+                                                        bg: "rgba(47,158,65,.12)",
+                                                        color: "brand.primaryDark"
+                                                    }}
+                                                    _checked={{
+                                                        color: "brand.primaryDark"
+                                                    }}
 
-                                                _hover={{
-                                                    bg: "rgba(47,158,65,.05)",
-                                                    borderColor: "brand.secondary"
-                                                }}
-                                                _focusVisible={{
-                                                    borderColor: "brand.secondary",
-                                                    boxShadow: "0 0 0 2px rgba(47,158,65,.18)",
-                                                    color: "brand.primaryDark"
-                                                }}
-                                            />
-                                        </Select.Trigger>
-                                        <Select.IndicatorGroup>
-                                            <Select.Indicator
-                                                color="brand.neutral"
-                                            />
-                                        </Select.IndicatorGroup >
-                                    </Select.Control>
-                                    <Portal>
-                                        <Select.Positioner>
-                                            <Select.Content
-                                                textStyle="inputPlaceholder"
-                                                color="brand.neutral"
-                                            >
-                                                {tematicasCollection.items.map((trilha) => (
-                                                    <Select.Item
-                                                        _hover={{
-                                                            bg: "rgba(47,158,65,.08)"
-                                                        }}
-                                                        _highlighted={{
-                                                            bg: "rgba(47,158,65,.12)",
-                                                            color: "brand.primaryDark"
-                                                        }}
-                                                        _checked={{
-                                                            color: "brand.primaryDark"
-                                                        }}
-
-                                                        item={trilha}
-                                                        key={trilha.value}
-                                                    >
-                                                        {trilha.label}
-                                                        <Select.ItemIndicator />
-                                                    </Select.Item>
-                                                ))}
-                                            </Select.Content>
-                                        </Select.Positioner>
-                                    </Portal>
-                                </Select.Root>
-                                {validacaoIdTrilha && (
-                                    <Field.ErrorText
-                                        textStyle="inputPlaceholder"
-                                        color="brand.secondaryRed"
-                                    >
-                                        Selecione uma temática válida.
-                                    </Field.ErrorText>
-                                )}
-                                {validacaoIdTrilhaMantida && (
-                                    <Field.ErrorText
-                                        textStyle="inputPlaceholder"
-                                        color="brand.secondaryRed"
-                                    >
-                                        A temática não pode ser alterada durante a edição
-                                    </Field.ErrorText>
-                                )}
-                                {/*
+                                                    item={trilha}
+                                                    key={trilha.value}
+                                                >
+                                                    {trilha.label}
+                                                    <Select.ItemIndicator />
+                                                </Select.Item>
+                                            ))}
+                                        </Select.Content>
+                                    </Select.Positioner>
+                                </Portal>
+                            </Select.Root>
+                            {validacaoIdTrilha && (
+                                <Field.ErrorText
+                                    textStyle="inputPlaceholder"
+                                    color="brand.secondaryRed"
+                                >
+                                    Selecione uma temática válida.
+                                </Field.ErrorText>
+                            )}
+                            {validacaoIdTrilhaMantida && (
+                                <Field.ErrorText
+                                    textStyle="inputPlaceholder"
+                                    color="brand.secondaryRed"
+                                >
+                                    A temática não pode ser alterada durante a edição
+                                </Field.ErrorText>
+                            )}
+                            {/*
                                   * Ocupação do mapa da trilha, visível
                                   * ANTES de o usuário preencher o resto
                                   * do formulário: o limite é uma
                                   * característica da imagem da trilha,
                                   * não uma surpresa no momento de salvar.
                                   */}
-                                {capacidade.possuiLimite && (
-                                    <Field.HelperText
-                                        textStyle="inputPlaceholder"
-                                        color={
-                                            capacidade.atingiuLimite
-                                                ? "brand.secondaryRed"
-                                                : "brand.neutral"
-                                        }
-                                    >
-                                        {capacidade.atingiuLimite
-                                            ? `Esta trilha já usa as ${capacidade.capacidade} posições do mapa. Exclua uma missão antes de cadastrar outra.`
-                                            : `${capacidade.ocupadas} de ${capacidade.capacidade} posições do mapa em uso nesta trilha.`}
-                                    </Field.HelperText>
-                                )}
-                            </Field.Root>
-                        </GridItem>
-                        {tipoAtividade !== TipoAtividade.QUIZ && (
-                            <GridItem
-                                rowSpan={3}
+                            {capacidade.possuiLimite && (
+                                <Field.HelperText
+                                    textStyle="inputPlaceholder"
+                                    color={
+                                        capacidade.atingiuLimite
+                                            ? "brand.secondaryRed"
+                                            : "brand.neutral"
+                                    }
+                                >
+                                    {capacidade.atingiuLimite
+                                        ? `Esta trilha já usa as ${capacidade.capacidade} posições do mapa. Exclua uma missão antes de cadastrar outra.`
+                                        : `${capacidade.ocupadas} de ${capacidade.capacidade} posições do mapa em uso nesta trilha.`}
+                                </Field.HelperText>
+                            )}
+                        </Field.Root>
+                    </GridItem>
+                    {tipoAtividade !== TipoAtividade.QUIZ && (
+                        <GridItem
+                            rowSpan={3}
+                        >
+                            <Stack
+                                gap="1"
+                                h="100%"
                             >
-                                <Stack
-                                    gap="1"
+                                <Text
+                                    textStyle="bodyTextBold"
+                                    color="brand.primaryDark"
+                                >
+                                    Distintivo
+                                    <Em color="brand.secondaryRed">*</Em>
+                                </Text>
+                                <Box
+                                    borderRadius="sm"
+                                    borderWidth="1px"
+                                    bg="transparent"
+                                    color="brand.neutral"
+                                    borderColor="brand.neutral"
                                     h="100%"
                                 >
-                                    <Text
-                                        textStyle="bodyTextBold"
-                                        color="brand.primaryDark"
-                                    >
-                                        Distintivo
-                                        <Em color="brand.secondaryRed">*</Em>
-                                    </Text>
-                                    <Box
-                                        borderRadius="sm"
-                                        borderWidth="1px"
-                                        bg="transparent"
-                                        color="brand.neutral"
-                                        borderColor="brand.neutral"
-                                        h="100%"
-                                    >
-                                        <Box h="100%">
-                                            <Listbox.Root
-                                                collection={distintivosFiltradosCollection}
-                                                defaultValue={idDistintivo !== -1 ? [String(idDistintivo)] : [""]}
+                                    <Box h="100%">
+                                        <Listbox.Root
+                                            collection={distintivosFiltradosCollection}
+                                            defaultValue={idDistintivo !== -1 ? [String(idDistintivo)] : [""]}
+                                        >
+                                            <InputGroup
+                                                endElement={
+                                                    <Box color="brand.primaryDark">
+                                                        <FaSearch />
+                                                    </Box>
+                                                }
+                                                maxW="sm"
                                             >
-                                                <InputGroup
-                                                    endElement={
-                                                        <Box color="brand.primaryDark">
-                                                            <FaSearch />
-                                                        </Box>
-                                                    }
-                                                    maxW="sm"
-                                                >
-                                                    <AppInput
-                                                        border="none"
-                                                        outline="none"
-                                                        boxShadow="none"
-                                                        _focus={{
-                                                            border: "none",
-                                                            boxShadow: "none",
-                                                        }}
-                                                        _focusVisible={{
-                                                            border: "none",
-                                                            boxShadow: "none",
-                                                        }}
-
-                                                        borderBottom="1px solid"
-                                                        borderColor="brand.neutral"
-
-                                                        placeholder="Pesquisar missão"
-                                                        appVariant="outline"
-                                                        value={termoBusca}
-                                                        onChange={(e) => setTermoBusca(e.target.value)}
-                                                    />
-                                                </InputGroup>
-                                                <Listbox.Content
-                                                    boxShadow="none"
+                                                <AppInput
                                                     border="none"
-                                                >
-                                                    {distintivosFiltradosCollection.items.map((distintivo) => (
-                                                        <Listbox.Item
-                                                            item={distintivo}
-                                                            key={distintivo.value}
-                                                            onClick={() =>
-                                                                setIdDistintivo(Number(distintivo.value))
-                                                            }
+                                                    outline="none"
+                                                    boxShadow="none"
+                                                    _focus={{
+                                                        border: "none",
+                                                        boxShadow: "none",
+                                                    }}
+                                                    _focusVisible={{
+                                                        border: "none",
+                                                        boxShadow: "none",
+                                                    }}
 
-                                                            _hover={{
-                                                                bg: "#2f9e411f",
-                                                                color: "brand.primaryDark",
-                                                            }}
-                                                            _highlighted={{
-                                                                bg: "#2f9e411f",
-                                                                color: "brand.primaryDark",
-                                                            }}
-                                                            _selected={{
-                                                                color: "brand.primaryDark",
-                                                                bg: "#2f9e411f",
-                                                            }}
-                                                        >
-                                                            <Box
-                                                                px="3"
-                                                                rounded="sm"
-                                                                w="100%"
-                                                                h="100%"
-                                                            >
-                                                                <Listbox.ItemText>
-                                                                    {distintivo.label}
-                                                                </Listbox.ItemText>
-                                                            </Box>
-                                                            <Listbox.ItemIndicator />
-                                                        </Listbox.Item>
-                                                    ))}
-                                                    <Listbox.Empty
+                                                    borderBottom="1px solid"
+                                                    borderColor="brand.neutral"
+
+                                                    placeholder="Pesquisar missão"
+                                                    appVariant="outline"
+                                                    value={termoBusca}
+                                                    onChange={(e) => setTermoBusca(e.target.value)}
+                                                />
+                                            </InputGroup>
+                                            <Listbox.Content
+                                                boxShadow="none"
+                                                border="none"
+                                            >
+                                                {distintivosFiltradosCollection.items.map((distintivo) => (
+                                                    <Listbox.Item
+                                                        item={distintivo}
+                                                        key={distintivo.value}
+                                                        onClick={() =>
+                                                            setIdDistintivo(Number(distintivo.value))
+                                                        }
+
+                                                        _hover={{
+                                                            bg: "#2f9e411f",
+                                                            color: "brand.primaryDark",
+                                                        }}
+                                                        _highlighted={{
+                                                            bg: "#2f9e411f",
+                                                            color: "brand.primaryDark",
+                                                        }}
+                                                        _selected={{
+                                                            color: "brand.primaryDark",
+                                                            bg: "#2f9e411f",
+                                                        }}
                                                     >
                                                         <Box
                                                             px="3"
                                                             rounded="sm"
+                                                            w="100%"
+                                                            h="100%"
                                                         >
-                                                            Nenhum distintivo cadastrado
+                                                            <Listbox.ItemText>
+                                                                {distintivo.label}
+                                                            </Listbox.ItemText>
                                                         </Box>
-                                                    </Listbox.Empty>
-                                                </Listbox.Content>
-                                            </Listbox.Root>
-                                        </Box>
-                                    </Box>
-                                    {validacaoDistintivo && (
-                                        <Text
-                                            textStyle="inputPlaceholder"
-                                            color="brand.secondaryRed"
-                                            textAlign="end"
-                                        >
-                                            Selecione um distintivo válido.
-                                        </Text>
-                                    )}
-                                </Stack>
-                            </GridItem>
-                        )}
-                        <GridItem>
-                            <Field.Root
-                                required
-                                invalid={validacaoTipoAtividade || validacaoTipoAtividadeMantido}
-                            >
-                                <Select.Root
-                                    collection={tipoAtividadeCollection}
-                                    disabled={Object.values(TipoAtividade).length === 0 || idMissao !== undefined}
-                                    name="tipoAtividade"
-                                    value={[tipoAtividade]}
-                                    onValueChange={(details) => {
-                                        setTipoAtividade(details.value[0]);
-                                    }}
-
-                                    size="md"
-                                    maxW="md"
-                                >
-                                    <Select.HiddenSelect />
-                                    <Select.Label
-                                        textStyle="bodyTextBold"
-                                        color="brand.primaryDark"
-                                    >
-                                        Tipo de atividade
-                                        <Field.RequiredIndicator color="brand.secondaryRed" />
-                                    </Select.Label>
-                                    <Select.Control>
-                                        <Select.Trigger
-                                            borderWidth="1px"
-                                            borderColor="brand.neutral"
-                                            borderRadius="sm"
-                                            bg="brand.white"
-                                        >
-                                            <Select.ValueText
-                                                placeholder="Selecione a trilha formativa"
-                                                textStyle="inputPlaceholder"
-                                                color="brand.neutral"
-
-                                                _hover={{
-                                                    bg: "rgba(47,158,65,.05)",
-                                                    borderColor: "brand.secondary"
-                                                }}
-                                                _focusVisible={{
-                                                    borderColor: "brand.secondary",
-                                                    boxShadow: "0 0 0 2px rgba(47,158,65,.18)",
-                                                    color: "brand.primaryDark"
-                                                }}
-                                            />
-                                        </Select.Trigger>
-                                        <Select.IndicatorGroup>
-                                            <Select.Indicator
-                                                color="brand.neutral"
-                                            />
-                                        </Select.IndicatorGroup >
-                                    </Select.Control>
-                                    <Portal>
-                                        <Select.Positioner>
-                                            <Select.Content
-                                                textStyle="inputPlaceholder"
-                                                color="brand.neutral"
-                                            >
-                                                {tipoAtividadeCollection.items.map((tipoAtvdd) => (
-                                                    <Select.Item
-                                                        _hover={{
-                                                            bg: "rgba(47,158,65,.08)"
-                                                        }}
-                                                        _highlighted={{
-                                                            bg: "rgba(47,158,65,.12)",
-                                                            color: "brand.primaryDark"
-                                                        }}
-                                                        _checked={{
-                                                            color: "brand.primaryDark"
-                                                        }}
-
-                                                        item={tipoAtvdd}
-                                                        key={tipoAtvdd.value}
-                                                    >
-                                                        {tipoAtvdd.label}
-                                                        <Select.ItemIndicator />
-                                                    </Select.Item>
+                                                        <Listbox.ItemIndicator />
+                                                    </Listbox.Item>
                                                 ))}
-                                            </Select.Content>
-                                        </Select.Positioner>
-                                    </Portal>
-                                </Select.Root>
-                                {validacaoTipoAtividade && (
-                                    <Field.ErrorText
+                                                <Listbox.Empty
+                                                >
+                                                    <Box
+                                                        px="3"
+                                                        rounded="sm"
+                                                    >
+                                                        Nenhum distintivo cadastrado
+                                                    </Box>
+                                                </Listbox.Empty>
+                                            </Listbox.Content>
+                                        </Listbox.Root>
+                                    </Box>
+                                </Box>
+                                {validacaoDistintivo && (
+                                    <Text
                                         textStyle="inputPlaceholder"
                                         color="brand.secondaryRed"
+                                        textAlign="end"
                                     >
-                                        Selecione um tipo de atividade válido
-                                    </Field.ErrorText>
+                                        Selecione um distintivo válido.
+                                    </Text>
                                 )}
-                                {validacaoTipoAtividadeMantido && (
-                                    <Field.ErrorText
-                                        textStyle="inputPlaceholder"
-                                        color="brand.secondaryRed"
-                                    >
-                                        O tipo de atividade não pode ser alterado durante a edição.
-                                    </Field.ErrorText>
-                                )}
-                            </Field.Root>
+                            </Stack>
                         </GridItem>
-                        <GridItem>
-                            <Field.Root
-                                required
-                                invalid={validacaoPontuacao}
+                    )}
+                    <GridItem>
+                        <Field.Root
+                            required
+                            invalid={validacaoTipoAtividade || validacaoTipoAtividadeMantido}
+                        >
+                            <Select.Root
+                                collection={tipoAtividadeCollection}
+                                disabled={Object.values(TipoAtividade).length === 0 || idMissao !== undefined}
+                                name="tipoAtividade"
+                                value={[tipoAtividade]}
+                                onValueChange={(details) => {
+                                    setTipoAtividade(details.value[0]);
+                                }}
+
+                                size="md"
+                                maxW="md"
                             >
-                                <Field.Label
-                                    textStyle="emphasis"
+                                <Select.HiddenSelect />
+                                <Select.Label
+                                    textStyle="bodyTextBold"
                                     color="brand.primaryDark"
                                 >
-                                    Valor da missão
+                                    Tipo de atividade
                                     <Field.RequiredIndicator color="brand.secondaryRed" />
-                                </Field.Label>
-                                <AppInput
-                                    name="pontuacao"
-                                    value={pontuacao}
-                                    placeholder="100"
-                                    size="sm"
-                                    type="number"
-                                    min="0"
-                                    max="9999"
-                                    onChange={(e) => setPontuacao(Number(e.target.value))}
-                                />
-                                {validacaoPontuacao && (
-                                    <Field.ErrorText
-                                        textStyle="inputPlaceholder"
-                                        color="brand.secondaryRed"
+                                </Select.Label>
+                                <Select.Control>
+                                    <Select.Trigger
+                                        borderWidth="1px"
+                                        borderColor="brand.neutral"
+                                        borderRadius="sm"
+                                        bg="brand.white"
                                     >
-                                        A pontuação deve ser um número inteiro entre 1 e 9999.
-                                    </Field.ErrorText>
-                                )}
-                            </Field.Root>
-                        </GridItem>
-                    </Grid>
-                    <Field.Root required invalid={validacaoTitulo}>
-                        <Field.Label
-                            textStyle="emphasis"
-                            color="brand.primaryDark"
+                                        <Select.ValueText
+                                            placeholder="Selecione a trilha formativa"
+                                            textStyle="inputPlaceholder"
+                                            color="brand.neutral"
+
+                                            _hover={{
+                                                bg: "rgba(47,158,65,.05)",
+                                                borderColor: "brand.secondary"
+                                            }}
+                                            _focusVisible={{
+                                                borderColor: "brand.secondary",
+                                                boxShadow: "0 0 0 2px rgba(47,158,65,.18)",
+                                                color: "brand.primaryDark"
+                                            }}
+                                        />
+                                    </Select.Trigger>
+                                    <Select.IndicatorGroup>
+                                        <Select.Indicator
+                                            color="brand.neutral"
+                                        />
+                                    </Select.IndicatorGroup >
+                                </Select.Control>
+                                <Portal>
+                                    <Select.Positioner>
+                                        <Select.Content
+                                            textStyle="inputPlaceholder"
+                                            color="brand.neutral"
+                                        >
+                                            {tipoAtividadeCollection.items.map((tipoAtvdd) => (
+                                                <Select.Item
+                                                    _hover={{
+                                                        bg: "rgba(47,158,65,.08)"
+                                                    }}
+                                                    _highlighted={{
+                                                        bg: "rgba(47,158,65,.12)",
+                                                        color: "brand.primaryDark"
+                                                    }}
+                                                    _checked={{
+                                                        color: "brand.primaryDark"
+                                                    }}
+
+                                                    item={tipoAtvdd}
+                                                    key={tipoAtvdd.value}
+                                                >
+                                                    {tipoAtvdd.label}
+                                                    <Select.ItemIndicator />
+                                                </Select.Item>
+                                            ))}
+                                        </Select.Content>
+                                    </Select.Positioner>
+                                </Portal>
+                            </Select.Root>
+                            {validacaoTipoAtividade && (
+                                <Field.ErrorText
+                                    textStyle="inputPlaceholder"
+                                    color="brand.secondaryRed"
+                                >
+                                    Selecione um tipo de atividade válido
+                                </Field.ErrorText>
+                            )}
+                            {validacaoTipoAtividadeMantido && (
+                                <Field.ErrorText
+                                    textStyle="inputPlaceholder"
+                                    color="brand.secondaryRed"
+                                >
+                                    O tipo de atividade não pode ser alterado durante a edição.
+                                </Field.ErrorText>
+                            )}
+                        </Field.Root>
+                    </GridItem>
+                    <GridItem>
+                        <Field.Root
+                            required
+                            invalid={validacaoPontuacao}
                         >
-                            Título
-                            <Field.RequiredIndicator color="brand.secondaryRed" />
-                        </Field.Label>
-                        <AppInput
-                            name="titulo"
-                            value={titulo}
-                            placeholder="Título do material"
-                            size="md"
-                            onChange={(e) => setTitulo(e.target.value)}
-                        />
-                        {validacaoTitulo && (
-                            <Field.ErrorText
-                                textStyle="inputPlaceholder"
-                                color="brand.secondaryRed"
-                            >
-                                O título é obrigatório e deve ter no máximo 255 caracteres.
-                            </Field.ErrorText>
-                        )}
-                    </Field.Root>
-                    {questoes.length !== 0 &&
-                        <>
-                            <Text
+                            <Field.Label
                                 textStyle="emphasis"
                                 color="brand.primaryDark"
                             >
-                                Questões
-                            </Text>
-                            <Stack
-                                gap="3"
-                            >
-                                {questoes.map(questao => (
-                                    <ListagemQuestao
-                                        key={questao.id}
-                                        {...questao}
-                                        onExcluir={carregarDadosMissao}
-                                    />
-                                ))}
-                            </Stack>
-                        </>
-                    }
-                    <Stack
-                        direction={{ base: "column", md: "row" }}
-                        w="100%"
-                        gap="4"
+                                Valor da missão
+                                <Field.RequiredIndicator color="brand.secondaryRed" />
+                            </Field.Label>
+                            <AppInput
+                                name="pontuacao"
+                                value={pontuacao}
+                                placeholder="100"
+                                size="sm"
+                                type="number"
+                                min="0"
+                                max="9999"
+                                onChange={(e) => setPontuacao(Number(e.target.value))}
+                            />
+                            {validacaoPontuacao && (
+                                <Field.ErrorText
+                                    textStyle="inputPlaceholder"
+                                    color="brand.secondaryRed"
+                                >
+                                    A pontuação deve ser um número inteiro entre 1 e 9999.
+                                </Field.ErrorText>
+                            )}
+                        </Field.Root>
+                    </GridItem>
+                </Grid>
+                <Field.Root required invalid={validacaoTitulo}>
+                    <Field.Label
+                        textStyle="emphasis"
+                        color="brand.primaryDark"
                     >
-                        {idMissao &&
-                            <Button
-                                flex={1}
-                                w="100%"
-                                variant="outline"
-                                onClick={() => navigate("/banco-missoes-atividade")}
-                            >
-                                Voltar
-                            </Button>}
-                        {idMissao &&
-                            <Button
-                                flex={1}
-                                w="100%"
-                                variant="danger"
-                                onClick={() => setOpenModalConfirmacaoMissao(true)}
-                                size="md"
-                            >
-                                Excluir missão
-                            </Button>}
+                        Título
+                        <Field.RequiredIndicator color="brand.secondaryRed" />
+                    </Field.Label>
+                    <AppInput
+                        name="titulo"
+                        value={titulo}
+                        placeholder="Título do material"
+                        size="md"
+                        onChange={(e) => setTitulo(e.target.value)}
+                    />
+                    {validacaoTitulo && (
+                        <Field.ErrorText
+                            textStyle="inputPlaceholder"
+                            color="brand.secondaryRed"
+                        >
+                            O título é obrigatório e deve ter no máximo 255 caracteres.
+                        </Field.ErrorText>
+                    )}
+                </Field.Root>
+                {questoes.length !== 0 &&
+                    <>
+                        <Text
+                            textStyle="emphasis"
+                            color="brand.primaryDark"
+                        >
+                            Questões
+                        </Text>
+                        <Stack
+                            gap="3"
+                        >
+                            {questoes.map(questao => (
+                                <ListagemQuestao
+                                    key={questao.id}
+                                    {...questao}
+                                    onExcluir={carregarDadosMissao}
+                                />
+                            ))}
+                        </Stack>
+                    </>
+                }
+                <Stack
+                    direction={{ base: "column", md: "row" }}
+                    w="100%"
+                    gap="4"
+                >
+                    {idMissao &&
                         <Button
                             flex={1}
                             w="100%"
-                            variant="solid"
-                            type="submit"
+                            variant="outline"
+                            onClick={() => navigate("/banco-missoes-atividade")}
                         >
-                            {acaoBotao}
-                        </Button>
-                    </Stack>
+                            Voltar
+                        </Button>}
+                    {idMissao &&
+                        <Button
+                            flex={1}
+                            w="100%"
+                            variant="danger"
+                            onClick={() => setOpenModalConfirmacaoMissao(true)}
+                            size="md"
+                        >
+                            Excluir missão
+                        </Button>}
+                    <Button
+                        flex={1}
+                        w="100%"
+                        variant="solid"
+                        type="submit"
+                    >
+                        {acaoBotao}
+                    </Button>
                 </Stack>
-            </form>
+            </Stack>
+        </form>
 
-            <Dialog.Root
-                size="md"
-                lazyMount
-                placement="center"
-                open={openModalConfirmacaoMissao}
-                onOpenChange={(e) => setOpenModalConfirmacaoMissao(e.open)}
-            >
-                <Portal>
-                    <Dialog.Backdrop />
-                    <Dialog.Positioner>
-                        <Dialog.Content>
-                            <Dialog.Header>
-                                <Dialog.Title
-                                    textStyle="headingMD"
-                                    color="brand.secondaryRed"
-                                >
-                                    Excluir missão
-                                </Dialog.Title>
-                            </Dialog.Header>
-                            <Dialog.Body>
+        <Dialog.Root
+            size="md"
+            lazyMount
+            placement="center"
+            open={openModalConfirmacaoMissao}
+            onOpenChange={(e) => setOpenModalConfirmacaoMissao(e.open)}
+        >
+            <Portal>
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header>
+                            <Dialog.Title
+                                textStyle="headingMD"
+                                color="brand.secondaryRed"
+                            >
+                                Excluir missão
+                            </Dialog.Title>
+                        </Dialog.Header>
+                        <Dialog.Body>
+                            <Text
+                                textStyle="bodyText"
+                                color="brand.neutral"
+                                textAlign="justify"
+                                pb="4"
+                            >
+                                Você está prestes a excluir esta missãoa atividade. Após a confirmação, ela será removida permanentemente e não poderá ser recuperada.
+                            </Text>
+                            <Stack
+                                direction={{ base: "column", md: "row" }}
+                                w="fit-content"
+                                mx="auto"
+                                gap="5"
+                                align="center"
+                            >
+                                <Heading textStyle="emphasis" color="brand.primaryDark">
+                                    {TipoAtividadeLabel[tipoAtividade as keyof typeof TipoAtividadeLabel]}
+                                </Heading>
                                 <Text
                                     textStyle="bodyText"
                                     color="brand.neutral"
-                                    textAlign="justify"
-                                    pb="4"
+                                    maxW="320px"
+                                    overflow="hidden"
+                                    textOverflow="ellipsis"
+                                    whiteSpace="nowrap"
+                                    boxSizing="border-box"
                                 >
-                                    Você está prestes a excluir esta missãoa atividade. Após a confirmação, ela será removida permanentemente e não poderá ser recuperada.
+                                    {titulo}
                                 </Text>
-                                <Stack
-                                    direction={{ base: "column", md: "row" }}
-                                    w="fit-content"
-                                    mx="auto"
-                                    gap="5"
-                                    align="center"
+                                <Text
+                                    textStyle="bodyText"
+                                    color="brand.primaryDark"
+                                    maxW="320px"
+                                    overflow="hidden"
+                                    textOverflow="ellipsis"
+                                    whiteSpace="nowrap"
+                                    boxSizing="border-box"
                                 >
-                                    <Heading textStyle="emphasis" color="brand.primaryDark">
-                                        {TipoAtividadeLabel[tipoAtividade as keyof typeof TipoAtividadeLabel]}
-                                    </Heading>
-                                    <Text
-                                        textStyle="bodyText"
-                                        color="brand.neutral"
-                                        maxW="320px"
-                                        overflow="hidden"
-                                        textOverflow="ellipsis"
-                                        whiteSpace="nowrap"
-                                        boxSizing="border-box"
-                                    >
-                                        {titulo}
-                                    </Text>
-                                    <Text
-                                        textStyle="bodyText"
-                                        color="brand.primaryDark"
-                                        maxW="320px"
-                                        overflow="hidden"
-                                        textOverflow="ellipsis"
-                                        whiteSpace="nowrap"
-                                        boxSizing="border-box"
-                                    >
-                                        {pontuacao}
-                                    </Text>
-                                </Stack>
-                            </Dialog.Body>
-                            <Dialog.Footer justifyContent="center">
-                                <Stack
-                                    direction={{ base: "column", md: "row" }}
+                                    {pontuacao}
+                                </Text>
+                            </Stack>
+                        </Dialog.Body>
+                        <Dialog.Footer justifyContent="center">
+                            <Stack
+                                direction={{ base: "column", md: "row" }}
+                                w="100%"
+                                gap="2"
+                            >
+                                <Button
+                                    flex={1}
                                     w="100%"
-                                    gap="2"
+                                    variant="outline"
+                                    onClick={() => {
+                                        setOpenModalConfirmacaoMissao(false)
+                                    }}
                                 >
-                                    <Button
-                                        flex={1}
-                                        w="100%"
-                                        variant="outline"
-                                        onClick={() => {
-                                            setOpenModalConfirmacaoMissao(false)
-                                        }}
-                                    >
-                                        Voltar
-                                    </Button>
-                                    <Button
-                                        flex={1}
-                                        w="100%"
-                                        variant="danger"
-                                        onClick={() => {
-                                            setOpenModalConfirmacaoMissao(false)
-                                            onExclude()
-                                        }}
-                                    >
-                                        Excluir
-                                    </Button>
-                                </Stack>
-                            </Dialog.Footer>
-                            <Dialog.CloseTrigger asChild>
-                            </Dialog.CloseTrigger>
-                        </Dialog.Content>
-                    </Dialog.Positioner>
-                </Portal>
-            </Dialog.Root>
-        </CardCustomizado >
-    );
+                                    Voltar
+                                </Button>
+                                <Button
+                                    flex={1}
+                                    w="100%"
+                                    variant="danger"
+                                    onClick={() => {
+                                        setOpenModalConfirmacaoMissao(false)
+                                        onExclude()
+                                    }}
+                                >
+                                    Excluir
+                                </Button>
+                            </Stack>
+                        </Dialog.Footer>
+                        <Dialog.CloseTrigger asChild>
+                        </Dialog.CloseTrigger>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+            </Portal>
+        </Dialog.Root>
+    </CardCustomizado >
+);
 }

@@ -220,7 +220,7 @@ export default function Quiz() {
                 etapa === "home" &&
                 <HomeMissao
                     key={"home"}
-                    missao="quiz"
+                    missao={TipoAtividade.QUIZ}
                     titulo={titulo}
                     tentativas={tentativas}
                     trilha={trilha}

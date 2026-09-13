@@ -217,7 +217,7 @@ export default function Tarefa() {
                 etapa === "home" &&
                 <HomeMissao
                     key={"home"}
-                    missao="tarefa"
+                    missao={TipoAtividade.TAREFA}
                     titulo={titulo}
                     tentativas={tentativas}
                     trilha={trilha}
