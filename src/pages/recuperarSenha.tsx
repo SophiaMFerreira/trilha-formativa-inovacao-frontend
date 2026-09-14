@@ -354,12 +354,19 @@ export default function RecuperarSenha() {
                             Solicitar novo link
                         </Button>
                     </Stack>
-                    <Field.Root required={!user} invalid={validarConfirmarSenha}>
+                    {/*
+                      * Esta tela é sempre anônima: quem chega aqui veio
+                      * pelo link do e-mail, sem sessão. O código anterior
+                      * consultava uma variável "user" que não existe neste
+                      * arquivo, o que derrubava a renderização assim que o
+                      * token era aceito e quebrava o build no tsc.
+                      */}
+                    <Field.Root required invalid={validarConfirmarSenha}>
                         <Field.Label
                             textStyle="emphasis"
                             color="brand.primaryDark"
                         >
-                            {user ? "Confirmar nova senha" : "Confirmar senha"}
+                            Confirmar nova senha
                             <Field.RequiredIndicator color="brand.secondaryRed" />
                         </Field.Label>
 

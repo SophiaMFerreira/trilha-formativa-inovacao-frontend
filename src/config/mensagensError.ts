@@ -121,6 +121,12 @@ export const mensagensErroConsole = {
     recuperarSenha:
         "Erro ao recuperar a senha. ",
 
+    enviarCodigoVerificacao:
+        "Erro ao enviar o código de verificação de e-mail. ",
+
+    confirmarCodigoVerificacao:
+        "Erro ao confirmar o código de verificação de e-mail. ",
+
     primeiroAcesso:
         "Erro: primeiro acesso não foi alterado. ",
-} as const;
+} as const;

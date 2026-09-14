@@ -13,6 +13,12 @@ export type UsuarioDTO = SenhasDTO & {
     possuiConhecimento: boolean
     primeiroAcesso: boolean
     idOcupacao: number
+    /*
+     * Comprovante devolvido por /verificacao-email/confirmar. Só existe
+     * no cadastro: a API exige a prova de que o endereço foi verificado
+     * antes de criar a conta. Na edição o campo não se aplica.
+     */
+    comprovanteVerificacao?: string
 }
 
 type SenhasDTO = 
@@ -50,4 +56,4 @@ export type Usuario = {
 export type Login = {
     email: string
     senha: string
-}
+}
