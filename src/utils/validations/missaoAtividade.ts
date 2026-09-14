@@ -1,4 +1,5 @@
 import { TipoAtividade } from "@/types_consts/missao";
+import { Tematica } from "@/types_consts/tematica";
 
 type ValidarAtividadeParams = {
     titulo: unknown;
@@ -88,7 +89,6 @@ export function validarAtividade({
     // INALTERACAO DE TIPO ATIVIDADE
     const tipoAtividadeMantido =
         !edicao || tipoAtividade === dadosAtuais.tipoAtividade
-
 
     // RESULTADO FINAL
     const valido = !(

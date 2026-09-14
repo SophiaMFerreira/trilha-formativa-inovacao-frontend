@@ -18,6 +18,10 @@ import { urlDaFotoDePerfil } from "@/utils/fotoPerfil";
 import { mensagemDeErroDaApi } from "@/utils/erroApi";
 import { carrosselIntroducao } from "@/config/carrosselIntro";
 
+import imagemMissoes from "@/assets/images/tutorial/ModalIntoducaoImagem1.png"
+import imagemConteudos from "@/assets/images/tutorial/ModalIntoducaoImagem2.png"
+import imagemQuiz from "@/assets/images/tutorial/ModalIntroducaoImagem3.png"
+import imagemTarefaFinal from "@/assets/images/tutorial/ModalIntoducaoImagem4.png"
 
 export default function TelaPrincipal() {
     const navigate = useNavigate()
@@ -25,15 +29,16 @@ export default function TelaPrincipal() {
     const { progressoTotal, progressoPontosTematicas, distintivos } = useGame()
 
     const [usuario, setUsuario] = useState<Usuario>()
-
-    /*
-     * URL da foto derivada do usuário carregado. Havia um segundo
-     * useEffect apenas para montar essa string, custando uma
-     * renderização extra sem fazer requisição alguma.
-     */
     const imagem = urlDaFotoDePerfil(usuario)
     const [open, setOpen] = useState(false)
     const [loaded, setLoaded] = useState(false)
+
+    const tutorial: Record<string, string> = {
+            imagemMissoes: imagemMissoes,
+            imagemConteudos: imagemConteudos,
+            imagemQuiz: imagemQuiz,
+            imagemTarefaFinal: imagemTarefaFinal,
+        };
 
     useEffect(() => {
         if (!user) return;
@@ -75,13 +80,6 @@ export default function TelaPrincipal() {
     if (!user) {
         return <Navigate to="/login" replace />
     }
-
-    /*
-     * A tela NÃO espera mais o GET do usuário para renderizar.
-     * O dado só alimenta o avatar; segurar mapa, distintivos, barra de
-     * progresso e ranking por causa dele atrasava a tela inteira por
-     * uma requisição que nem é necessária na primeira pintura.
-     */
 
     return (
         <>
@@ -147,12 +145,6 @@ export default function TelaPrincipal() {
                             content={`Progresso total: ${Math.round(progressoTotal)}%`}
                         >
                             <Progress.Root
-                                /*
-                                 * "value", não "defaultValue": com
-                                 * defaultValue o componente fica não
-                                 * controlado e a barra continuava em zero
-                                 * depois de o progresso chegar da API.
-                                 */
                                 value={progressoTotal}
                                 min={0}
                                 max={100}
@@ -251,7 +243,7 @@ export default function TelaPrincipal() {
                                                                 rounded="2xl"
                                                             >
                                                                 <Image
-                                                                    src={item.imagem}
+                                                                    src={tutorial[item.imagem]}
                                                                     alt={item.titulo}
                                                                     w="100%"
                                                                     h={{ base: "220px", md: "310px" }}

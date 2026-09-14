@@ -1,4 +1,4 @@
-import { obterRotaTematica, TematicaRota } from "@/types_consts/tematica";
+import { obterRotaTematica, Tematica, TematicaRota } from "@/types_consts/tematica";
 
 export const posicoesItensLegislacao = [
   {
@@ -328,15 +328,6 @@ export type PosicaoItemMapa = {
   left: string
 }
 
-/**
- * Posições disponíveis em cada mapa, indexadas pelo parâmetro de rota
- * da trilha.
- *
- * A associação estava escrita como um switch dentro de mapaRegional.
- * Trazê-la para cá deixa uma única fonte da verdade: o mapa usa para
- * posicionar os ícones e o cadastro de missões usa para saber quantas
- * missões cabem na trilha.
- */
 export const posicoesPorTrilha: Record<TematicaRota, PosicaoItemMapa[]> = {
   [TematicaRota.LEGISLACAO]: posicoesItensLegislacao,
   [TematicaRota.TRANFERENCIA_TECNOLOGICA]: posicoesItensTransferenciaTecnologica,
@@ -367,5 +358,9 @@ export function posicoesDaTrilha(trilha: string): PosicaoItemMapa[] {
  * "sem limite a aplicar" — nunca como "não cabe nenhuma missão".
  */
 export function capacidadeDaTrilha(trilha: string): number {
+  if(trilha === Tematica.TAREFA_FINAL){
+    return 1
+  }
+  
   return posicoesDaTrilha(trilha).length;
 }

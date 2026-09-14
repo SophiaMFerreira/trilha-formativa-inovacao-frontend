@@ -562,6 +562,60 @@ export const mensagensToastErro = {
         closable: true,
         duration: 9000,
     },
+    tipoAlternativaTipoAtividadeIncorreto: {
+        title: "Tipo de missão incompatível",
+        description:
+            "As missões do tipo Tarefa Final são exclusivas da trilha de tarefa final. Já as missões do tipo Quiz e Tarefa devem ser cadastradas somente nas trilhas temáticas de inovação.",
+        type: "warning",
+        closable: true,
+        duration: 9000,
+    },
+
+
+    validarCodigoVerificacao: {
+        title: "Código incompleto",
+        description:
+            "Informe os 6 dígitos que enviamos para o seu e-mail.",
+        type: "warning",
+        closable: true,
+        duration: 7000,
+    },
+
+    codigoVerificacaoIncorreto: {
+        title: "Código incorreto",
+        description:
+            "Confira os dígitos recebidos por e-mail. Após algumas tentativas erradas o código é cancelado e será preciso pedir um novo.",
+        type: "warning",
+        closable: true,
+        duration: 9000,
+    },
+
+    codigoVerificacaoExpirado: {
+        title: "Código expirado",
+        description:
+            "Este código não vale mais. Solicite um novo para concluir seu cadastro.",
+        type: "warning",
+        closable: true,
+        duration: 9000,
+    },
+
+    enviarCodigoVerificacao: {
+        title: "Não foi possível enviar o código",
+        description:
+            "Não conseguimos enviar o código de verificação para este e-mail. Verifique o endereço informado e tente novamente em instantes.",
+        type: "error",
+        closable: true,
+        duration: 9000,
+    },
+
+    confirmarCodigoVerificacao: {
+        title: "Não foi possível confirmar o e-mail",
+        description:
+            "Ocorreu uma falha ao validar o código. Tente novamente em instantes.",
+        type: "error",
+        closable: true,
+        duration: 9000,
+    },
 
 } as const;
 
@@ -749,4 +803,32 @@ export const mensagensToastSucesso = {
         closable: true,
         duration: 7000,
     },
-} as const;
+
+    enviarCodigoVerificacao: {
+        title: "Código enviado!",
+        description:
+            "Enviamos um código de 6 dígitos para o seu e-mail. Informe-o para concluir o cadastro.",
+        type: "success",
+        closable: true,
+        duration: 7000,
+    },
+
+    reenviarCodigoVerificacao: {
+        title: "Novo código enviado!",
+        description:
+            "Enviamos outro código para o seu e-mail. O código anterior deixou de valer.",
+        type: "success",
+        closable: true,
+        duration: 7000,
+    },
+
+    confirmarCodigoVerificacao: {
+        title: "E-mail confirmado!",
+        description:
+            "Seu e-mail foi verificado. Estamos finalizando o seu cadastro.",
+        type: "success",
+        closable: true,
+        duration: 7000,
+    },
+
+} as const;

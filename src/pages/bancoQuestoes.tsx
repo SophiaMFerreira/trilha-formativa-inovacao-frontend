@@ -150,7 +150,7 @@ export default function BancoQuestoes() {
                             variant="solid"
                             onClick={() => navigate("/cadastro-questoes")}
                         >
-                            Adcionar questão
+                            Adicionar questão
                         </Button>
                     </HStack>
                     <Stack>
@@ -186,7 +186,7 @@ export default function BancoQuestoes() {
                         alignSelf="center"
                         onClick={() => navigate("/cadastro-questoes")}
                     >
-                        Adcionar questão
+                        Adicionar questão
                     </Button>
                 </Flex>
             </CardCustomizado>

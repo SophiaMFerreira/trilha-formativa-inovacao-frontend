@@ -1,9 +1,10 @@
 import { Button, HStack, Stack, Text } from "@chakra-ui/react";
 import { FaPencilAlt, FaRegClock } from "react-icons/fa";
 import CardCustomizado from "../cardCustomizado";
+import { TipoAtividade } from "@/types_consts/missao";
 
 type HomeMissaoProps = {
-    missao: "quiz" | "tarefa"
+    missao: TipoAtividade
     titulo: string;
     tentativas: number;
     trilha: string;
@@ -11,15 +12,19 @@ type HomeMissaoProps = {
     navigate: Function
     setEtapa: Function;
 };
-export default function HomeMissao({ missao, titulo, tentativas, trilha, parametroTrilha, navigate, setEtapa }: HomeMissaoProps) {    
+export default function HomeMissao({ missao, titulo, tentativas, trilha, parametroTrilha, navigate, setEtapa }: HomeMissaoProps) {
 
-    const mensagem = missao === "quiz" ? `Este quiz contém 5 perguntas sobre o conteúdo de ${trilha}.` :
-                            `Esta tarefa contém 5 perguntas sobre o conteúdo de ${trilha}.`
+    const mensagem = missao === "quiz" ?
+        `Este quiz contém 5 perguntas sobre o conteúdo de ${trilha}.` : (
+            missao === "tarefa" ?
+                `Esta tarefa contém 5 perguntas sobre o conteúdo de ${trilha}.` :
+                `Você chegou à última missão! Mostre tudo o que aprendeu e conquiste essa última etapa! Atenção, esta tarefa possui apenas uma tentativa`
+        )
     const mensagemTempo = missao === "quiz" ? "Tempo por pergunta: 5 min" : "Tempo da tarefa: 30 min"
     return (
         <CardCustomizado
             titulo={titulo}
-            info={`0${String(tentativas)}/03`}
+            info={`0${String(tentativas)}/${missao !== TipoAtividade.TAREFA_FINAL ? "03" : "01"}`}
             mensagem={mensagem}
         >
             <HStack

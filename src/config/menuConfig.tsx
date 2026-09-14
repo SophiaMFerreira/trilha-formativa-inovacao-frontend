@@ -1,6 +1,6 @@
 import { User } from "@/contexts/AuthContext"
 import type { ItemMenu } from "@/types_consts/menu"
-import { FaMap, FaMapSigns, FaBook, FaPencilAlt, FaUserAlt, FaEye, FaPuzzlePiece, FaAward, } from "react-icons/fa"
+import { FaMap, FaMapSigns, FaBook, FaPencilAlt, FaUserAlt, FaEye, FaPuzzlePiece, FaAward, FaRoute, } from "react-icons/fa"
 
 export function getMenuItens(user: User | null): ItemMenu[] {
   return [
@@ -94,7 +94,7 @@ export function getMenuItens(user: User | null): ItemMenu[] {
         posicao: "esquerda",
         titulo: "Trilhas Temáticas",
         rota: "#",
-        icone: <FaMapSigns size={20} color="brand.primaryDark" />,
+        icone: <FaRoute size={20} color="brand.primaryDark" />,
         roles: ["usuario"],
         children: [
             {

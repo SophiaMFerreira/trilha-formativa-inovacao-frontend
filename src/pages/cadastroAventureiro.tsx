@@ -5,9 +5,10 @@ import { Box, Button, createListCollection, DatePicker, DateValue, Dialog, Dialo
 import { AvatarUsuario } from "@/components/AvatarUsuario";
 import { AppInput } from "@/components/commons/AppInput";
 import CardSimples from "@/components/commons/cardCustomizado";
+import { VerificacaoEmailDialog } from "@/components/commons/verificacaoEmailDialog";
 
-import { obterNomeOcupacao, Usuario, UsuarioDTO } from "@/types_consts/usuario";
-import { OcupacaoDTO } from "@/types_consts/ocupacao";
+import { Usuario, UsuarioDTO } from "@/types_consts/usuario";
+import { obterNomeOcupacao, OcupacaoDTO } from "@/types_consts/ocupacao";
 import { UsuarioAPI } from "../../api/usuario";
 import { OcupacaoAPI } from "../../api/ocupacao";
 import { urlDaFotoDePerfil } from "@/utils/fotoPerfil";
@@ -31,6 +32,7 @@ export function CadastroAventureiro() {
     const mensagem = editando ? "Altere seus dados cadastrais." : "Faça seu cadastro para uma jornada de aprendizado incrível."
     const [open, setOpen] = useState(false)
     const [openExclusao, setOpenModalExclusao] = useState(false)
+    const [openVerificacao, setOpenVerificacao] = useState(false)
     const prosseguir = () => {
         if (aceiteTermos) {
             onSubmit();
@@ -317,102 +319,146 @@ export function CadastroAventureiro() {
             return;
         }
 
+        /*
+         * Cadastro novo não grava nada antes de o e-mail ser
+         * confirmado: o formulário fica em memória e o diálogo de
+         * verificação assume. A conta só nasce em cadastrarUsuario,
+         * com o comprovante em mãos.
+         */
+        if (!user?.id) {
+            setOpen(false);
+            setOpenVerificacao(true);
+            return;
+        }
+
+        await atualizarUsuario();
+    }
+
+    const atualizarUsuario = async () => {
         const alterarSenha = informouNovaSenha(senha, confirmarSenha)
 
         try {
-            if (user?.id) {
-                const usuarioPayload = {
-                    nomeUsuario: nomeUsuario,
-                    nomeAventureiro: nomeAventureiro,
-                    correioEletronico: correioEletronico,
-                    ...(dataNascimento && { dataNascimento: `${dataNascimento[0].year}-${String(dataNascimento[0].month).padStart(2, "0")}-${String(dataNascimento[0].day).padStart(2, "0")}` }),
-                    possuiConhecimento: possuiConhecimento,
-                    primeiroAcesso: !editando,
-                    ...(alterarSenha && {
-                        novaSenha: senha,
-                        novaSenhaRepeticao: confirmarSenha,
-                    }),
-                    senhaAtual: confirmarSenhaAtual,
-                    idOcupacao: idOcupacao,
-                } as UsuarioDTO
+            const usuarioPayload = {
+                nomeUsuario: nomeUsuario,
+                nomeAventureiro: nomeAventureiro,
+                correioEletronico: correioEletronico,
+                ...(dataNascimento && { dataNascimento: `${dataNascimento[0].year}-${String(dataNascimento[0].month).padStart(2, "0")}-${String(dataNascimento[0].day).padStart(2, "0")}` }),
+                possuiConhecimento: possuiConhecimento,
+                primeiroAcesso: !editando,
+                ...(alterarSenha && {
+                    novaSenha: senha,
+                    novaSenhaRepeticao: confirmarSenha,
+                }),
+                senhaAtual: confirmarSenhaAtual,
+                idOcupacao: idOcupacao,
+            } as UsuarioDTO
 
-                const responseEdicao = await UsuarioAPI.atualizar(idUsuario, usuarioPayload);
-                if (!responseEdicao.data) {
-                    toaster.create(mensagensToastErro.editarAventureiro)
-                    return
-                }
-
-                const novoUser: User = {
-                    id: idUsuario,
-                    nomeAventureiro: nomeAventureiro,
-                    role: "usuario",
-                }
-
-                if (arquivoImagem) {
-                    const formData = new FormData();
-                    formData.append("foto", arquivoImagem);
-
-                    await UsuarioAPI.salvarImagemPerfil(idUsuario, formData);
-                }
-                updateUser(novoUser)
-                toaster.create(mensagensToastSucesso.editarAventureiro)
-            } else {
-                const usuarioPayload = {
-                    nomeUsuario: nomeUsuario,
-                    nomeAventureiro: nomeAventureiro,
-                    correioEletronico: correioEletronico,
-                    ...(dataNascimento && { dataNascimento: `${dataNascimento[0].year}-${String(dataNascimento[0].month).padStart(2, "0")}-${String(dataNascimento[0].day).padStart(2, "0")}` }),
-                    possuiConhecimento: possuiConhecimento,
-                    primeiroAcesso: !editando,
-                    senha: senha,
-                    senhaRepeticao: confirmarSenha,
-                    idOcupacao: idOcupacao,
-                    ...(idUsuario !== -1 && { id: idUsuario }),
-                } as UsuarioDTO
-
-                const responseCadastro = await UsuarioAPI.salvar(usuarioPayload);
-                if (!responseCadastro.data) {
-                    toaster.create(mensagensToastErro.salvarAventureiro)
-                    return
-                }
-
-                const responseLogin = await login(usuarioPayload.correioEletronico, senha)
-                if (!responseLogin) {
-                    console.error("Usuário cadastrado com sucesso, mas não foi possível realizar o login.");
-                    navigate("/login");
-                    return
-                }
-
-                if (arquivoImagem) {
-                    const formData = new FormData();
-                    formData.append("foto", arquivoImagem);
-
-                    await UsuarioAPI.salvarImagemPerfil(responseLogin.id, formData);
-                }
-
-                toaster.create(mensagensToastSucesso.salvarAventureiro)
+            const responseEdicao = await UsuarioAPI.atualizar(idUsuario, usuarioPayload);
+            if (!responseEdicao.data) {
+                toaster.create(mensagensToastErro.editarAventureiro)
+                return
             }
+
+            const novoUser: User = {
+                id: idUsuario,
+                nomeAventureiro: nomeAventureiro,
+                role: "usuario",
+            }
+
+            if (arquivoImagem) {
+                const formData = new FormData();
+                formData.append("foto", arquivoImagem);
+
+                await UsuarioAPI.salvarImagemPerfil(idUsuario, formData);
+            }
+            updateUser(novoUser)
+            toaster.create(mensagensToastSucesso.editarAventureiro)
 
             navigate("/trilhaFormativaInovacao");
         } catch (erro) {
             console.error(
-                user?.id
-                    ? mensagensErroConsole.editarAventureiro
-                    : mensagensErroConsole.salvarAventureiro,
+                mensagensErroConsole.editarAventureiro,
                 mensagemDeErroDaApi(erro) ?? erro
             );
 
             const toasterMensagemApi = mensagemParaToaster(erro);
-            if(toasterMensagemApi){
+            if (toasterMensagemApi) {
                 toaster.create(toasterMensagemApi)
             } else {
-                toaster.create(
-                user?.id
-                    ? mensagensToastErro.editarAventureiro
-                    : mensagensToastErro.salvarAventureiro
-            )
+                toaster.create(mensagensToastErro.editarAventureiro)
             }
-            
+        }
+    }
+
+    /**
+     * Criação da conta, já com o e-mail verificado.
+     *
+     * Recebe o comprovante emitido por /verificacao-email/confirmar. A
+     * API recusa o cadastro sem ele, e o comprovante é de uso único:
+     * se esta chamada falhar depois de consumido, o usuário precisa
+     * pedir um código novo — por isso o diálogo só fecha no sucesso.
+     */
+    const cadastrarUsuario = async (comprovanteVerificacao: string) => {
+        try {
+            const usuarioPayload = {
+                nomeUsuario: nomeUsuario,
+                nomeAventureiro: nomeAventureiro,
+                correioEletronico: correioEletronico,
+                ...(dataNascimento && { dataNascimento: `${dataNascimento[0].year}-${String(dataNascimento[0].month).padStart(2, "0")}-${String(dataNascimento[0].day).padStart(2, "0")}` }),
+                possuiConhecimento: possuiConhecimento,
+                primeiroAcesso: !editando,
+                senha: senha,
+                senhaRepeticao: confirmarSenha,
+                idOcupacao: idOcupacao,
+                comprovanteVerificacao: comprovanteVerificacao,
+                ...(idUsuario !== -1 && { id: idUsuario }),
+            } as UsuarioDTO
+
+            const responseCadastro = await UsuarioAPI.salvar(usuarioPayload);
+            if (!responseCadastro.data) {
+                toaster.create(mensagensToastErro.salvarAventureiro)
+                return
+            }
+
+            setOpenVerificacao(false);
+
+            const responseLogin = await login(usuarioPayload.correioEletronico, senha)
+            if (!responseLogin) {
+                console.error("Usuário cadastrado com sucesso, mas não foi possível realizar o login.");
+                navigate("/login");
+                return
+            }
+
+            if (arquivoImagem) {
+                const formData = new FormData();
+                formData.append("foto", arquivoImagem);
+
+                await UsuarioAPI.salvarImagemPerfil(responseLogin.id, formData);
+            }
+
+            toaster.create(mensagensToastSucesso.salvarAventureiro)
+
+            navigate("/trilhaFormativaInovacao");
+        } catch (erro) {
+            console.error(
+                mensagensErroConsole.salvarAventureiro,
+                mensagemDeErroDaApi(erro) ?? erro
+            );
+
+            /*
+             * Fecha o diálogo: o comprovante é de uso único e já foi
+             * consumido pela API, então insistir no mesmo código não
+             * levaria a nada. O usuário corrige o formulário e uma nova
+             * tentativa dispara um código novo.
+             */
+            setOpenVerificacao(false);
+
+            const toasterMensagemApi = mensagemParaToaster(erro);
+            if (toasterMensagemApi) {
+                toaster.create(toasterMensagemApi)
+            } else {
+                toaster.create(mensagensToastErro.salvarAventureiro)
+            }
         }
     }
 
@@ -1438,6 +1484,20 @@ export function CadastroAventureiro() {
                     </Dialog.Positioner>
                 </Portal>
             </Dialog.Root>
+
+            {/*
+              * Confirmação do e-mail, exibida só no cadastro. O
+              * formulário permanece montado atrás do diálogo, então
+              * cancelar devolve o usuário aos dados que ele já digitou.
+              */}
+            {!editando && (
+                <VerificacaoEmailDialog
+                    aberto={openVerificacao}
+                    correioEletronico={correioEletronico}
+                    onCancelar={() => setOpenVerificacao(false)}
+                    onVerificado={cadastrarUsuario}
+                />
+            )}
         </CardSimples >
     );
 }

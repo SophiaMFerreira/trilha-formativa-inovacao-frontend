@@ -89,8 +89,8 @@ export default function BancoMateriais() {
 
     return (
         <CardCustomizado
-            titulo={"Banco de materiais de estudo"}
-            mensagem={"Faça cadastro, edição e exclusão de materiais de estudo para a trilha formativa."}
+            titulo="Banco de textos e vídeos"
+            mensagem="Faça cadastro, edição e exclusão de textos e vídeos para a trilha formativa."
         >
             <Flex
                 direction="column"
