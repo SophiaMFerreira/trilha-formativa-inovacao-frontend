@@ -963,7 +963,8 @@ export default function CadastroQuestoes() {
                                                         item={tipoA}
                                                         key={tipoA.value}
                                                         hidden={(tipoA.value === TipoAlternativa.ORDENACAO ||
-                                                            tipoA.value === TipoAlternativa.ASSOCIACAO) && tipoAtividade === TipoAtividade.TAREFA
+                                                            tipoA.value === TipoAlternativa.ASSOCIACAO) && 
+                                                            (tipoAtividade === TipoAtividade.TAREFA || tipoAtividade === TipoAtividade.TAREFA_FINAL)
                                                         }
                                                     >
                                                         {tipoA.label}
@@ -1477,7 +1478,7 @@ export default function CadastroQuestoes() {
                                                     onLoad={() => setLoadedAjuda(true)}
                                                 />
                                             </Skeleton>}
-                                        {tipoAtividade === TipoAtividade.TAREFA &&
+                                        {(tipoAtividade === TipoAtividade.TAREFA || tipoAtividade === TipoAtividade.TAREFA_FINAL) &&
                                             tipoAlternativa === SubtipoAlternativa.MULTIPLAS_CORRETAS &&
                                             <Skeleton
                                                 loading={!loadedAjuda}
@@ -1499,7 +1500,7 @@ export default function CadastroQuestoes() {
                                                     onLoad={() => setLoadedAjuda(true)}
                                                 />
                                             </Skeleton>}
-                                        {tipoAtividade === TipoAtividade.TAREFA &&
+                                        {(tipoAtividade === TipoAtividade.TAREFA || tipoAtividade === TipoAtividade.TAREFA_FINAL) &&
                                             tipoAlternativa !== SubtipoAlternativa.MULTIPLAS_CORRETAS &&
                                             <>
                                                 <Skeleton
@@ -1709,90 +1710,89 @@ function ExibirTipoAlternativa({
         setAlternativas(novasAlternativas)
     }
 
-    switch (tipoAtividade) {
-        case TipoAtividade.QUIZ:
-            switch (tipoAlternativa) {
-                case SubtipoAlternativa.MULTIPLAS_CORRETAS:
-                case SubtipoAlternativa.MULTIPLA_ESCOLHA:
-                case SubtipoAlternativa.VERDADEIRO_FALSO:
-                    return (
-                        <MultiplaEscolhaCadastroQuiz
-                            alternativas={alternativas}
-                            onClick={marcarAlternativaMultiplaEscolha}
-                        />
-                    )
-                case TipoAlternativa.ASSOCIACAO:
-                    return (
-                        < AssociacaoCadastroQuiz
-                            alternativas={alternativas}
-                            onChange={alterarRespostaAssociacao}
-                        />
-                    )
-                case TipoAlternativa.ORDENACAO:
-                    return (
-                        < OrdenacaoCadastroQuiz
-                            alternativas={alternativas}
-                            onChange={alterarRespostaOrdenacao}
-                        />
-                    )
-                default:
-                    return (
-                        <Text
-                            textAlign="justify"
-                            color="brand.secondaryRed"
-                            textStyle="bodyTextBold"
-                        >
-                            Tipo de questão desconhecido.
-                        </Text>
-                    )
-            }
-
-        case TipoAtividade.TAREFA:
-            switch (tipoAlternativa) {
-                case SubtipoAlternativa.MULTIPLAS_CORRETAS:
-                case SubtipoAlternativa.MULTIPLA_ESCOLHA:
-                case SubtipoAlternativa.VERDADEIRO_FALSO:
-                    return (
-                        <MultiplaEscolhaCadastroTarefa
-                            alternativas={alternativas}
-                            onClick={marcarAlternativaMultiplaEscolha}
-                        />
-                    )
-                case TipoAlternativa.ASSOCIACAO:
-                    return (
-                        < AssociacaoCadastroTarefa
-                            alternativas={alternativas}
-                            onChange={alterarRespostaAssociacao}
-                        />
-                    )
-                case TipoAlternativa.ORDENACAO:
-                    return (
-                        < OrdenacaoCadastroTarefa
-                            alternativas={alternativas}
-                            onChange={alterarRespostaOrdenacao}
-                        />
-                    )
-                default:
-                    return (
-                        <Text
-                            textAlign="justify"
-                            color="brand.secondaryRed"
-                            textStyle="bodyTextBold"
-                        >
-                            Tipo de questão desconhecido.
-                        </Text>
-                    )
-            }
-
-        default:
-            return (
-                <Text
-                    textAlign="justify"
-                    color="brand.secondaryRed"
-                    textStyle="bodyTextBold"
-                >
-                    Tipo de atividade desconhecido.
-                </Text>
-            )
+    if (tipoAtividade === TipoAtividade.QUIZ) {
+        switch (tipoAlternativa) {
+            case SubtipoAlternativa.MULTIPLAS_CORRETAS:
+            case SubtipoAlternativa.MULTIPLA_ESCOLHA:
+            case SubtipoAlternativa.VERDADEIRO_FALSO:
+                return (
+                    <MultiplaEscolhaCadastroQuiz
+                        alternativas={alternativas}
+                        onClick={marcarAlternativaMultiplaEscolha}
+                    />
+                )
+            case TipoAlternativa.ASSOCIACAO:
+                return (
+                    < AssociacaoCadastroQuiz
+                        alternativas={alternativas}
+                        onChange={alterarRespostaAssociacao}
+                    />
+                )
+            case TipoAlternativa.ORDENACAO:
+                return (
+                    < OrdenacaoCadastroQuiz
+                        alternativas={alternativas}
+                        onChange={alterarRespostaOrdenacao}
+                    />
+                )
+            default:
+                return (
+                    <Text
+                        textAlign="justify"
+                        color="brand.secondaryRed"
+                        textStyle="bodyTextBold"
+                    >
+                        Tipo de questão desconhecido.
+                    </Text>
+                )
+        }
     }
+    if (tipoAtividade === TipoAtividade.TAREFA || tipoAtividade === TipoAtividade.TAREFA_FINAL) {
+        switch (tipoAlternativa) {
+            case SubtipoAlternativa.MULTIPLAS_CORRETAS:
+            case SubtipoAlternativa.MULTIPLA_ESCOLHA:
+            case SubtipoAlternativa.VERDADEIRO_FALSO:
+                return (
+                    <MultiplaEscolhaCadastroTarefa
+                        alternativas={alternativas}
+                        onClick={marcarAlternativaMultiplaEscolha}
+                    />
+                )
+            case TipoAlternativa.ASSOCIACAO:
+                return (
+                    < AssociacaoCadastroTarefa
+                        alternativas={alternativas}
+                        onChange={alterarRespostaAssociacao}
+                    />
+                )
+            case TipoAlternativa.ORDENACAO:
+                return (
+                    < OrdenacaoCadastroTarefa
+                        alternativas={alternativas}
+                        onChange={alterarRespostaOrdenacao}
+                    />
+                )
+            default:
+                return (
+                    <Text
+                        textAlign="justify"
+                        color="brand.secondaryRed"
+                        textStyle="bodyTextBold"
+                    >
+                        Tipo de questão desconhecido.
+                    </Text>
+                )
+        }
+    } else {
+        return (
+            <Text
+                textAlign="justify"
+                color="brand.secondaryRed"
+                textStyle="bodyTextBold"
+            >
+                Tipo de atividade desconhecido.
+            </Text>
+        )
+    }
+
 }
