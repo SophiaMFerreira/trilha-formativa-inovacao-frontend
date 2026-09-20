@@ -127,7 +127,7 @@ export function Login() {
                         opacity={0.25}
                     />
 
-                    <NavLink to="https://www.ifsudestemg.edu.br/juizdefora">
+                    <NavLink to="https://www.ifsudestemg.edu.br">
                         <Skeleton
                             loading={!loadedLogoIF}
                             h="64px"

@@ -1,11 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
-import { Box, Button, HStack, InputGroup, Stack, Heading, Flex, } from "@chakra-ui/react"
+import { Box, Button, HStack, InputGroup, Stack, Heading, Flex } from "@chakra-ui/react";
 import CardCustomizado from "@/components/commons/cardCustomizado";
 import ListagemQuestao from "@/components/listagemQuestao";
 import { toaster } from "@/components/commons/toaster";
 import { FaSearch } from "react-icons/fa";
-import { obterNomeTematica, Tematica, TematicaDTO, tematicaLabel } from "@/types_consts/tematica";
+import { obterNomeTematica, TematicaDTO } from "@/types_consts/tematica";
 import { QuestaoProp } from "@/types_consts/questao";
 import { SubtipoAlternativaLabel, TipoAlternativa, TipoAlternativaLabel } from "@/types_consts/alternativa";
 import { Missao, MissaoAtividade } from "@/types_consts/missao";
@@ -18,17 +18,18 @@ import { mensagensErroConsole } from "@/config/mensagensError";
 type GrupoTematica = {
     tematica: string;
     questoes: QuestaoRich[];
-}
+};
+
 type QuestaoRich = QuestaoProp & {
     missao: string;
-}
+};
 
 export default function BancoQuestoes() {
-    const navigate = useNavigate()
+    const navigate = useNavigate();
 
     const [questoesPorTematica, setQuestoesPorTematica] = useState<GrupoTematica[]>([]);
-
     const [termoBusca, setTermoBusca] = useState("");
+
     const questoesFiltradas = useMemo(() => {
         if (!termoBusca.trim()) {
             return questoesPorTematica;
@@ -38,10 +39,9 @@ export default function BancoQuestoes() {
 
         return questoesPorTematica
             .map(grupoTematica => ({
-
                 tematica: grupoTematica.tematica,
                 questoes: grupoTematica.questoes.filter(questao => {
-                    if (!questao.alternativas?.length) return;
+                    if (!questao.alternativas?.length) return false;
 
                     let tipoQuestao = "Tipo desconhecido";
                     switch (questao.alternativas[0].tipoAlternativa) {
@@ -56,6 +56,7 @@ export default function BancoQuestoes() {
                             ];
                             break;
                     }
+
                     return (
                         grupoTematica.tematica.toLowerCase().includes(busca) ||
                         questao.missao?.toLowerCase().includes(busca) ||
@@ -65,10 +66,10 @@ export default function BancoQuestoes() {
                             alternativa.texto.toLowerCase().includes(busca) ||
                             alternativa.tipoAlternativa.includes(busca)
                         )
-                    )
+                    );
                 })
-            }
-            ))
+            }))
+            .filter(grupo => grupo.questoes.length > 0);
     }, [termoBusca, questoesPorTematica]);
 
     async function carregarDados() {
@@ -82,113 +83,125 @@ export default function BancoQuestoes() {
             ]);
 
             if (!tematicasResponse.data) {
-                toaster.create(mensagensToastErro.carregarTematicas)
-                return
+                toaster.create(mensagensToastErro.carregarTematicas);
+                return;
             }
-            const tematicas = tematicasResponse.data as TematicaDTO[]
+            const tematicas = tematicasResponse.data as TematicaDTO[];
 
             if (!missoesResponse.data) {
-                toaster.create(mensagensToastErro.carregarMissoesAtividade)
-                return
+                toaster.create(mensagensToastErro.carregarMissoesAtividade);
+                return;
             }
-            const missoes = missoesResponse.data as Missao[]
-            const missoesAtividades = missoes.filter((m): m is MissaoAtividade => "tipoAtividade" in m)
+            const missoes = missoesResponse.data as Missao[];
+            const missoesAtividades = missoes.filter((m): m is MissaoAtividade => "tipoAtividade" in m);
 
-            if (!missoesAtividades) return
-            const missoesFiltradas: GrupoTematica[] = tematicas.map(tematica => ({
-                tematica: obterNomeTematica(tematica.titulo) || tematica.titulo,
-                questoes: missoesAtividades
-                    .filter(missao => missao.tematica.id === tematica.id)
-                    .flatMap(missao =>
-                        missao.questoes.map(questao => ({
-                            ...questao,
-                            missao: missao.titulo,
-                        }))
-                    )}))
-            setQuestoesPorTematica(missoesFiltradas)
-            } catch (erro) {
-                console.error(mensagensErroConsole.buscarGenerico, erro)
-                toaster.create(mensagensToastErro.carregarGenerico)
-            }
+            if (!missoesAtividades) return;
+
+            const missoesFiltradas: GrupoTematica[] = tematicas
+                .map(tematica => ({
+                    tematica: obterNomeTematica(tematica.titulo) || tematica.titulo,
+                    questoes: missoesAtividades
+                        .filter(missao => missao.tematica.id === tematica.id)
+                        .flatMap(missao =>
+                            missao.questoes.map(questao => ({
+                                ...questao,
+                                missao: missao.titulo,
+                            }))
+                        )
+                }))
+                .sort((a, b) => {
+                    const NOME_TAREFA_FINAL = "Tarefa Final";
+                    if (a.tematica.toLowerCase() === NOME_TAREFA_FINAL.toLowerCase()) return 1;
+                    if (b.tematica.toLowerCase() === NOME_TAREFA_FINAL.toLowerCase()) return -1;
+                    return 0;
+                });
+
+            setQuestoesPorTematica(missoesFiltradas);
+        } catch (erro) {
+            console.error(mensagensErroConsole.buscarGenerico, erro);
+            toaster.create(mensagensToastErro.carregarGenerico);
         }
+    }
 
     useEffect(() => {
-            carregarDados();
-        }, []);
+        carregarDados();
+    }, []);
 
-        return (
-            <CardCustomizado
-                titulo={"Banco de questões"}
-                mensagem={"Faça cadastro, edição e exclusão de questões para a trilha formativa."}
+    return (
+        <CardCustomizado
+            titulo={"Banco de questões"}
+            mensagem={"Faça cadastro, edição e exclusão de questões para a trilha formativa."}
+        >
+            <Flex
+                direction="column"
+                justify="center"
+                gap="3"
+                mt={6}
             >
-                <Flex
-                    direction="column"
-                    justify="center"
-                    gap="3"
-                    mt={6}
+                <HStack
+                    justify="space-between"
+                    flex="1"
                 >
-                    <HStack
-                        justify="space-between"
-                        flex="1"
-                    >
-                        <InputGroup
-                            endElement={
-                                <Box color="brand.primaryDark">
-                                    <FaSearch />
-                                </Box>
-                            }
-                            maxW="md"
-                        >
-                            <AppInput
-                                placeholder="Pesquisar questão"
-                                appVariant="filled"
-                                value={termoBusca}
-                                onChange={(e) => setTermoBusca(e.target.value)}
-                            />
-                        </InputGroup>
-                        <Button
-                            variant="solid"
-                            onClick={() => navigate("/cadastro-questoes")}
-                        >
-                            Adicionar questão
-                        </Button>
-                    </HStack>
-                    <Stack>
-                        {questoesFiltradas.map(groupoTematica => (
-                            <Box
-                                my={3}
-                                key={groupoTematica.tematica}
-                            >
-                                <Heading
-                                    textStyle="headingMD"
-                                    color="brand.primaryDark"
-                                    mb={1.5}
-                                >
-                                    {groupoTematica.tematica}
-                                </Heading>
-                                <Stack
-                                    gap={2}
-                                >
-                                    {groupoTematica.questoes.map(questao => (
-                                        <ListagemQuestao
-                                            key={questao.id}
-                                            {...questao}
-                                            onExcluir={carregarDados}
-                                        />
-                                    ))}
-                                </Stack>
+                    <InputGroup
+                        endElement={
+                            <Box color="brand.primaryDark">
+                                <FaSearch />
                             </Box>
-                        ))}
-                    </Stack>
+                        }
+                        maxW="md"
+                    >
+                        <AppInput
+                            placeholder="Pesquisar questão"
+                            appVariant="filled"
+                            value={termoBusca}
+                            onChange={(e) => setTermoBusca(e.target.value)}
+                        />
+                    </InputGroup>
                     <Button
-                        variant="outline"
-                        w="sm"
-                        alignSelf="center"
+                        variant="solid"
                         onClick={() => navigate("/cadastro-questoes")}
                     >
                         Adicionar questão
                     </Button>
-                </Flex>
-            </CardCustomizado>
-        );
-    }
+                </HStack>
+                <Stack spacing={4}>
+                    {questoesFiltradas.map(grupoTematica => (
+                        <Box
+                            my={3}
+                            p={4}
+                            borderRadius="lg"
+                            bg="white"
+                            boxShadow="0px 4px 12px rgba(0, 0, 0, 0.08)"
+                            key={grupoTematica.tematica}
+                        >
+                            <Heading
+                                textStyle="headingMD"
+                                color="brand.primaryDark"
+                                mb={3}
+                            >
+                                {grupoTematica.tematica}
+                            </Heading>
+                            <Stack gap={2}>
+                                {grupoTematica.questoes.map(questao => (
+                                    <ListagemQuestao
+                                        key={questao.id}
+                                        {...questao}
+                                        onExcluir={carregarDados}
+                                    />
+                                ))}
+                            </Stack>
+                        </Box>
+                    ))}
+                </Stack>
+                <Button
+                    variant="outline"
+                    w="sm"
+                    alignSelf="center"
+                    onClick={() => navigate("/cadastro-questoes")}
+                >
+                    Adicionar questão
+                </Button>
+            </Flex>
+        </CardCustomizado>
+    );
+}

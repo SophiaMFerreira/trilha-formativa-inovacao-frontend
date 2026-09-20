@@ -100,7 +100,7 @@ export default function Navbar() {
             </Box>
           </NavLink>
 
-          <NavLink to="https://www.ifsudestemg.edu.br/juizdefora">
+          <NavLink to="https://www.ifsudestemg.edu.br">
             <Box
               display={{
                 base: "none",

@@ -168,11 +168,11 @@ export default function CadastroQuestoes() {
 
                         return {
                             id: idA,
-                            texto: "Conteúdo da alternativa",
+                            texto: "",
                             tipoAlternativa: TipoAlternativa.ASSOCIACAO,
                             alternativaAssociada: {
                                 id: idB,
-                                texto: "Conteúdo da alternativa associada",
+                                texto: "",
                                 tipoAlternativa: TipoAlternativa.ASSOCIACAO,
                             },
                         }
@@ -184,7 +184,7 @@ export default function CadastroQuestoes() {
                 setAlternativas(
                     Array.from({ length: 4 }, (_, i) => ({
                         id: -(i + 1),
-                        texto: "Conteúdo da alternativa",
+                        texto: "",
                         tipoAlternativa: TipoAlternativa.ORDENACAO,
                         ...(i !== 0 && { numeroSequencia: i }),
                         numeroSequencia: i + 1
@@ -196,7 +196,7 @@ export default function CadastroQuestoes() {
                 setAlternativas(
                     Array.from({ length: 2 }, (_, i) => ({
                         id: -(i + 1),
-                        texto: "Conteúdo da alternativa",
+                        texto: "",
                         tipoAlternativa: TipoAlternativa.MULTIPLA_ESCOLHA,
                         correta: false,
                         subtipo: SubtipoAlternativa.VERDADEIRO_FALSO,
@@ -208,7 +208,7 @@ export default function CadastroQuestoes() {
                 setAlternativas(
                     Array.from({ length: 4 }, (_, i) => ({
                         id: -(i + 1),
-                        texto: "Conteúdo da alternativa",
+                        texto: "",
                         tipoAlternativa: TipoAlternativa.MULTIPLA_ESCOLHA,
                         correta: false,
                         subtipo: SubtipoAlternativa.MULTIPLAS_CORRETAS,
@@ -222,7 +222,7 @@ export default function CadastroQuestoes() {
                 setAlternativas(
                     Array.from({ length: 4 }, (_, i) => ({
                         id: -(i + 1),
-                        texto: "Conteúdo da alternativa",
+                        texto: "",
                         tipoAlternativa: TipoAlternativa.MULTIPLA_ESCOLHA,
                         correta: false,
                         subtipo: SubtipoAlternativa.MULTIPLA_ESCOLHA,

@@ -120,7 +120,7 @@ export default function DadosAventureiro() {
                                 color="brand.primaryDark"
                                 textAlign="right"
                             >
-                                {pontuacao}
+                                {pontuacao.toFixed(2)}
                             </Text>
                             <Text
                                 textStyle="headingSM"

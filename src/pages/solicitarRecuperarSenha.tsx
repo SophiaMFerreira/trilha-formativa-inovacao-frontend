@@ -85,7 +85,6 @@ export default function SolicitarRecuperarSenha() {
                             <AppInput
                                 name="correioEletronico"
                                 type="email"
-                                value={correioEletronico}
                                 placeholder="alunoInovacoes@gmail.com"
                                 size="md"
                                 onChange={(e) => {
