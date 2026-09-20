@@ -10,7 +10,7 @@ import { Missao, MissaoConteudo, MissaoDTO, tipoMaterialLabel } from "@/types_co
 import { validarConteudo } from "@/utils/validations/missaoConteudo";
 import { avaliarCapacidadeDaTrilha } from "@/utils/limiteDeMissoes";
 import { toaster } from "@/components/commons/toaster";
-import { mensagemParaToaster, mensagensToastErro, mensagensToastSucesso } from "@/config/mensagensToaster";
+import { mensagemParaToaster, mensagensToastErro, mensagensToastSucesso, toasterDaApiOuPadrao } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
 
 export default function CadastroMateriais() {
@@ -214,7 +214,7 @@ export default function CadastroMateriais() {
             navigate("/banco-materiais")
 
         } catch (erro) {
-            toaster.create(mensagensToastErro.excluirConteudo)
+            toaster.create(toasterDaApiOuPadrao(erro, mensagensToastErro.excluirConteudo))
             console.error(mensagensErroConsole.excluirMissaoConteudo, erro)
         }
     }

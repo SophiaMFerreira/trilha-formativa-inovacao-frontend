@@ -8,7 +8,7 @@ import CustomTooltip from "./commons/customTooltip.tsx"
 import { QuestaoAPI } from "../../api/questao.ts"
 import { QuestaoProp } from "@/types_consts/questao.ts"
 import { Alternativa, AlternativaAssociacao, AlternativaMultiplaEscolhaDTO, AlternativaOrdenacaoDTO, SubtipoAlternativaLabel, TipoAlternativa, TipoAlternativaLabel } from "@/types_consts/alternativa.ts"
-import { mensagensToastErro, mensagensToastSucesso } from "@/config/mensagensToaster.ts"
+import { mensagensToastErro, mensagensToastSucesso, toasterDaApiOuPadrao } from "@/config/mensagensToaster.ts"
 import { toaster } from "./commons/toaster.tsx"
 import { mensagensErroConsole } from "@/config/mensagensError.ts"
 
@@ -177,7 +177,7 @@ export default function ListagemQuestao({
       await onExcluir();
 
     } catch (erro) {
-      toaster.create(mensagensToastErro.excluirQuestao)
+      toaster.create(toasterDaApiOuPadrao(erro, mensagensToastErro.excluirQuestao))
       console.error(mensagensErroConsole.excluirQuestao, erro)
     }
   }

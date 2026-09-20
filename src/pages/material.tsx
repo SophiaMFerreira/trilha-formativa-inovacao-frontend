@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useGame } from "@/hooks/useGame";
 import { concluirMissao, ConcluirMissaoProps } from "@/utils/concluirMissao";
 import { toaster } from "@/components/commons/toaster";
-import { mensagensToastErro } from "@/config/mensagensToaster";
+import { mensagensToastErro, toasterDaApiOuPadrao } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
 
 export default function Material() {
@@ -62,7 +62,9 @@ export default function Material() {
 
             navigate(`/trilhaFormativaInovacao/${ParamTrilha}`);
         } catch (e) {
-            toaster.create(mensagensToastErro.falhaAoConsumirConteudo)
+            toaster.create(
+                toasterDaApiOuPadrao(e, mensagensToastErro.falhaAoConsumirConteudo)
+            )
             console.error(mensagensErroConsole.salvarConsumoConteudo, e);
         }
     }

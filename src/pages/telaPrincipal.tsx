@@ -16,6 +16,7 @@ import { mensagensToastErro } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
 import { urlDaFotoDePerfil } from "@/utils/fotoPerfil";
 import { mensagemDeErroDaApi } from "@/utils/erroApi";
+import { limitarPercentual } from "@/utils/pontuacao";
 import { carrosselIntroducao } from "@/config/carrosselIntro";
 
 import imagemMissoes from "@/assets/images/tutorial/ModalIntoducaoImagem1.png"
@@ -141,28 +142,49 @@ export default function TelaPrincipal() {
                                     )
                             ))}
                         </HStack>
-                        <CustomTooltip
-                            content={`Progresso total: ${Math.round(progressoTotal)}%`}
+                        {/*
+                          * A porcentagem sai do tooltip e passa a ficar
+                          * ao lado da barra, como já acontece na trilha
+                          * temática: o número só aparecia ao parar o
+                          * cursor sobre a barra, o que o deixava
+                          * invisível no toque e na leitura rápida.
+                          */}
+                        <HStack
+                            w="100%"
+                            ml="10"
+                            gap="3"
+                            align="center"
                         >
-                            <Progress.Root
-                                value={progressoTotal}
-                                min={0}
-                                max={100}
-                                rounded="full"
-                                w="100%"
-                                ml="10"
-                                size="lg"
+                            <CustomTooltip
+                                content={`Progresso total: ${Math.round(progressoTotal)}%`}
                             >
-                                <Progress.Track
-                                    bg="brand.primaryLight"
+                                <Progress.Root
+                                    value={limitarPercentual(progressoTotal)}
+                                    min={0}
+                                    max={100}
+                                    rounded="full"
+                                    w="100%"
+                                    size="lg"
                                 >
-                                    <Progress.Range
-                                        rounded="full"
-                                        bg="brand.primaryDark"
-                                    />
-                                </Progress.Track>
-                            </Progress.Root>
-                        </CustomTooltip>
+                                    <Progress.Track
+                                        bg="brand.primaryLight"
+                                    >
+                                        <Progress.Range
+                                            rounded="full"
+                                            bg="brand.primaryDark"
+                                        />
+                                    </Progress.Track>
+                                </Progress.Root>
+                            </CustomTooltip>
+                            <Heading
+                                textStyle="headingSM"
+                                color="brand.primaryDark"
+                                textAlign="right"
+                                whiteSpace="nowrap"
+                            >
+                                {limitarPercentual(progressoTotal).toFixed(2)}%
+                            </Heading>
+                        </HStack>
                     </HStack>
                     <   MapaPrincipal
                         navigate={navigate}

@@ -16,7 +16,8 @@ import { useGame } from "@/hooks/useGame";
 import { mensagensErroConsole } from "@/config/mensagensError";
 import { mensagemDeErroDaApi } from "@/utils/erroApi";
 import { toaster } from "../toaster";
-import { mensagensToastErro } from "@/config/mensagensToaster";
+import { mensagensToastErro, toasterDaApiOuPadrao } from "@/config/mensagensToaster";
+import { esgotouTentativas, formatarTentativas } from "@/utils/tentativas";
 
 type ConclusaoProps = {
     valorMissao: number
@@ -116,7 +117,9 @@ export default function ConclusaoMissao({
                     mensagensErroConsole.calcularRespostas,
                     mensagemDeErroDaApi(erro) ?? erro
                 );
-                toaster.create(mensagensToastErro.falhaAoEnviarRespostas);
+                toaster.create(
+                    toasterDaApiOuPadrao(erro, mensagensToastErro.falhaAoEnviarRespostas)
+                );
             }
         }
 
@@ -126,7 +129,7 @@ export default function ConclusaoMissao({
     function reiniciarMissao() {
         setQuestoes(shuffleArray(questoes));
         setRespostas(
-            Array.from({ length: 5 }, () => [
+            Array.from({ length: questoes.length }, () => [
                 {
                     idUsuario: user?.id ?? -1,
                     idAlternativa: -1,
@@ -174,7 +177,16 @@ export default function ConclusaoMissao({
                                 questao: respostaQuestao.questao,
                                 index: index,
                             });
-                            setOpen(tentativas === 3 || valorMissao === retornoConclusao.pontos);
+                            /*
+                             * A correção só é revelada quando não há
+                             * mais o que tentar: tentativas esgotadas
+                             * (limite que agora depende do tipo de
+                             * atividade) ou pontuação máxima atingida.
+                             */
+                            setOpen(
+                                esgotouTentativas(tentativas, tipoAtividade)
+                                || valorMissao === retornoConclusao.pontos
+                            );
                         }}
                     >
                         {status === "correta" && <FaCheck size={16} />}
@@ -267,7 +279,7 @@ export default function ConclusaoMissao({
                         w="100%"
                         variant="outline"
                         onClick={reiniciarMissao}
-                        disabled={tentativas >= 3}
+                        disabled={esgotouTentativas(tentativas, tipoAtividade)}
                     >
                         Refazer {tipoAtividade === "quiz" ? "quiz" : "tarefa"}
                     </Button>
@@ -291,7 +303,7 @@ export default function ConclusaoMissao({
                 textStyle="inputPlaceholder"
                 mt="-6"
             >
-                0{String(retornoConclusao.tentativas)}/{tipoAtividade !== TipoAtividade.TAREFA_FINAL ? "03" : "01"} tentativas restantes
+                {formatarTentativas(retornoConclusao.tentativas, tipoAtividade)} tentativas utilizadas
             </Text>
 
             <Dialog.Root

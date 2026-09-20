@@ -8,7 +8,7 @@ import { useState } from "react";
 import { AppInput } from "@/components/commons/AppInput";
 import { useAuth } from "@/hooks/useAuth";
 import { validarLogin } from "@/utils/validations/login";
-import { mensagensToastErro } from "@/config/mensagensToaster";
+import { mensagensToastErro, toasterDaApiOuPadrao } from "@/config/mensagensToaster";
 import { toaster } from "@/components/commons/toaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
@@ -46,7 +46,16 @@ export function Login() {
                 navigate("/trilhaFormativaInovacao");
             }
         } catch (e) {
-            toaster.create(mensagensToastErro.falhaAoFazerLogin)
+            /*
+             * "E-mail ou senha inválidos." vem da própria API
+             * (UsuarioService::login). Substituí-la por "não foi
+             * possível fazer login no momento" fazia o aventureiro
+             * achar que o sistema estava fora do ar quando só tinha
+             * errado a senha.
+             */
+            toaster.create(
+                toasterDaApiOuPadrao(e, mensagensToastErro.falhaAoFazerLogin)
+            )
             console.error(mensagensErroConsole.fazerLogin, e);
         }
     }

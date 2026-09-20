@@ -20,6 +20,7 @@ import { obterNomeTematica, Tematica } from "@/types_consts/tematica";
 import { toaster } from "@/components/commons/toaster";
 import { mensagensToastErro } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
+import { MINIMO_QUESTOES_POR_MISSAO } from "@/utils/limiteDeQuestoes";
 
 
 export default function TarefaFinal() {
@@ -33,7 +34,7 @@ export default function TarefaFinal() {
     const [titulo, setTitulo] = useState("");
     const [valorMissao, setValorMissao] = useState(0);
     const [questoes, setQuestoes] = useState<QuestaoProp[]>(
-        Array(5).fill({
+        Array(MINIMO_QUESTOES_POR_MISSAO).fill({
             id: -1,
             enunciado: "",
             mensagemCorrecao: "",
@@ -54,7 +55,7 @@ export default function TarefaFinal() {
     const [progressoTarefa, setProgressoTarefa] = useState<ProgressoMissaoAtividade>();
     const [distintivoTarefa, setDistintivoTarefa] = useState<DistintivoDTO>();
     const [respostas, setRespostas] = useState<AlternativaMarcadaDTO[][]>(
-        Array.from({ length: 5 }, () => [
+        Array.from({ length: MINIMO_QUESTOES_POR_MISSAO }, () => [
             {
                 idUsuario: user?.id ?? -1,
                 idAlternativa: -1,
@@ -66,7 +67,7 @@ export default function TarefaFinal() {
     const [tentativas, setTentativas] = useState(0);
 
     const [exibicaoQuestoes, setExibicaoQuestoes] = useState<("select" | "checkbox" | "radio")[]>(
-        Array(5).fill("radio")
+        Array(MINIMO_QUESTOES_POR_MISSAO).fill("radio")
     )
 
     const TEMPO_TAREFA = 30 * 60
@@ -98,7 +99,7 @@ export default function TarefaFinal() {
                 const tarefaFinal = missao as MissaoTarefa
 
                 if (!("questoes" in tarefaFinal) ||
-                    tarefaFinal.questoes.length < 5) {
+                    tarefaFinal.questoes.length < MINIMO_QUESTOES_POR_MISSAO) {
                     toaster.create(mensagensToastErro.nenhumaQuestao);
                     navigate(`/trilhaFormativaInovacao/`)
                     return
@@ -113,6 +114,20 @@ export default function TarefaFinal() {
                 const questoesEmbaralhadas = shuffleArray(tarefaFinal.questoes);
 
                 setQuestoes(questoesEmbaralhadas);
+
+                /*
+                 * Respostas dimensionadas pela missão, e não pelo
+                 * cinco fixo: uma tarefa final com mais questões lia
+                 * respostas[5] indefinido e derrubava a tela.
+                 */
+                setRespostas(
+                    Array.from({ length: questoesEmbaralhadas.length }, () => [
+                        {
+                            idUsuario: user?.id ?? -1,
+                            idAlternativa: -1,
+                        }
+                    ])
+                );
 
                 const formatos = questoesEmbaralhadas.map((q) => {
                     if (q.alternativas[0].tipoAlternativa === TipoAlternativa.MULTIPLA_ESCOLHA) {
@@ -211,6 +226,7 @@ export default function TarefaFinal() {
                     missao={TipoAtividade.TAREFA_FINAL}
                     titulo={titulo}
                     tentativas={tentativas}
+                    quantidadeQuestoes={questoes.length}
                     trilha={trilha}
                     parametroTrilha={""}
                     navigate={navigate}

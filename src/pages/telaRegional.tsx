@@ -1,6 +1,6 @@
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Box, Button, Dialog, Flex, Heading, HStack, Portal, Progress, SimpleGrid, Stack, Text, } from "@chakra-ui/react";
 
@@ -9,7 +9,7 @@ import { FaBook, FaGamepad, FaPencilAlt, FaPlayCircle, } from "react-icons/fa";
 
 import { MissaoAPI } from "../../api/missao";
 import { useGame } from "@/hooks/useGame";
-import { obterNomeTematicaBanco } from "@/types_consts/tematica";
+import { obterNomeTematicaBanco, obterNomeTematicaRota } from "@/types_consts/tematica";
 import { Distintivo } from "@/types_consts/distintivo";
 import MapaRegional from "@/components/commons/mapaRegional";
 import { mensagensErroConsole } from "@/config/mensagensError";
@@ -17,6 +17,11 @@ import { toaster } from "@/components/commons/toaster";
 import { mensagensToastErro } from "@/config/mensagensToaster";
 import { limitarPercentual } from "@/utils/pontuacao";
 import { mensagemDeErroDaApi } from "@/utils/erroApi";
+import {
+    avaliarLiberacaoDaTarefa,
+    descreverPendencias,
+} from "@/utils/bloqueioTarefa";
+import { FaLock, FaTrophy } from "react-icons/fa";
 
 import conectorSolucoes from "@/assets/images/distintivos/DistintivoConectorDeSolucoes.svg"
 import doutorLegal from "@/assets/images/distintivos/DistintivoDoutorLegal.svg"
@@ -50,6 +55,18 @@ export function TelaRegional() {
     const [missoesTrilha, setMissoesTrilha] = useState<Missao[] | null>(null)
     const [missaoEscolhida, setMissaoEscolhida] = useState<Missao | null>(null);
     const [open, setOpen] = useState(false);
+
+    /*
+     * Diálogo da última missão da trilha, em dois estados:
+     * "bloqueada" quando ainda faltam conteúdos ou quizzes, e
+     * "liberada" na chegada, para anunciar que aquela é a etapa final
+     * da temática.
+     */
+    const [dialogoTarefa, setDialogoTarefa] =
+        useState<"bloqueada" | "liberada" | null>(null)
+
+    /* A comemoração aparece uma vez por trilha, não a cada render. */
+    const trilhaComemorada = useRef<string | null>(null)
     const [loaded, setLoaded] = useState(false)
 
     const pontos = progressoPontosTematicas.get(trilha)?.pontuacao ?? 0
@@ -124,6 +141,18 @@ export function TelaRegional() {
             .filter((p): p is ProgressoMissao => p !== undefined);
     }, [missoesTrilha, progressoMissoes]);
 
+    /*
+     * Situação da tarefa da trilha: ela é a última missão da temática
+     * e só abre depois dos conteúdos e quizzes.
+     */
+    const situacaoTarefa = useMemo(
+        () => avaliarLiberacaoDaTarefa(missoesTrilha, progressoMissoes),
+        [missoesTrilha, progressoMissoes]
+    );
+
+    const tarefaBloqueada = situacaoTarefa.possuiTarefa
+        && !situacaoTarefa.liberada;
+
     /** Missões da trilha ainda não iniciadas. */
     const pendentes = useMemo<Missao[]>(() => {
         if (!missoesTrilha) return [];
@@ -135,13 +164,26 @@ export function TelaRegional() {
         );
 
         return missoesTrilha.filter(missao => {
+            /*
+             * A tarefa bloqueada sai de "Missões a fazer": listar uma
+             * missão que o aventureiro ainda não pode abrir só gera o
+             * clique que leva ao aviso de bloqueio.
+             */
+            if (
+                tarefaBloqueada
+                && "tipoAtividade" in missao
+                && missao.tipoAtividade === TipoAtividade.TAREFA
+            ) {
+                return false;
+            }
+
             const progressoMissao = progressoPorMissao.get(missao.id);
 
             if (!progressoMissao) return false;
 
             return Number(progressoMissao.progresso) === 0;
         });
-    }, [missoesTrilha, progressoMissoes]);
+    }, [missoesTrilha, progressoMissoes, tarefaBloqueada]);
 
     const missoesPendentes = useMemo(() => pendentes.slice(0, 3), [pendentes]);
 
@@ -159,6 +201,30 @@ export function TelaRegional() {
         () => descreverMissao(missaoSelecionada, ParamTrilha),
         [missaoSelecionada, ParamTrilha]
     );
+
+    /*
+     * Chegada à última missão: assim que os pré-requisitos caem, a
+     * trilha anuncia a etapa final uma única vez. A tarefa já
+     * finalizada não dispara nada — não há mais nada a anunciar.
+     */
+    useEffect(() => {
+        if (!situacaoTarefa.possuiTarefa) return;
+        if (!situacaoTarefa.liberada) return;
+        if (trilhaComemorada.current === trilha) return;
+
+        const progressoDaTarefa = progressoMissoes.find(
+            p => p.missao?.id === situacaoTarefa.idTarefa
+        );
+
+        if (progressoDaTarefa
+            && Number(progressoDaTarefa.progresso) >= 100) {
+            trilhaComemorada.current = trilha;
+            return;
+        }
+
+        trilhaComemorada.current = trilha;
+        setDialogoTarefa("liberada");
+    }, [trilha, situacaoTarefa, progressoMissoes]);
 
     const distintivosTrilha = useMemo<Distintivo[]>(() => {
         if (!missoesTrilha) return [];
@@ -200,6 +266,8 @@ export function TelaRegional() {
                 tematica={ParamTrilha}
                 navigate={navigate}
                 missoes={missoesTematica}
+                tarefaBloqueada={tarefaBloqueada}
+                onTarefaBloqueada={() => setDialogoTarefa("bloqueada")}
             />
             <Stack
                 gridColumn={{ lg: "span 3" }}
@@ -410,13 +478,30 @@ export function TelaRegional() {
                                     >
                                         Voltar
                                     </Button>
+                                    {/*
+                                      * Mesma trava do mapa: se a missão
+                                      * em foco for a tarefa ainda
+                                      * bloqueada, o botão explica em vez
+                                      * de navegar.
+                                      */}
                                     <Button
                                         flex={1}
                                         w="100%"
                                         variant="solid"
                                         onClick={() => {
                                             setOpen(false);
+
+                                            const ehTarefaBloqueada =
+                                                tarefaBloqueada
+                                                && "tipoAtividade" in missaoSelecionada
+                                                && missaoSelecionada.tipoAtividade === TipoAtividade.TAREFA;
+
                                             requestAnimationFrame(() => {
+                                                if (ehTarefaBloqueada) {
+                                                    setDialogoTarefa("bloqueada");
+                                                    return;
+                                                }
+
                                                 navigate(rota);
                                             });
                                         }}
@@ -427,6 +512,120 @@ export function TelaRegional() {
                             </Dialog.Footer>
                             <Dialog.CloseTrigger asChild>
                             </Dialog.CloseTrigger>
+                        </Dialog.Content>
+                    </Dialog.Positioner>
+                </Portal>
+            </Dialog.Root>
+
+            {/*
+              * Diálogo da última missão da trilha. Fechado, quando
+              * dialogoTarefa é null; "liberada" comemora a chegada e
+              * "bloqueada" explica o que ainda falta.
+              */}
+            <Dialog.Root
+                lazyMount
+                open={dialogoTarefa !== null}
+                onOpenChange={(e) => {
+                    if (!e.open) setDialogoTarefa(null);
+                }}
+                placement="center"
+                size="lg"
+            >
+                <Portal>
+                    <Dialog.Backdrop />
+                    <Dialog.Positioner>
+                        <Dialog.Content p="4">
+                            <Dialog.Body justifyContent="center">
+                                <Stack
+                                    gap="5"
+                                    align="center"
+                                    mt="4"
+                                    w="100%"
+                                >
+                                    <Box
+                                        w="100px"
+                                        h="100px"
+                                        borderRadius="full"
+                                        bg={
+                                            dialogoTarefa === "liberada"
+                                                ? "brand.primaryDark"
+                                                : "gray.400"
+                                        }
+                                        color="white"
+                                        display="flex"
+                                        alignItems="center"
+                                        justifyContent="center"
+                                    >
+                                        {dialogoTarefa === "liberada"
+                                            ? <FaTrophy size={40} />
+                                            : <FaLock size={36} />}
+                                    </Box>
+                                    <Heading
+                                        textStyle="headingMD"
+                                        color="brand.primaryDark"
+                                        textAlign="center"
+                                    >
+                                        {dialogoTarefa === "liberada"
+                                            ? "Você chegou à última missão da trilha!"
+                                            : "A última missão ainda está bloqueada"}
+                                    </Heading>
+                                    <Text
+                                        textStyle="bodyTextLong"
+                                        color="brand.neutral"
+                                        textAlign="center"
+                                    >
+                                        {dialogoTarefa === "liberada"
+                                            ? `Todos os conteúdos e quizzes de ${obterNomeTematicaRota(ParamTrilha)} foram concluídos. A tarefa é a etapa final desta trilha: mostre tudo o que você aprendeu e conquiste o distintivo.`
+                                            : `A tarefa é a última missão de ${obterNomeTematicaRota(ParamTrilha)} e abre depois que você percorre o restante da trilha.`}
+                                    </Text>
+                                    {dialogoTarefa === "bloqueada"
+                                        && descreverPendencias(situacaoTarefa) !== "" && (
+                                            <Text
+                                                textStyle="bodyTextBold"
+                                                color="brand.primaryDark"
+                                                textAlign="center"
+                                            >
+                                                Ainda faltam {descreverPendencias(situacaoTarefa)}.
+                                            </Text>
+                                        )}
+                                </Stack>
+                            </Dialog.Body>
+                            <Dialog.Footer justifyContent="center">
+                                <Stack
+                                    direction={{ base: "column", md: "row" }}
+                                    w="100%"
+                                    gap="2"
+                                >
+                                    <Button
+                                        flex={1}
+                                        w="100%"
+                                        variant="outline"
+                                        onClick={() => setDialogoTarefa(null)}
+                                    >
+                                        {dialogoTarefa === "liberada"
+                                            ? "Agora não"
+                                            : "Voltar para a trilha"}
+                                    </Button>
+                                    {dialogoTarefa === "liberada"
+                                        && situacaoTarefa.idTarefa !== undefined && (
+                                            <Button
+                                                flex={1}
+                                                w="100%"
+                                                variant="solid"
+                                                onClick={() => {
+                                                    setDialogoTarefa(null);
+                                                    requestAnimationFrame(() => {
+                                                        navigate(
+                                                            `/trilhaFormativaInovacao/${ParamTrilha}/tarefa/${situacaoTarefa.idTarefa}`
+                                                        );
+                                                    });
+                                                }}
+                                            >
+                                                Encarar a tarefa
+                                            </Button>
+                                        )}
+                                </Stack>
+                            </Dialog.Footer>
                         </Dialog.Content>
                     </Dialog.Positioner>
                 </Portal>

@@ -132,10 +132,11 @@ export function getMenuItens(user: User | null): ItemMenu[] {
     },*/ {
         id: 11,
         posicao: "esquerda",
-        titulo: user?.nomeAventureiro ?? "Nome Aventureiro",
+        titulo: user?.nomeAventureiro ?? "Minha conta",
         rota: "/dadosAventureiro",
         icone: <FaUserAlt size={20} color="brand.primaryDark" />,
-        roles: ["usuario"],
+        /* Também no menu administrativo: ver e editar os próprios dados. */
+        roles: ["usuario", "admin"],
     }, {
         id: 12,
         posicao: "esquerda",

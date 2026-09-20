@@ -164,7 +164,7 @@ export default function BancoQuestoes() {
                         Adicionar questão
                     </Button>
                 </HStack>
-                <Stack spacing={4}>
+                <Stack gap={4}>
                     {questoesFiltradas.map(grupoTematica => (
                         <Box
                             my={3}

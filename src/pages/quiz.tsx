@@ -1,5 +1,5 @@
 import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Box, Button, Stack, Text } from "@chakra-ui/react";
 import ConclusaoMissao from "@/components/commons/TarefaQuestao/cardConclusao";
@@ -23,6 +23,13 @@ import { User } from "@/contexts/AuthContext";
 import { toaster } from "@/components/commons/toaster";
 import { mensagensToastErro } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
+import { MINIMO_QUESTOES_POR_MISSAO } from "@/utils/limiteDeQuestoes";
+import {
+    chaveTempoQuiz,
+    gravarTempoQuiz,
+    lerTempoQuiz,
+    limparTempoQuiz,
+} from "@/utils/tempoQuiz";
 
 export default function Quiz() {
     const navigate = useNavigate()
@@ -36,7 +43,7 @@ export default function Quiz() {
     const [titulo, setTitulo] = useState("")
     const [valorMissao, setValorMissao] = useState(0)
     const [questoes, setQuestoes] = useState<QuestaoProp[]>(
-        Array(5).fill({
+        Array(MINIMO_QUESTOES_POR_MISSAO).fill({
             id: -1,
             enunciado: "",
             mensagemCorrecao: "",
@@ -59,7 +66,7 @@ export default function Quiz() {
     const [progressoQuiz, setProgressoQuiz] = useState<ProgressoMissaoAtividade>()
 
     const [respostas, setRespostas] = useState<AlternativaMarcadaDTO[][]>(
-        Array.from({ length: 5 }, () => [
+        Array.from({ length: MINIMO_QUESTOES_POR_MISSAO }, () => [
             {
                 idUsuario: user?.id ?? -1,
                 idAlternativa: -1,
@@ -71,11 +78,31 @@ export default function Quiz() {
     const [tentativas, setTentativas] = useState(0)
 
     const TEMPO_POR_QUESTAO = 5 * 60
-    const [tempo, setTempo] = useState(
-        Array(5).fill(TEMPO_POR_QUESTAO)
+
+    /*
+     * A chave do cronômetro é por aventureiro e por missão: dois
+     * quizzes abertos na mesma sessão não disputam o mesmo registro.
+     */
+    const chaveTempo = useMemo(
+        () => chaveTempoQuiz(user?.id, idMissao),
+        [user?.id, idMissao]
     );
-    const minutos = Math.floor(tempo[idQuestao] / 60)
-    const segundos = tempo[idQuestao] % 60
+
+    const [tempo, setTempo] = useState<number[]>(
+        Array(MINIMO_QUESTOES_POR_MISSAO).fill(TEMPO_POR_QUESTAO)
+    );
+
+    /*
+     * O relógio só passa a contar depois que a missão carregou e o
+     * tempo salvo foi restaurado. Sem essa trava o intervalo
+     * descontava segundos do array provisório e a restauração
+     * sobrescrevia a contagem logo em seguida.
+     */
+    const [tempoRestaurado, setTempoRestaurado] = useState(false)
+
+    const restanteDaQuestao = tempo[idQuestao] ?? TEMPO_POR_QUESTAO
+    const minutos = Math.floor(restanteDaQuestao / 60)
+    const segundos = restanteDaQuestao % 60
 
     useEffect(() => {
         async function carregarDados() {
@@ -101,7 +128,7 @@ export default function Quiz() {
                 const quiz = missao as MissaoQuiz
 
                 if (!("questoes" in quiz) ||
-                    quiz.questoes.length < 5) {
+                    quiz.questoes.length < MINIMO_QUESTOES_POR_MISSAO) {
                     toaster.create(mensagensToastErro.nenhumaQuestao);
                     navigate(`/trilhaFormativaInovacao/${ParamTrilha}`)
                     return
@@ -112,7 +139,35 @@ export default function Quiz() {
                 setValorMissao(quiz.pontuacao)
                 setTrilha(obterNomeTematica(quiz.tematica.titulo))
 
-                setQuestoes(shuffleArray(quiz.questoes) as QuestaoProp[])
+                const questoesDoQuiz = shuffleArray(quiz.questoes) as QuestaoProp[]
+
+                setQuestoes(questoesDoQuiz)
+
+                /*
+                 * As três estruturas paralelas (questões, respostas e
+                 * cronômetro) passam a ter o tamanho real da missão.
+                 * Estavam fixas em cinco: uma missão com seis questões
+                 * lia respostas[5] indefinido e derrubava a tela.
+                 */
+                setRespostas(
+                    Array.from({ length: questoesDoQuiz.length }, () => [
+                        {
+                            idUsuario: user?.id ?? -1,
+                            idAlternativa: -1,
+                        }
+                    ])
+                )
+
+                const tempoSalvo = lerTempoQuiz(
+                    chaveTempo,
+                    questoesDoQuiz.length,
+                    TEMPO_POR_QUESTAO
+                )
+
+                setTempo(tempoSalvo.restante)
+                setIdQuestao(tempoSalvo.idQuestao)
+                setTempoRestaurado(true)
+
                 setCarregando(false);
 
                 const progresso = progressoMissoes.find(p => p.missao.id === quiz.id)
@@ -133,6 +188,8 @@ export default function Quiz() {
     }, [ParamTrilha, idMissao]);
 
     useEffect(() => {
+        if (!tempoRestaurado) return;
+
         const intervalo = setInterval(() => {
             setTempo((anterior) => {
                 const copia = [...anterior];
@@ -146,13 +203,37 @@ export default function Quiz() {
         }, 1000);
 
         return () => clearInterval(intervalo);
-    }, [idQuestao]);
+    }, [idQuestao, tempoRestaurado]);
+
+    /*
+     * Cada segundo descontado é gravado junto com a questão atual.
+     * É o que faz o cronômetro sobreviver à troca de página: ao
+     * voltar, a tela retoma exatamente de onde parou.
+     */
+    useEffect(() => {
+        if (!tempoRestaurado) return;
+
+        gravarTempoQuiz(chaveTempo, { restante: tempo, idQuestao });
+    }, [chaveTempo, tempo, idQuestao, tempoRestaurado]);
 
     useEffect(() => {
+        if (!tempoRestaurado) return;
+
         if (tempo[idQuestao] === 0) {
             proximaQuestao();
         }
-    }, [tempo, idQuestao]);
+    }, [tempo, idQuestao, tempoRestaurado]);
+
+    /*
+     * Nova tentativa começa com o cronômetro cheio. A conclusão já
+     * apaga o registro salvo; aqui o estado em memória também volta ao
+     * início, senão o quiz reabriria com o tempo zerado da tentativa
+     * anterior.
+     */
+    function reiniciarCronometro() {
+        limparTempoQuiz(chaveTempo)
+        setTempo(Array(questoes.length).fill(TEMPO_POR_QUESTAO))
+    }
 
     function voltarQuestao() {
         if (idQuestao === 0) {
@@ -162,7 +243,13 @@ export default function Quiz() {
         }
     }
     function proximaQuestao() {
-        if (idQuestao === 4) {
+        if (idQuestao >= questoes.length - 1) {
+            /*
+             * Tentativa encerrada: o cronômetro salvo não vale mais.
+             * Mantê-lo faria a próxima tentativa começar com o tempo
+             * zerado da anterior.
+             */
+            limparTempoQuiz(chaveTempo)
             setEtapa("resultado")
         } else {
             setIdQuestao(idQuestao + 1)
@@ -223,6 +310,7 @@ export default function Quiz() {
                     missao={TipoAtividade.QUIZ}
                     titulo={titulo}
                     tentativas={tentativas}
+                    quantidadeQuestoes={questoes.length}
                     trilha={trilha}
                     parametroTrilha={ParamTrilha!}
                     navigate={navigate}
@@ -272,7 +360,9 @@ export default function Quiz() {
                             variant="solid"
                             onClick={() => proximaQuestao()}
                         >
-                            {idQuestao === 4 ? "Concluir quiz" : "Próxima pergunta"}
+                            {idQuestao >= questoes.length - 1
+                                ? "Concluir quiz"
+                                : "Próxima pergunta"}
                         </Button>
                     </Stack>
 
@@ -291,7 +381,10 @@ export default function Quiz() {
 
                     trilha={trilha}
                     parametroTrilha={ParamTrilha!}
-                    setEtapa={setEtapa}
+                    setEtapa={(proxima: "home" | "quiz" | "resultado") => {
+                        if (proxima === "home") reiniciarCronometro()
+                        setEtapa(proxima)
+                    }}
                     setQuestoes={setQuestoes}
                     setRespostas={setRespostas}
                     setPontuacao={setPontuacao}
@@ -358,12 +451,23 @@ function ExibirQuestao({
         const novasRespostas = [...respostas];
         const idUsuario = respostas[idQuestao]?.[0]?.idUsuario ?? user!.id;
 
+        /*
+         * O par é posicional: a linha i da coluna A responde a linha i
+         * da coluna B. Linhas sem par são descartadas em vez de
+         * derrubarem a tela ao ler `.id` de um índice inexistente.
+         */
         novasRespostas[idQuestao] = alternativasAssociadasresposta.colunaA
-            .map((alternativaA, i) => ({
-                idUsuario,
-                idAlternativa: alternativaA.id,
-                idAlternativaAssociadaRespondida: alternativasAssociadasresposta.colunaB[i].id
-            }))
+            .flatMap((alternativaA, i) => {
+                const associada = alternativasAssociadasresposta.colunaB[i];
+
+                if (!associada) return [];
+
+                return [{
+                    idUsuario,
+                    idAlternativa: alternativaA.id,
+                    idAlternativaAssociadaRespondida: associada.id
+                }];
+            })
 
         setRespostas(novasRespostas);
     }

@@ -1,7 +1,7 @@
 import { Box, Heading, HStack, IconButton, Image, Skeleton, } from "@chakra-ui/react";
 import { useState } from "react";
 import CustomTooltip from "./customTooltip";
-import { FaArrowLeft, FaBook, FaGamepad, FaPencilAlt, FaPlayCircle, } from "react-icons/fa";
+import { FaArrowLeft, FaBook, FaGamepad, FaLock, FaPencilAlt, FaPlayCircle, } from "react-icons/fa";
 import { obterNomeTematicaRota } from "@/types_consts/tematica";
 
 import mapaLegislacao from "@/assets/images/Mapas/legislacao.png";
@@ -16,9 +16,19 @@ type mapaRegionalProps = {
     tematica: string
     navigate: Function
     missoes: ProgressoMissao[]
+    /** A tarefa da trilha ainda depende de conteúdos ou quizzes. */
+    tarefaBloqueada: boolean
+    /** Chamado quando o aventureiro clica na tarefa bloqueada. */
+    onTarefaBloqueada: () => void
 }
 
-export default function MapaRegional({ tematica, navigate, missoes }: mapaRegionalProps) {
+export default function MapaRegional({
+    tematica,
+    navigate,
+    missoes,
+    tarefaBloqueada,
+    onTarefaBloqueada,
+}: mapaRegionalProps) {
 
     const [loadedMapa, setLoadedMapa] = useState(false)
     const tematicaLabel = obterNomeTematicaRota(tematica)
@@ -106,6 +116,12 @@ export default function MapaRegional({ tematica, navigate, missoes }: mapaRegion
                         missao={missao}
                         paramTrilha={tematica}
                         navigate={navigate}
+                        bloqueada={
+                            tarefaBloqueada
+                            && "tipoAtividade" in missao.missao
+                            && missao.missao.tipoAtividade === TipoAtividade.TAREFA
+                        }
+                        onBloqueada={onTarefaBloqueada}
                     />
                 ))}
             </Skeleton>
@@ -117,21 +133,27 @@ type IconeMissaoProps = {
     navigate: Function
     index: number
     paramTrilha: string
+    bloqueada: boolean
+    onBloqueada: () => void
 }
 
 function IconeMissao({
     missao,
     navigate,
     index,
-    paramTrilha
+    paramTrilha,
+    bloqueada,
+    onBloqueada,
 }: IconeMissaoProps) {
     const concluido = missao.progresso === 100
 
-    let tentativas = true
-    if ("tentativasRealizadas" in missao) {
-        tentativas = missao.tentativasRealizadas < 3
-        tentativas = false
-    }
+    /*
+     * O bloco que existia aqui calculava "tentativas" a partir de
+     * tentativasRealizadas < 3 e, na linha seguinte, sobrescrevia o
+     * resultado com false — a variável nunca chegava a ser lida. O
+     * bloqueio que faltava não era por tentativa e sim por
+     * pré-requisito, e agora chega pronto por props.
+     */
 
     /*
      * A associação trilha -> posições virou uma única fonte em
@@ -175,18 +197,31 @@ function IconeMissao({
         }
     }
 
+    /*
+     * A missão bloqueada continua visível e clicável: clicar abre a
+     * explicação em vez de navegar. Esconder o ícone tiraria do mapa
+     * a noção de que ainda há uma etapa pela frente.
+     */
     return (
         <CustomTooltip
-            content={missao.missao.titulo}
+            content={
+                bloqueada
+                    ? `${missao.missao.titulo} — conclua os conteúdos e quizzes da trilha para liberar`
+                    : missao.missao.titulo
+            }
         >
             <IconButton
                 position="absolute"
                 top={posicao.top}
                 left={posicao.left}
                 transform="translate(-50%, -50%)"
-                onClick={() => navigate(rota)}
+                onClick={() => bloqueada ? onBloqueada() : navigate(rota)}
 
-                aria-label={missao.missao.titulo}
+                aria-label={
+                    bloqueada
+                        ? `${missao.missao.titulo} (bloqueada)`
+                        : missao.missao.titulo
+                }
                 variant="solid"
                 size="lg"
                 color="brand.primaryLight"
@@ -197,11 +232,19 @@ function IconeMissao({
                 p="0"
                 borderRadius="full"
 
-                bg={concluido ? "brand.secondary" : "brand.primaryDark"}
-                borderColor={concluido ? "brand.secondary" : "brand.primaryDark"}
+                bg={
+                    bloqueada
+                        ? "gray.400"
+                        : concluido ? "brand.secondary" : "brand.primaryDark"
+                }
+                borderColor={
+                    bloqueada
+                        ? "gray.400"
+                        : concluido ? "brand.secondary" : "brand.primaryDark"
+                }
                 opacity="100%"
             >
-                {distintivo}
+                {bloqueada ? <FaLock size={20} /> : distintivo}
             </IconButton>
         </CustomTooltip >
     )

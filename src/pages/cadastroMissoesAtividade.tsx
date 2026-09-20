@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { obterNomeTematica, Tematica, TematicaDTO } from "@/types_consts/tematica";
 import { avaliarCapacidadeDaTrilha } from "@/utils/limiteDeMissoes";
+import { avaliarQuestoesDaMissao } from "@/utils/limiteDeQuestoes";
 import { Missao, MissaoAtividade, MissaoDTO, MissaoTarefa, TipoAtividade, TipoAtividadeLabel } from "@/types_consts/missao";
 import { TematicaAPI } from "../../api/tematica";
 import { QuestaoProp } from "@/types_consts/questao";
@@ -15,7 +16,7 @@ import { DistintivoAPI } from "../../api/distintivos";
 import ListagemQuestao from "@/components/listagemQuestao";
 import { DadosAtuaisProps, validarAtividade } from "@/utils/validations/missaoAtividade";
 import { toaster } from "@/components/commons/toaster";
-import { mensagemParaToaster, mensagensToastErro, mensagensToastSucesso } from "@/config/mensagensToaster";
+import { mensagemParaToaster, mensagensToastErro, mensagensToastSucesso, toasterDaApiOuPadrao } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
 
 export default function CadastroMissoesAtividade() {
@@ -210,6 +211,13 @@ export default function CadastroMissoesAtividade() {
         idMissao ? idMissaoAtividade : undefined
     )
 
+    /*
+     * Contagem de questões da missão. Diferente do limite de posições
+     * do mapa, aqui o que existe é um piso (cinco) e nenhum teto: a
+     * missão pode receber quantas questões o administrador quiser.
+     */
+    const situacaoQuestoes = avaliarQuestoesDaMissao(questoes)
+
     const onSubmit = async () => {
         const resultado = validarAtividade({
             titulo,
@@ -302,7 +310,7 @@ const onExclude = () => {
 
     } catch (erro) {
         console.error(mensagensErroConsole.excluirMissaoAtividade, erro)
-        toaster.create(mensagensToastErro.excluirMissao)
+        toaster.create(toasterDaApiOuPadrao(erro, mensagensToastErro.excluirMissao))
     }
 }
 return (
@@ -726,7 +734,14 @@ return (
                         </Field.ErrorText>
                     )}
                 </Field.Root>
-                {questoes.length !== 0 &&
+                {/*
+                  * A contagem aparece também com zero questões, que é
+                  * justamente quando o administrador precisa vê-la: o
+                  * bloco inteiro ficava escondido nesse caso e a
+                  * missão era publicada sem questão nenhuma, para
+                  * quebrar depois, no jogo.
+                  */}
+                {idMissao &&
                     <>
                         <Text
                             textStyle="emphasis"
@@ -734,17 +749,32 @@ return (
                         >
                             Questões
                         </Text>
-                        <Stack
-                            gap="3"
+                        <Text
+                            textStyle="inputPlaceholder"
+                            color={
+                                situacaoQuestoes.atingiuMinimo
+                                    ? "brand.neutral"
+                                    : "brand.secondaryRed"
+                            }
+                            mt="-2"
                         >
-                            {questoes.map(questao => (
-                                <ListagemQuestao
-                                    key={questao.id}
-                                    {...questao}
-                                    onExcluir={carregarDadosMissao}
-                                />
-                            ))}
-                        </Stack>
+                            {situacaoQuestoes.atingiuMinimo
+                                ? `${situacaoQuestoes.quantidade} ${situacaoQuestoes.quantidade === 1 ? "questão cadastrada" : "questões cadastradas"} nesta missão (mínimo de ${situacaoQuestoes.minimo}, sem limite máximo).`
+                                : `${situacaoQuestoes.quantidade} de ${situacaoQuestoes.minimo} questões mínimas nesta missão. ${situacaoQuestoes.faltam === 1 ? "Falta 1 questão" : `Faltam ${situacaoQuestoes.faltam} questões`} para a missão ficar disponível ao aventureiro.`}
+                        </Text>
+                        {questoes.length !== 0 &&
+                            <Stack
+                                gap="3"
+                            >
+                                {questoes.map(questao => (
+                                    <ListagemQuestao
+                                        key={questao.id}
+                                        {...questao}
+                                        onExcluir={carregarDadosMissao}
+                                    />
+                                ))}
+                            </Stack>
+                        }
                     </>
                 }
                 <Stack

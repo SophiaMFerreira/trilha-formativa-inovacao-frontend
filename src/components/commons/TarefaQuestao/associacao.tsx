@@ -3,7 +3,7 @@ import CaixaAlternativa from "./caixaAlternativa"
 import { estilosAlternativa } from "@/config/alternativasEstiloConfig"
 
 import { shuffleArray } from "@/utils/shuffle"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import { DragDropProvider } from '@dnd-kit/react';
 import { useSortable } from '@dnd-kit/react/sortable';
@@ -19,25 +19,70 @@ type AssociacaoProps = {
     questao: QuestaoProp;
     onChange: (alternativasAssociadasresposta: colunasAssociadas) => void;
 };
+/**
+ * Emparelha as duas colunas pela posição, que é como o usuário lê a
+ * tela: a linha 1 da coluna A responde a linha 1 da coluna B.
+ *
+ * As listas são truncadas ao menor comprimento. Uma questão de
+ * associação gravada pela metade (alternativa sem par) deixava
+ * `colunaB[i]` indefinido e o consumidor estourava ao ler `.id`.
+ */
+function emparelhar(
+    colunaA: Alternativa[],
+    colunaB: AlternativaAssocida[]
+): colunasAssociadas {
+    const tamanho = Math.min(colunaA.length, colunaB.length);
+
+    return {
+        colunaA: colunaA.slice(0, tamanho),
+        colunaB: colunaB.slice(0, tamanho),
+    };
+}
+
 export default function Associacao({ questao, onChange }: AssociacaoProps) {
     const { colunaA, colunaB } = useMemo(() => {
         const alternativas = questao.alternativas as AlternativaAssociacao[]
-        const colunaA = [];
-        const colunaB = [];
-        
+        const colunaA: AlternativaAssociacao[] = [];
+        const colunaB: AlternativaAssocida[] = [];
+
         for (const alternativa of alternativas) {
+            if (!alternativa?.alternativaAssociada) continue;
+
             colunaA.push(alternativa);
             colunaB.push(alternativa.alternativaAssociada);
         }
 
         return {
-            colunaA: shuffleArray(colunaA),
-            colunaB: shuffleArray(colunaB),
+            colunaA: shuffleArray(colunaA) as Alternativa[],
+            colunaB: shuffleArray(colunaB) as AlternativaAssocida[],
         };
     }, [questao.id]);
 
     const [colA, setColA] = useState<Alternativa[]>(colunaA);
-    const [colB, setColB] = useState<Alternativa[]>(colunaB);
+    const [colB, setColB] = useState<AlternativaAssocida[]>(colunaB);
+
+    /*
+     * O onChange chega como arrow nova a cada renderização do pai;
+     * guardá-lo em ref é o que permite reagir só à mudança das
+     * colunas, sem reemitir a cada render.
+     */
+    const onChangeRef = useRef(onChange);
+    onChangeRef.current = onChange;
+
+    /*
+     * A resposta sobe daqui, e não de um onChange no <Stack>.
+     *
+     * O <Stack> vira uma <div> e os itens arrastáveis não têm
+     * controle de formulário algum: o evento DOM "change" nunca
+     * borbulhava até ele, então a associação NUNCA era reportada ao
+     * quiz e o payload ia para a API com idAlternativa -1. Reagir à
+     * mudança das colunas cobre os dois caminhos — o arraste e o
+     * emparelhamento inicial, que é uma resposta válida por si só,
+     * já que as colunas chegam embaralhadas.
+     */
+    useEffect(() => {
+        onChangeRef.current(emparelhar(colA, colB));
+    }, [colA, colB]);
 
     const estiloClaro = estilosAlternativa.find(
         (estilo) => estilo.className === "itemPLight"
@@ -67,13 +112,7 @@ export default function Associacao({ questao, onChange }: AssociacaoProps) {
                     });
                 }}
             >
-                <Stack gap="5"
-                    onChange={() => onChange({
-                        colunaA: colA,
-                        colunaB: colB,
-                    } as colunasAssociadas
-                    )}
-                >
+                <Stack gap="5">
                     {colA.map((alternativa, index) => (
                         <Sortable
                             key={alternativa.id}
@@ -100,13 +139,7 @@ export default function Associacao({ questao, onChange }: AssociacaoProps) {
                     });
                 }}
             >
-                <Stack gap="5"
-                    onChange={() => onChange({
-                        colunaA: colA,
-                        colunaB: colB
-                    } as colunasAssociadas
-                    )}
-                >
+                <Stack gap="5">
                     {colB.map((alternativa, index) => (
                         <Sortable
                             key={alternativa.id}

@@ -1,5 +1,5 @@
 import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Box, Button, HStack, Stack, Text, } from "@chakra-ui/react";
 import CardCustomizado from "@/components/commons/cardCustomizado";
@@ -20,13 +20,15 @@ import { obterNomeTematica } from "@/types_consts/tematica";
 import { toaster } from "@/components/commons/toaster";
 import { mensagensToastErro } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
+import { MINIMO_QUESTOES_POR_MISSAO } from "@/utils/limiteDeQuestoes";
+import { avaliarLiberacaoDaTarefa } from "@/utils/bloqueioTarefa";
 
 
 export default function Tarefa() {
     const navigate = useNavigate()
     const { ParamTrilha, idMissao } = useParams()
     const { user } = useAuth()
-    const { progressoMissoes } = useGame()
+    const { progressoMissoes, carregando: carregandoJogo } = useGame()
 
     const [etapa, setEtapa] = useState<"home" | "tarefa" | "resultado">("home");
 
@@ -34,7 +36,7 @@ export default function Tarefa() {
     const [titulo, setTitulo] = useState("");
     const [valorMissao, setValorMissao] = useState(0);
     const [questoes, setQuestoes] = useState<QuestaoProp[]>(
-        Array(5).fill({
+        Array(MINIMO_QUESTOES_POR_MISSAO).fill({
             id: -1,
             enunciado: "",
             mensagemCorrecao: "",
@@ -59,8 +61,9 @@ export default function Tarefa() {
      * tinha como saber qual distintivo conceder.
      */
     const [distintivoTarefa, setDistintivoTarefa] = useState<DistintivoDTO>();
+    const [tituloTematica, setTituloTematica] = useState("")
     const [respostas, setRespostas] = useState<AlternativaMarcadaDTO[][]>(
-        Array.from({ length: 5 }, () => [
+        Array.from({ length: MINIMO_QUESTOES_POR_MISSAO }, () => [
             {
                 idUsuario: user?.id ?? -1,
                 idAlternativa: -1,
@@ -72,7 +75,19 @@ export default function Tarefa() {
     const [tentativas, setTentativas] = useState(0);
 
     const [exibicaoQuestoes, setExibicaoQuestoes] = useState<("select" | "checkbox" | "radio")[]>(
-        Array(5).fill("radio")
+        Array(MINIMO_QUESTOES_POR_MISSAO).fill("radio")
+    )
+
+    /*
+     * Missões da mesma temática, derivadas do progresso que o
+     * GameProvider já carregou: evita um segundo GET da lista inteira
+     * de missões só para conferir o bloqueio.
+     */
+    const missoesDaTematica = useMemo(
+        () => progressoMissoes
+            .filter(p => p?.missao?.tematica?.titulo === tituloTematica)
+            .map(p => p.missao),
+        [progressoMissoes, tituloTematica]
     )
 
     const TEMPO_TAREFA = 30 * 60
@@ -105,7 +120,7 @@ export default function Tarefa() {
                 const tarefa = missao as MissaoTarefa
 
                 if (!("questoes" in tarefa) ||
-                    tarefa.questoes.length < 5) {
+                    tarefa.questoes.length < MINIMO_QUESTOES_POR_MISSAO) {
                     toaster.create(mensagensToastErro.nenhumaQuestao);
                     navigate(`/trilhaFormativaInovacao/${ParamTrilha}`)
                     return
@@ -115,11 +130,25 @@ export default function Tarefa() {
                 setTitulo(tarefa.titulo)
                 setValorMissao(tarefa.pontuacao)
                 setTrilha(obterNomeTematica(tarefa.tematica.titulo))
+                setTituloTematica(tarefa.tematica.titulo)
                 setDistintivoTarefa(tarefa.distintivo)
 
                 const questoesEmbaralhadas = shuffleArray(tarefa.questoes);
 
                 setQuestoes(questoesEmbaralhadas);
+
+                /*
+                 * As três estruturas paralelas acompanham o número
+                 * real de questões da missão, em vez do cinco fixo.
+                 */
+                setRespostas(
+                    Array.from({ length: questoesEmbaralhadas.length }, () => [
+                        {
+                            idUsuario: user?.id ?? -1,
+                            idAlternativa: -1,
+                        }
+                    ])
+                );
 
                 const formatos = questoesEmbaralhadas.map((q) => {
                     if (q.alternativas[0].tipoAlternativa === TipoAlternativa.MULTIPLA_ESCOLHA) {
@@ -153,6 +182,38 @@ export default function Tarefa() {
 
         carregarDados();
     }, [ParamTrilha, idMissao]);
+
+    /*
+     * Trava de rota: a tarefa é a última missão da temática e só abre
+     * depois dos conteúdos e quizzes. O bloqueio principal está no
+     * mapa da trilha; esta guarda cobre quem chega pela URL.
+     *
+     * Só roda depois de o GameProvider terminar de carregar: com a
+     * lista de progressos ainda vazia, qualquer tarefa pareceria
+     * bloqueada.
+     */
+    useEffect(() => {
+        if (carregandoJogo) return;
+        if (!tituloTematica) return;
+        if (missoesDaTematica.length === 0) return;
+
+        const situacao = avaliarLiberacaoDaTarefa(
+            missoesDaTematica,
+            progressoMissoes
+        );
+
+        if (situacao.liberada) return;
+
+        toaster.create(mensagensToastErro.tarefaBloqueada);
+        navigate(`/trilhaFormativaInovacao/${ParamTrilha}`);
+    }, [
+        carregandoJogo,
+        tituloTematica,
+        missoesDaTematica,
+        progressoMissoes,
+        ParamTrilha,
+        navigate,
+    ]);
 
     useEffect(() => {
         const intervalo = setInterval(() => {
@@ -220,6 +281,7 @@ export default function Tarefa() {
                     missao={TipoAtividade.TAREFA}
                     titulo={titulo}
                     tentativas={tentativas}
+                    quantidadeQuestoes={questoes.length}
                     trilha={trilha}
                     parametroTrilha={ParamTrilha}
                     navigate={navigate}
@@ -230,7 +292,7 @@ export default function Tarefa() {
                 <CardCustomizado
                     key={"tarefa"}
                     titulo={titulo}
-                    mensagem={`Esta tarefa contém 5 perguntas sobre o conteúdo da trilha de ${trilha}.`}
+                    mensagem={`Esta tarefa contém ${questoes.length} ${questoes.length === 1 ? "pergunta" : "perguntas"} sobre o conteúdo da trilha de ${trilha}.`}
                     info={`${String(minutos).padStart(2, "0")}:${String(segundos).padStart(2, "0")}`}
                 >
                     <Stack

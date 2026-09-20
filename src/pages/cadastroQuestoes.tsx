@@ -20,7 +20,7 @@ import { OrdenacaoCadastroQuiz, OrdenacaoCadastroTarefa } from "@/components/com
 import { QuestaoAPI } from "../../api/questao";
 import { DadosAtuaisProps, validarQuestao } from "@/utils/validations/questao";
 import { toaster } from "@/components/commons/toaster";
-import { mensagemParaToaster, mensagensToastErro, mensagensToastSucesso } from "@/config/mensagensToaster";
+import { mensagemParaToaster, mensagensToastErro, mensagensToastSucesso, toasterDaApiOuPadrao } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
 import { mensagensAjudaQuestoes, mensagensAjudaQuestoesModal } from "@/config/mensagemAjudaQuestoes";
 
@@ -695,7 +695,9 @@ export default function CadastroQuestoes() {
                     return
                 }
             } catch (erroSalvarQuestao) {
-                toaster.create(mensagensToastErro.salvarQuestao)
+                toaster.create(
+                    toasterDaApiOuPadrao(erroSalvarQuestao, mensagensToastErro.salvarQuestao)
+                )
                 console.error(
                     mensagensErroConsole.salvarQuestao,
                     mensagemDeErroDaApi(erroSalvarQuestao) ?? erroSalvarQuestao
@@ -707,15 +709,25 @@ export default function CadastroQuestoes() {
         navigate("/banco-questoes");
     }
 
-    const onExclude = () => {
+    /*
+     * A exclusão precisa ser aguardada.
+     *
+     * Sem o await a promessa rejeitada nunca entrava no catch: a tela
+     * mostrava "Questão removida com sucesso!" e navegava embora,
+     * mesmo quando a API recusava a exclusão por regra de negócio. O
+     * erro só aparecia como unhandled rejection no console.
+     */
+    const onExclude = async () => {
         try {
             if (!idQuestao) return
-            QuestaoAPI.deletar(idAtividade, id)
+            await QuestaoAPI.deletar(idAtividade, id)
             toaster.create(mensagensToastSucesso.excluirQuestao)
             navigate("/banco-questoes")
 
         } catch (erro) {
-            toaster.create(mensagensToastErro.excluirQuestao)
+            toaster.create(
+                toasterDaApiOuPadrao(erro, mensagensToastErro.excluirQuestao)
+            )
             console.error(mensagensErroConsole.excluirQuestao, erro)
         }
     }

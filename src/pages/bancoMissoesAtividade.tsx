@@ -131,7 +131,7 @@ export default function BancoMissoesAtividade() {
                         Adicionar missão
                     </Button>
                 </HStack>
-                <Stack spacing={4}>
+                <Stack gap={4}>
                     {materiaisFiltrados.map(grupoTematica => (
                         <Box
                             my={3}

@@ -2,7 +2,7 @@ import { Button, Field, InputGroup, Link, Stack, Text } from "@chakra-ui/react";
 
 import { useState } from "react";
 import { AppInput } from "@/components/commons/AppInput";
-import { mensagensToastErro, mensagensToastSucesso } from "@/config/mensagensToaster";
+import { mensagensToastErro, mensagensToastSucesso, toasterDaApiOuPadrao } from "@/config/mensagensToaster";
 import { toaster } from "@/components/commons/toaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
 import CardCustomizado from "@/components/commons/cardCustomizado";
@@ -52,7 +52,16 @@ export default function SolicitarRecuperarSenha() {
             toaster.create(mensagensToastSucesso.emailRecuperarSenha);
         } catch (e) {
             console.error(mensagensErroConsole.enviarEmailRecuperacao, e);
-            toaster.create(mensagensToastErro.enviarEmailRecSenha);
+            /*
+             * A API responde de forma idêntica para e-mail existente e
+             * inexistente (anti-enumeração), então aqui não há risco
+             * de vazamento: o que chega com 4xx é limite de envios ou
+             * e-mail malformado, e o usuário precisa ler exatamente
+             * isso para saber que basta esperar.
+             */
+            toaster.create(
+                toasterDaApiOuPadrao(e, mensagensToastErro.enviarEmailRecSenha)
+            );
         } finally {
             setEnviando(false)
         }

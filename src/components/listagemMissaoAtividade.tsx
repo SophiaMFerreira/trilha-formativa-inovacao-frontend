@@ -8,7 +8,7 @@ import CustomTooltip from "./commons/customTooltip.tsx"
 import { MissaoAtividade, TipoAtividadeLabel } from "@/types_consts/missao.ts"
 import { MissaoAPI } from "../../api/missao.ts"
 import { toaster } from "./commons/toaster.tsx"
-import { mensagensToastErro, mensagensToastSucesso } from "@/config/mensagensToaster.ts"
+import { mensagensToastErro, mensagensToastSucesso, toasterDaApiOuPadrao } from "@/config/mensagensToaster.ts"
 import { mensagensErroConsole } from "@/config/mensagensError.ts"
 
 type ListagemMaterial = MissaoAtividade & {
@@ -41,7 +41,7 @@ export default function ListagemMissaoAtividade(
 
     } catch (erro) {
       console.error(mensagensErroConsole.excluirMissaoAtividade, erro)
-      toaster.create(mensagensToastErro.excluirMissao)
+      toaster.create(toasterDaApiOuPadrao(erro, mensagensToastErro.excluirMissao))
     }
   }
 

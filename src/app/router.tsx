@@ -94,16 +94,24 @@ export const router = createBrowserRouter([
           </RoleRoute>
         ),
       }, {
+        /*
+         * Dados da conta valem para os dois perfis.
+         *
+         * A tela estava restrita a "usuario", então o administrador
+         * não tinha por onde revisar os próprios dados nem trocar a
+         * senha: o RoleRoute o devolvia ao banco de materiais com um
+         * aviso de permissão negada.
+         */
         path: "/dadosAventureiro",
         element: (
-          <RoleRoute roles={["usuario"]}>
+          <RoleRoute roles={["usuario", "admin"]}>
             <DadosAventureiro />
           </RoleRoute>
         ),
       }, {
         path: "/editarDadosAventureiro",
         element: (
-          <RoleRoute roles={["usuario"]}>
+          <RoleRoute roles={["usuario", "admin"]}>
             <CadastroAventureiro />
           </RoleRoute>
         )
@@ -178,4 +186,4 @@ export const router = createBrowserRouter([
       },
     ],
   },
-])
+])

@@ -19,7 +19,7 @@ import { FaEye, FaEyeSlash, FaRegCalendarAlt } from "react-icons/fa";
 import { validarUsuario } from "@/utils/validations/usuario";
 import { informouNovaSenha } from "@/utils/validations/senha";
 import { toaster } from "@/components/commons/toaster";
-import { mensagemParaToaster, mensagensToastErro, mensagensToastSucesso } from "@/config/mensagensToaster";
+import { mensagemParaToaster, mensagensToastErro, mensagensToastSucesso, toasterDaApiOuPadrao } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
 
 export function CadastroAventureiro() {
@@ -112,7 +112,7 @@ export function CadastroAventureiro() {
                 mensagensErroConsole.removerFotoPerfil,
                 mensagemDeErroDaApi(erro) ?? erro
             );
-            toaster.create(mensagensToastErro.removerFotoPerfil);
+            toaster.create(toasterDaApiOuPadrao(erro, mensagensToastErro.removerFotoPerfil));
         } finally {
             setRemovendoImagem(false);
         }
@@ -359,10 +359,17 @@ export function CadastroAventureiro() {
                 return
             }
 
+            /*
+             * O papel é preservado.
+             *
+             * O literal "usuario" rebaixava o administrador que
+             * editasse os próprios dados: ele perdia o acesso às
+             * telas administrativas até sair e entrar de novo.
+             */
             const novoUser: User = {
                 id: idUsuario,
                 nomeAventureiro: nomeAventureiro,
-                role: "usuario",
+                role: user?.role ?? "usuario",
             }
 
             if (arquivoImagem) {
@@ -374,7 +381,11 @@ export function CadastroAventureiro() {
             updateUser(novoUser)
             toaster.create(mensagensToastSucesso.editarAventureiro)
 
-            navigate("/trilhaFormativaInovacao");
+            navigate(
+                novoUser.role === "admin"
+                    ? "/dadosAventureiro"
+                    : "/trilhaFormativaInovacao"
+            );
         } catch (erro) {
             console.error(
                 mensagensErroConsole.editarAventureiro,
@@ -475,7 +486,7 @@ export function CadastroAventureiro() {
                 mensagensErroConsole.excluirAventureiro,
                 mensagemDeErroDaApi(erro) ?? erro
             );
-            toaster.create(mensagensToastErro.excluirUsuario)
+            toaster.create(toasterDaApiOuPadrao(erro, mensagensToastErro.excluirUsuario))
         }
     }
 

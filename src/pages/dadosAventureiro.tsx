@@ -18,6 +18,17 @@ export default function DadosAventureiro() {
     const { user } = useAuth()
     const { pontuacao, distintivos } = useGame()
 
+    /*
+     * A tela passou a servir aos dois perfis. Pontuação, distintivos
+     * e o atalho para o mapa são do aventureiro: para o
+     * administrador ficariam sempre zerados e o "Voltar" o mandaria
+     * para uma rota que ele não pode abrir.
+     */
+    const ehAventureiro = user?.role !== "admin"
+    const rotaDeRetorno = ehAventureiro
+        ? "/trilhaFormativaInovacao"
+        : "/banco-materiais"
+
     const [usuario, setUsuario] = useState<Usuario>()
 
     /*
@@ -110,11 +121,13 @@ export default function DadosAventureiro() {
                                     color="brand.neutral"
                                     textAlign="left"
                                 >
-                                    {usuario.nomeAventureiro}
+                                    {ehAventureiro
+                                        ? usuario.nomeAventureiro
+                                        : "Administrador"}
                                 </Heading>
                             </Stack>
                         </Stack>
-                        <Stack gap="2">
+                        {ehAventureiro && <Stack gap="2">
                             <Text
                                 textStyle="headingXL"
                                 color="brand.primaryDark"
@@ -129,7 +142,7 @@ export default function DadosAventureiro() {
                             >
                                 pontos
                             </Text>
-                        </Stack>
+                        </Stack>}
                     </Stack>
                 </Card.Header>
                 <Card.Body
@@ -186,7 +199,7 @@ export default function DadosAventureiro() {
                                 </Text>
                             </Stack>
                         </Stack>
-                        <Stack
+                        {ehAventureiro && <Stack
                             flex={1}
                             align="center"
                             justify="center"
@@ -218,7 +231,7 @@ export default function DadosAventureiro() {
                                     </Box>
                                 ))}
                             </Stack>
-                        </Stack>
+                        </Stack>}
                     </Stack>
                     <Stack
                         direction={{ base: "column", md: "row" }}
@@ -230,7 +243,7 @@ export default function DadosAventureiro() {
                             flex={1}
                             w="100%"
                             variant="outline"
-                            onClick={() => navigate("/trilhaFormativaInovacao")}
+                            onClick={() => navigate(rotaDeRetorno)}
                         >
                             Voltar
                         </Button>

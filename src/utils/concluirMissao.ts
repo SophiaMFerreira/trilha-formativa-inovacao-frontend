@@ -9,9 +9,10 @@ import { DistintivoAdquiridoAPI } from "../../api/distintivoAdquirido";
 import { DistintivoAdquiridoDTO, DistintivoDTO } from "@/types_consts/distintivo";
 import { User } from "@/contexts/AuthContext";
 import { toaster } from "@/components/commons/toaster";
-import { mensagemToasterConquista, mensagensToastErro } from "@/config/mensagensToaster";
+import { mensagemToasterConquista, mensagensToastErro, toasterDaApiOuPadrao } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
 import { mensagemDeErroDaApi } from "./erroApi";
+import { esgotouTentativas } from "./tentativas";
 
 export type RetornoConclusao = {
   pontos: number
@@ -135,7 +136,12 @@ export async function concluirMissao(props: ConcluirMissaoProps) {
         props.progressoAtual,
         "atividade")
 
-      if (props.tentativas < 3) {
+      /*
+       * O limite deixa de ser o número fixo 3: a tarefa final vale
+       * uma única tentativa, e gravar a segunda sobrescrevia o
+       * resultado definitivo do aventureiro.
+       */
+      if (!esgotouTentativas(props.tentativas, props.tipoAtividade)) {
         if (!melhorDesempenho) {
           const progressoAntigo = props.progressoAtual as ProgressoMissaoAtividade
           progressoMissao = {
@@ -177,7 +183,9 @@ export async function concluirMissao(props: ConcluirMissaoProps) {
 
   } catch (e) {
     console.error(mensagensErroConsole.salvarConsumoConteudo, e)
-    toaster.create(mensagensToastErro.falhaAoEnviarRespostas)
+    toaster.create(
+      toasterDaApiOuPadrao(e, mensagensToastErro.falhaAoEnviarRespostas)
+    )
   }
 
   return {
