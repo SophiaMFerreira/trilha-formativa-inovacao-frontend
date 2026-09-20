@@ -1,5 +1,5 @@
 import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Box, Button, HStack, Stack, Text, } from "@chakra-ui/react";
 import CardCustomizado from "@/components/commons/cardCustomizado";
@@ -20,13 +20,14 @@ import { obterNomeTematica } from "@/types_consts/tematica";
 import { toaster } from "@/components/commons/toaster";
 import { mensagensToastErro } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
-
+import { MINIMO_QUESTOES_POR_MISSAO } from "@/utils/limiteDeQuestoes";
+import { avaliarLiberacaoDaTarefa } from "@/utils/bloqueioTarefa";
 
 export default function Tarefa() {
     const navigate = useNavigate()
     const { ParamTrilha, idMissao } = useParams()
     const { user } = useAuth()
-    const { progressoMissoes } = useGame()
+    const { progressoMissoes, carregando: carregandoJogo } = useGame()
 
     const [etapa, setEtapa] = useState<"home" | "tarefa" | "resultado">("home");
 
@@ -34,7 +35,7 @@ export default function Tarefa() {
     const [titulo, setTitulo] = useState("");
     const [valorMissao, setValorMissao] = useState(0);
     const [questoes, setQuestoes] = useState<QuestaoProp[]>(
-        Array(5).fill({
+        Array(MINIMO_QUESTOES_POR_MISSAO).fill({
             id: -1,
             enunciado: "",
             mensagemCorrecao: "",
@@ -53,14 +54,10 @@ export default function Tarefa() {
     const [trilha, setTrilha] = useState("");
 
     const [progressoTarefa, setProgressoTarefa] = useState<ProgressoMissaoAtividade>();
-    /*
-     * Distintivo vinculado à tarefa. A tela nunca repassava essa
-     * informação para a conclusão, então a concessão do distintivo não
-     * tinha como saber qual distintivo conceder.
-     */
     const [distintivoTarefa, setDistintivoTarefa] = useState<DistintivoDTO>();
+    const [tituloTematica, setTituloTematica] = useState("")
     const [respostas, setRespostas] = useState<AlternativaMarcadaDTO[][]>(
-        Array.from({ length: 5 }, () => [
+        Array.from({ length: MINIMO_QUESTOES_POR_MISSAO }, () => [
             {
                 idUsuario: user?.id ?? -1,
                 idAlternativa: -1,
@@ -72,7 +69,14 @@ export default function Tarefa() {
     const [tentativas, setTentativas] = useState(0);
 
     const [exibicaoQuestoes, setExibicaoQuestoes] = useState<("select" | "checkbox" | "radio")[]>(
-        Array(5).fill("radio")
+        Array(MINIMO_QUESTOES_POR_MISSAO).fill("radio")
+    )
+
+    const missoesDaTematica = useMemo(
+        () => progressoMissoes
+            .filter(p => p?.missao?.tematica?.titulo === tituloTematica)
+            .map(p => p.missao),
+        [progressoMissoes, tituloTematica]
     )
 
     const TEMPO_TAREFA = 30 * 60
@@ -105,7 +109,7 @@ export default function Tarefa() {
                 const tarefa = missao as MissaoTarefa
 
                 if (!("questoes" in tarefa) ||
-                    tarefa.questoes.length < 5) {
+                    tarefa.questoes.length < MINIMO_QUESTOES_POR_MISSAO) {
                     toaster.create(mensagensToastErro.nenhumaQuestao);
                     navigate(`/trilhaFormativaInovacao/${ParamTrilha}`)
                     return
@@ -115,11 +119,21 @@ export default function Tarefa() {
                 setTitulo(tarefa.titulo)
                 setValorMissao(tarefa.pontuacao)
                 setTrilha(obterNomeTematica(tarefa.tematica.titulo))
+                setTituloTematica(tarefa.tematica.titulo)
                 setDistintivoTarefa(tarefa.distintivo)
 
                 const questoesEmbaralhadas = shuffleArray(tarefa.questoes);
 
                 setQuestoes(questoesEmbaralhadas);
+
+                setRespostas(
+                    Array.from({ length: questoesEmbaralhadas.length }, () => [
+                        {
+                            idUsuario: user?.id ?? -1,
+                            idAlternativa: -1,
+                        }
+                    ])
+                );
 
                 const formatos = questoesEmbaralhadas.map((q) => {
                     if (q.alternativas[0].tipoAlternativa === TipoAlternativa.MULTIPLA_ESCOLHA) {
@@ -153,6 +167,29 @@ export default function Tarefa() {
 
         carregarDados();
     }, [ParamTrilha, idMissao]);
+
+    useEffect(() => {
+        if (carregandoJogo) return;
+        if (!tituloTematica) return;
+        if (missoesDaTematica.length === 0) return;
+
+        const situacao = avaliarLiberacaoDaTarefa(
+            missoesDaTematica,
+            progressoMissoes
+        );
+
+        if (situacao.liberada) return;
+
+        toaster.create(mensagensToastErro.tarefaBloqueada);
+        navigate(`/trilhaFormativaInovacao/${ParamTrilha}`);
+    }, [
+        carregandoJogo,
+        tituloTematica,
+        missoesDaTematica,
+        progressoMissoes,
+        ParamTrilha,
+        navigate,
+    ]);
 
     useEffect(() => {
         const intervalo = setInterval(() => {
@@ -220,6 +257,7 @@ export default function Tarefa() {
                     missao={TipoAtividade.TAREFA}
                     titulo={titulo}
                     tentativas={tentativas}
+                    quantidadeQuestoes={questoes.length}
                     trilha={trilha}
                     parametroTrilha={ParamTrilha}
                     navigate={navigate}
@@ -230,7 +268,7 @@ export default function Tarefa() {
                 <CardCustomizado
                     key={"tarefa"}
                     titulo={titulo}
-                    mensagem={`Esta tarefa contém 5 perguntas sobre o conteúdo da trilha de ${trilha}.`}
+                    mensagem={`Esta tarefa contém ${questoes.length} ${questoes.length === 1 ? "pergunta" : "perguntas"} sobre o conteúdo da trilha de ${trilha}.`}
                     info={`${String(minutos).padStart(2, "0")}:${String(segundos).padStart(2, "0")}`}
                 >
                     <Stack
@@ -291,7 +329,6 @@ export default function Tarefa() {
     )
 }
 
-
 type FormatoQuestaoAleatorioProps = {
     exibicaoQuestoes: string[];
     questao: QuestaoProp;
@@ -327,7 +364,6 @@ export function FormatoQuestaoAleatorio({
         const [linhas, setLinhas] = useState(<></>)
         // gerar combinacoes
     }*/
-
     if (exibicaoQuestoes[index] === "radio") {
         return (
             <QuestaoRadio

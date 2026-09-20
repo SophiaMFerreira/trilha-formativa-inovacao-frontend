@@ -1,7 +1,6 @@
 import { Tooltip } from "@chakra-ui/react"
 import type { ReactNode } from "react"
 
-
 type CustomTooltipProps = {
   content: string
   children: ReactNode

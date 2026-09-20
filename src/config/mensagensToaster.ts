@@ -1,4 +1,4 @@
-import { mensagemDeErroDaApi } from "@/utils/erroApi";
+import { erroDeValidacaoDaApi, mensagemDeErroDaApi } from "@/utils/erroApi";
 
 export const mensagemToasterConquista = (
     pontos: number,
@@ -22,21 +22,52 @@ export const mensagemToasterConquista = (
     }
 };
 
+/**
+ * Toaster com a mensagem que a própria API devolveu.
+ *
+ * Só vale para respostas 4xx, que é como a API reporta DomainException
+ * e RegraDeNegocioException — as exceções escritas para serem lidas
+ * por quem está na tela ("Email já utilizado!", "Senha atual não
+ * confere!"). Um 5xx carrega texto técnico e não deve chegar ao
+ * usuário: nesse caso a função devolve undefined e quem chama exibe a
+ * mensagem genérica da tela.
+ */
 export function mensagemParaToaster(
     erro: unknown
 ) {
+    if (!erroDeValidacaoDaApi(erro)) {
+        return undefined
+    }
+
     const mensagemApi = mensagemDeErroDaApi(erro)
-    if(mensagemApi){
+
+    if (mensagemApi) {
         return {
             title: "Algo deu errado!",
             description: mensagemApi,
             type: "warning",
             duration: 7000,
         }
-    } else {
-        return undefined
     }
-    
+
+    return undefined
+}
+
+/**
+ * Atalho para o padrão que se repetia em todas as telas: exibir a
+ * regra de negócio quando a API mandou uma, e a mensagem própria da
+ * tela quando não mandou.
+ *
+ * Existia só em parte das telas — exclusões, login, envio de
+ * respostas e consumo de conteúdo descartavam a mensagem da API e
+ * mostravam "Tente novamente", escondendo do usuário o motivo real
+ * da recusa.
+ */
+export function toasterDaApiOuPadrao<T>(
+    erro: unknown,
+    padrao: T
+) {
+    return mensagemParaToaster(erro) ?? padrao
 }
 
 /**
@@ -53,6 +84,19 @@ export const mensagemLimiteMissoesTrilha = (
     title: "Limite de missões da trilha atingido",
     description:
         `A trilha ${nomeTrilha} tem espaço para ${limite} missões no mapa e todas já estão ocupadas. Exclua uma missão existente antes de cadastrar outra.`,
+    type: "warning",
+    closable: true,
+    duration: 9000,
+});
+/** Segunda tarefa na mesma temática. */
+export const mensagemTarefaDuplicadaNaTematica = (
+    nomeTematica: string,
+    tituloDaTarefa: string | undefined
+) => ({
+    title: "Esta temática já tem uma tarefa",
+    description: tituloDaTarefa
+        ? `A temática ${nomeTematica} já tem a tarefa "${tituloDaTarefa}". Cada temática comporta uma única missão de tarefa, que é a etapa final da trilha. Exclua a existente antes de cadastrar outra.`
+        : `A temática ${nomeTematica} já tem uma missão de tarefa. Cada temática comporta uma única missão de tarefa, que é a etapa final da trilha.`,
     type: "warning",
     closable: true,
     duration: 9000,
@@ -198,10 +242,18 @@ export const mensagensToastErro = {
         duration: 7000,
     },
 
-
     // =========================
     // AUSÊNCIA DE CONTEÚDO
     // =========================
+
+    tarefaBloqueada: {
+        title: "Tarefa ainda bloqueada",
+        description:
+            "A tarefa é a última missão da trilha. Conclua os conteúdos e os quizzes desta temática para liberá-la.",
+        type: "warning",
+        closable: true,
+        duration: 9000,
+    },
 
     permissaoNegada: {
         title: "Acesso negado",
@@ -238,7 +290,6 @@ export const mensagensToastErro = {
         closable: true,
         duration: 7000,
     },
-
 
     // =========================
     // SALVAR CONTEÚDO
@@ -392,7 +443,6 @@ export const mensagensToastErro = {
         duration: 7000,
     },
 
-
     // =========================
     // EXCLUSÃO
     // =========================
@@ -464,6 +514,8 @@ export const mensagensToastErro = {
     },
 
     limiteMissoesTrilha: mensagemLimiteMissoesTrilha,
+
+    tarefaDuplicadaNaTematica: mensagemTarefaDuplicadaNaTematica,
 
     validarMissaoAtividade: {
         title: "Não foi possível salvar a missão atividade",
@@ -570,7 +622,6 @@ export const mensagensToastErro = {
         closable: true,
         duration: 9000,
     },
-
 
     validarCodigoVerificacao: {
         title: "Código incompleto",
@@ -754,7 +805,6 @@ export const mensagensToastSucesso = {
         duration: 7000,
     },
 
-
     // =========================
     // EXCLUSÃO
     // =========================
@@ -831,4 +881,4 @@ export const mensagensToastSucesso = {
         duration: 7000,
     },
 
-} as const;
+} as const;

@@ -9,15 +9,51 @@ import { ReactNode, useMemo, useState } from "react"
 import { DragDropProvider, useDroppable } from '@dnd-kit/react';
 import { move } from '@dnd-kit/helpers';
 import { useSortable } from "@dnd-kit/react/sortable"
-import { Alternativa, AlternativaOrdenacaoDTO } from "@/types_consts/alternativa"
+import { Alternativa, AlternativaMarcadaDTO, AlternativaMarcadaOrdenacaoDTO, AlternativaOrdenacaoDTO } from "@/types_consts/alternativa"
 
 type OrdenacaoProps = {
     questao: QuestaoProp
-    //value: number[]
+    /**
+     * Sequência já registrada para esta questão, usada para remontar a
+     * linha de resposta quando a tela volta a exibi-la.
+     */
+    value?: AlternativaMarcadaDTO[]
     onChange: (value: number[]) => void
 };
+/**
+ * Estado inicial das duas linhas: o que já foi respondido volta para a
+ * linha de resposta, na ordem gravada, e o restante fica na origem.
+ */
+function montarLinhas(
+    alternativas: AlternativaOrdenacaoDTO[],
+    value: AlternativaMarcadaDTO[] | undefined
+): { origem: string[]; resposta: string[] } {
+    const textoPorId = new Map(
+        alternativas
+            .filter(a => a.id !== undefined)
+            .map(a => [a.id as number, a.texto])
+    );
 
-export default function Ordenacao({ questao, onChange }: OrdenacaoProps) {
+    const resposta = (value ?? [])
+        .filter((marcada): marcada is AlternativaMarcadaOrdenacaoDTO =>
+            "sequenciaRespondida" in marcada
+            && textoPorId.has(marcada.idAlternativa)
+        )
+        .slice()
+        .sort((a, b) => a.sequenciaRespondida - b.sequenciaRespondida)
+        .map(marcada => textoPorId.get(marcada.idAlternativa) as string);
+
+    const jaRespondidos = new Set(resposta);
+
+    return {
+        origem: alternativas
+            .map(alternativa => alternativa.texto)
+            .filter(texto => !jaRespondidos.has(texto)),
+        resposta,
+    };
+}
+
+export default function Ordenacao({ questao, value, onChange }: OrdenacaoProps) {
     const alternativas = useMemo(
         () => shuffleArray([...questao.alternativas]) as AlternativaOrdenacaoDTO[],
 
@@ -27,11 +63,9 @@ export default function Ordenacao({ questao, onChange }: OrdenacaoProps) {
     const mapaLista = new Map(
         alternativas.map(a => [a.texto, a.id])
     );
-
-    const [listas, setListas] = useState({
-        origem: alternativas.map(alternativa => alternativa.texto) as string[],
-        resposta: [] as string[],
-    });
+    const [listas, setListas] = useState(
+        () => montarLinhas(alternativas, value)
+    );
 
     function handleDragOver(event: any) {
     const novaLista = move(listas, event);
@@ -117,7 +151,6 @@ function Sortable({ id, index, alternativa, estilo, row }: sortableProps) {
         type: 'item',
         accept: ['item'],
     });
-
 
     return (
         <Box

@@ -3,12 +3,13 @@ import CaixaAlternativa from "./caixaAlternativa"
 import { estilosAlternativa } from "@/config/alternativasEstiloConfig"
 
 import { shuffleArray } from "@/utils/shuffle"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import { DragDropProvider } from '@dnd-kit/react';
+import { move } from '@dnd-kit/helpers';
 import { useSortable } from '@dnd-kit/react/sortable';
 import { QuestaoProp } from "@/types_consts/questao"
-import { Alternativa, AlternativaAssociacao, AlternativaAssocida } from "@/types_consts/alternativa"
+import { Alternativa, AlternativaAssociacao, AlternativaAssocida, AlternativaMarcadaAssociacaoDTO, AlternativaMarcadaDTO } from "@/types_consts/alternativa"
 
 export type colunasAssociadas = {
     colunaA: Alternativa[]
@@ -17,27 +18,100 @@ export type colunasAssociadas = {
 }
 type AssociacaoProps = {
     questao: QuestaoProp;
+    /**
+     * Resposta já registrada para esta questão, usada para remontar a
+     * ordem das colunas quando a tela volta a exibi-la.
+     */
+    value?: AlternativaMarcadaDTO[];
     onChange: (alternativasAssociadasresposta: colunasAssociadas) => void;
 };
-export default function Associacao({ questao, onChange }: AssociacaoProps) {
+
+/**
+ * Reconstrói a ordem das colunas a partir da resposta já registrada.
+ *
+ * Devolve null quando não há resposta utilizável — primeira visita à
+ * questão, resposta de outra questão, ou questão editada depois de
+ * respondida. Nesses casos o componente embaralha, que é o
+ * comportamento de quem está vendo a questão pela primeira vez.
+ */
+function ordenarPelaResposta(
+    paresA: AlternativaAssociacao[],
+    paresB: AlternativaAssocida[],
+    value: AlternativaMarcadaDTO[] | undefined
+): { colunaA: Alternativa[]; colunaB: AlternativaAssocida[] } | null {
+    if (!value || value.length !== paresA.length) return null;
+
+    const porIdA = new Map(paresA.map(a => [a.id, a]));
+    const porIdB = new Map(paresB.map(b => [b.id, b]));
+
+    const colunaA: Alternativa[] = [];
+    const colunaB: AlternativaAssocida[] = [];
+
+    for (const marcada of value) {
+        const alternativa = porIdA.get(marcada.idAlternativa);
+
+        const idAssociada =
+            (marcada as AlternativaMarcadaAssociacaoDTO)
+                .idAlternativaAssociadaRespondida;
+
+        const associada = idAssociada === undefined
+            ? undefined
+            : porIdB.get(idAssociada);
+
+        if (!alternativa || !associada) return null;
+
+        colunaA.push(alternativa);
+        colunaB.push(associada);
+    }
+
+    return { colunaA, colunaB };
+}
+/**
+ * Emparelha as duas colunas pela posição, que é como o usuário lê a
+ * tela: a linha 1 da coluna A responde a linha 1 da coluna B.
+ */
+function emparelhar(
+    colunaA: Alternativa[],
+    colunaB: AlternativaAssocida[]
+): colunasAssociadas {
+    const tamanho = Math.min(colunaA.length, colunaB.length);
+
+    return {
+        colunaA: colunaA.slice(0, tamanho),
+        colunaB: colunaB.slice(0, tamanho),
+    };
+}
+
+export default function Associacao({ questao, value, onChange }: AssociacaoProps) {
     const { colunaA, colunaB } = useMemo(() => {
         const alternativas = questao.alternativas as AlternativaAssociacao[]
-        const colunaA = [];
-        const colunaB = [];
-        
+        const paresA: AlternativaAssociacao[] = [];
+        const paresB: AlternativaAssocida[] = [];
+
         for (const alternativa of alternativas) {
-            colunaA.push(alternativa);
-            colunaB.push(alternativa.alternativaAssociada);
+            if (!alternativa?.alternativaAssociada) continue;
+
+            paresA.push(alternativa);
+            paresB.push(alternativa.alternativaAssociada);
         }
+        const ordemSalva = ordenarPelaResposta(paresA, paresB, value);
+
+        if (ordemSalva) return ordemSalva;
 
         return {
-            colunaA: shuffleArray(colunaA),
-            colunaB: shuffleArray(colunaB),
+            colunaA: shuffleArray(paresA) as Alternativa[],
+            colunaB: shuffleArray(paresB) as AlternativaAssocida[],
         };
     }, [questao.id]);
 
     const [colA, setColA] = useState<Alternativa[]>(colunaA);
-    const [colB, setColB] = useState<Alternativa[]>(colunaB);
+    const [colB, setColB] = useState<AlternativaAssocida[]>(colunaB);
+
+    const onChangeRef = useRef(onChange);
+    onChangeRef.current = onChange;
+    useEffect(() => {
+        onChangeRef.current(emparelhar(colA, colB));
+    }, [colA, colB]);
 
     const estiloClaro = estilosAlternativa.find(
         (estilo) => estilo.className === "itemPLight"
@@ -53,27 +127,11 @@ export default function Associacao({ questao, onChange }: AssociacaoProps) {
             w="100%"
         >
             <DragDropProvider
-                onDragEnd={(event) => {
-                    const from = event.operation.source?.data.index;
-                    const to = event.operation.target?.data.index;
-
-                    if (from == null || to == null) return;
-
-                    setColA((items) => {
-                        const novo = [...items];
-                        const [item] = novo.splice(from, 1);
-                        novo.splice(to, 0, item);
-                        return novo;
-                    });
+                onDragOver={(event) => {
+                    setColA((items) => move(items, event));
                 }}
             >
-                <Stack gap="5"
-                    onChange={() => onChange({
-                        colunaA: colA,
-                        colunaB: colB,
-                    } as colunasAssociadas
-                    )}
-                >
+                <Stack gap="5">
                     {colA.map((alternativa, index) => (
                         <Sortable
                             key={alternativa.id}
@@ -86,27 +144,11 @@ export default function Associacao({ questao, onChange }: AssociacaoProps) {
                 </Stack>
             </DragDropProvider>
             <DragDropProvider
-                onDragEnd={(event) => {
-                    const from = event.operation.source?.data.index;
-                    const to = event.operation.target?.data.index;
-
-                    if (from == null || to == null) return;
-
-                    setColB((items) => {
-                        const novo = [...items];
-                        const [item] = novo.splice(from, 1);
-                        novo.splice(to, 0, item);
-                        return novo;
-                    });
+                onDragOver={(event) => {
+                    setColB((items) => move(items, event));
                 }}
             >
-                <Stack gap="5"
-                    onChange={() => onChange({
-                        colunaA: colA,
-                        colunaB: colB
-                    } as colunasAssociadas
-                    )}
-                >
+                <Stack gap="5">
                     {colB.map((alternativa, index) => (
                         <Sortable
                             key={alternativa.id}
@@ -217,13 +259,6 @@ export function AssociacaoCadastroQuiz({ alternativas, onChange }: AssociacaoCad
                     </Box>
                 ))}
             </Stack>
-            {/*
-              * Sem onChange no Stack: o evento change do input interno
-              * borbulhava até aqui e chamava onChange SEM o índice da
-              * linha, fazendo o consumidor ler colunaA[undefined] e
-              * estourar ao acessar .id. Quem notifica a alteração é o
-              * Editable.Root de cada célula, que sabe o índice.
-              */}
             <Stack gap="5">
                 {colunaB.map((alternativa, index) => (
                     <Box
@@ -277,7 +312,6 @@ export function AssociacaoCadastroQuiz({ alternativas, onChange }: AssociacaoCad
         </SimpleGrid >
     )
 }
-
 
 export function AssociacaoCadastroTarefa({ alternativas, onChange }: AssociacaoCadastroProps) {
     const colunaA: Alternativa[] = [];

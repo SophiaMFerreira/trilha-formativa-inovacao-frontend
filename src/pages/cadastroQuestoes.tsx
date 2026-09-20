@@ -13,6 +13,7 @@ import { Missao, MissaoAtividade, TipoAtividade, TipoAtividadeLabel } from "@/ty
 import { TematicaAPI } from "../../api/tematica";
 import { QuestaoDTO, QuestaoProp } from "@/types_consts/questao";
 import { MissaoAPI } from "../../api/missao";
+import { avaliarQuestoesDaMissao } from "@/utils/limiteDeQuestoes";
 import { AlternativaAPI } from "../../api/alternativa";
 import { MultiplaEscolhaCadastroQuiz, MultiplaEscolhaCadastroTarefa } from "@/components/commons/TarefaQuestao/multiplaEscolha";
 import { AssociacaoCadastroQuiz, AssociacaoCadastroTarefa, colunasAssociadas } from "@/components/commons/TarefaQuestao/associacao";
@@ -20,7 +21,7 @@ import { OrdenacaoCadastroQuiz, OrdenacaoCadastroTarefa } from "@/components/com
 import { QuestaoAPI } from "../../api/questao";
 import { DadosAtuaisProps, validarQuestao } from "@/utils/validations/questao";
 import { toaster } from "@/components/commons/toaster";
-import { mensagemParaToaster, mensagensToastErro, mensagensToastSucesso } from "@/config/mensagensToaster";
+import { mensagemParaToaster, mensagensToastErro, mensagensToastSucesso, toasterDaApiOuPadrao } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
 import { mensagensAjudaQuestoes, mensagensAjudaQuestoesModal } from "@/config/mensagemAjudaQuestoes";
 
@@ -147,6 +148,12 @@ export default function CadastroQuestoes() {
         tipoAtividade,
         missoes
     ]);
+    const situacaoQuestoesDaMissao = useMemo(() => {
+        const missao = missoes.find(m => m.id === idAtividade);
+
+        return missao ? avaliarQuestoesDaMissao(missao.questoes) : null;
+    }, [missoes, idAtividade]);
+
     const missoesFiltradasCollection = useMemo(() => {
         return createListCollection({
             items: missoesFiltradas.map(mf => ({
@@ -168,11 +175,11 @@ export default function CadastroQuestoes() {
 
                         return {
                             id: idA,
-                            texto: "Conteúdo da alternativa",
+                            texto: "",
                             tipoAlternativa: TipoAlternativa.ASSOCIACAO,
                             alternativaAssociada: {
                                 id: idB,
-                                texto: "Conteúdo da alternativa associada",
+                                texto: "",
                                 tipoAlternativa: TipoAlternativa.ASSOCIACAO,
                             },
                         }
@@ -184,7 +191,7 @@ export default function CadastroQuestoes() {
                 setAlternativas(
                     Array.from({ length: 4 }, (_, i) => ({
                         id: -(i + 1),
-                        texto: "Conteúdo da alternativa",
+                        texto: "",
                         tipoAlternativa: TipoAlternativa.ORDENACAO,
                         ...(i !== 0 && { numeroSequencia: i }),
                         numeroSequencia: i + 1
@@ -196,7 +203,7 @@ export default function CadastroQuestoes() {
                 setAlternativas(
                     Array.from({ length: 2 }, (_, i) => ({
                         id: -(i + 1),
-                        texto: "Conteúdo da alternativa",
+                        texto: "",
                         tipoAlternativa: TipoAlternativa.MULTIPLA_ESCOLHA,
                         correta: false,
                         subtipo: SubtipoAlternativa.VERDADEIRO_FALSO,
@@ -208,7 +215,7 @@ export default function CadastroQuestoes() {
                 setAlternativas(
                     Array.from({ length: 4 }, (_, i) => ({
                         id: -(i + 1),
-                        texto: "Conteúdo da alternativa",
+                        texto: "",
                         tipoAlternativa: TipoAlternativa.MULTIPLA_ESCOLHA,
                         correta: false,
                         subtipo: SubtipoAlternativa.MULTIPLAS_CORRETAS,
@@ -222,7 +229,7 @@ export default function CadastroQuestoes() {
                 setAlternativas(
                     Array.from({ length: 4 }, (_, i) => ({
                         id: -(i + 1),
-                        texto: "Conteúdo da alternativa",
+                        texto: "",
                         tipoAlternativa: TipoAlternativa.MULTIPLA_ESCOLHA,
                         correta: false,
                         subtipo: SubtipoAlternativa.MULTIPLA_ESCOLHA,
@@ -506,11 +513,6 @@ export default function CadastroQuestoes() {
                         id: alternativa.id,
                         texto: alternativa.texto,
                         tipoAlternativa: alternativa.tipoAlternativa,
-                        /*
-                         * O ID da associada existente vai no payload
-                         * para que o backend ATUALIZE o par em vez de
-                         * criar outro.
-                         */
                         alternativaAssociada: {
                             idAlternativaAssociada: alternativa.alternativaAssociada.id,
                             texto: alternativa.alternativaAssociada.texto,
@@ -547,22 +549,10 @@ export default function CadastroQuestoes() {
             try {
                 await QuestaoAPI.atualizar(idAtividade, id, questaoPayload)
 
-                /*
-                 * Sequencial pelo mesmo motivo do cadastro: cada PUT
-                 * recarrega e regrava todas as alternativas da questão
-                 * no backend, então requisições concorrentes competem
-                 * entre si.
-                 */
                 for (const alternativa of alternativasPayload) {
                     const idAlternativa = Number(alternativa.id)
 
                     if (!Number.isInteger(idAlternativa) || idAlternativa <= 0) {
-                        /*
-                         * Alternativa sem ID válido é nova: precisa de
-                         * POST, não de PUT. Antes ia para o PUT com
-                         * "id!" e o backend recusava a atualização de
-                         * uma alternativa inexistente.
-                         */
                         await AlternativaAPI.salvar(id, alternativa)
                         continue
                     }
@@ -570,12 +560,6 @@ export default function CadastroQuestoes() {
                     await AlternativaAPI.atualizar(id, idAlternativa, alternativa)
                 }
 
-                /*
-                 * O toaster de sucesso só aparece depois de as
-                 * alternativas terem sido salvas. Antes ele era exibido
-                 * mesmo quando a atualização delas falhava, junto com
-                 * o toaster de erro.
-                 */
                 toaster.create(mensagensToastSucesso.editarQuestao)
 
             } catch (erroQuestaoUpdate) {
@@ -594,14 +578,6 @@ export default function CadastroQuestoes() {
 
         } else {
             try {
-                /*
-                 * O POST responde 201 com o ID da questão criada. Esse
-                 * ID é a fonte oficial para salvar as alternativas:
-                 * antes, o código listava TODAS as questões e procurava
-                 * a recém-criada por enunciado + missão + mensagem, o
-                 * que carregava a base inteira e podia casar com a
-                 * questão errada.
-                 */
                 const questaoResponse = await QuestaoAPI.salvar(idAtividade, questaoPayload)
 
                 const idQuestaoCriada = Number(questaoResponse.data?.id)
@@ -653,15 +629,6 @@ export default function CadastroQuestoes() {
                 }
 
                 try {
-                    /*
-                     * Sequencial, não Promise.all: cada POST de
-                     * alternativa faz o backend recarregar a questão
-                     * inteira, anexar a nova e regravar todas. Em
-                     * paralelo, as requisições leem o mesmo estado
-                     * antigo e disputam as validações de texto
-                     * duplicado — a causa de falhas intermitentes ao
-                     * salvar alternativas.
-                     */
                     for (const alternativa of alternativasPayload) {
                         await AlternativaAPI.salvar(idQuestaoCriada, alternativa)
                     }
@@ -695,7 +662,9 @@ export default function CadastroQuestoes() {
                     return
                 }
             } catch (erroSalvarQuestao) {
-                toaster.create(mensagensToastErro.salvarQuestao)
+                toaster.create(
+                    toasterDaApiOuPadrao(erroSalvarQuestao, mensagensToastErro.salvarQuestao)
+                )
                 console.error(
                     mensagensErroConsole.salvarQuestao,
                     mensagemDeErroDaApi(erroSalvarQuestao) ?? erroSalvarQuestao
@@ -707,15 +676,17 @@ export default function CadastroQuestoes() {
         navigate("/banco-questoes");
     }
 
-    const onExclude = () => {
+    const onExclude = async () => {
         try {
             if (!idQuestao) return
-            QuestaoAPI.deletar(idAtividade, id)
+            await QuestaoAPI.deletar(idAtividade, id)
             toaster.create(mensagensToastSucesso.excluirQuestao)
             navigate("/banco-questoes")
 
         } catch (erro) {
-            toaster.create(mensagensToastErro.excluirQuestao)
+            toaster.create(
+                toasterDaApiOuPadrao(erro, mensagensToastErro.excluirQuestao)
+            )
             console.error(mensagensErroConsole.excluirQuestao, erro)
         }
     }
@@ -963,7 +934,8 @@ export default function CadastroQuestoes() {
                                                         item={tipoA}
                                                         key={tipoA.value}
                                                         hidden={(tipoA.value === TipoAlternativa.ORDENACAO ||
-                                                            tipoA.value === TipoAlternativa.ASSOCIACAO) && tipoAtividade === TipoAtividade.TAREFA
+                                                            tipoA.value === TipoAlternativa.ASSOCIACAO) && 
+                                                            (tipoAtividade === TipoAtividade.TAREFA || tipoAtividade === TipoAtividade.TAREFA_FINAL)
                                                         }
                                                     >
                                                         {tipoA.label}
@@ -1114,6 +1086,20 @@ export default function CadastroQuestoes() {
                                     </Box>
                                 </Listbox.Root>
                             </Box>
+                            {situacaoQuestoesDaMissao && (
+                                <Text
+                                    textStyle="inputPlaceholder"
+                                    color={
+                                        situacaoQuestoesDaMissao.atingiuMinimo
+                                            ? "brand.neutral"
+                                            : "brand.secondaryRed"
+                                    }
+                                >
+                                    {situacaoQuestoesDaMissao.atingiuMinimo
+                                        ? `Esta missão já tem ${situacaoQuestoesDaMissao.quantidade} ${situacaoQuestoesDaMissao.quantidade === 1 ? "questão cadastrada" : "questões cadastradas"} (mínimo de ${situacaoQuestoesDaMissao.minimo}, sem limite máximo).`
+                                        : `Esta missão tem ${situacaoQuestoesDaMissao.quantidade} de ${situacaoQuestoesDaMissao.minimo} questões mínimas. ${situacaoQuestoesDaMissao.faltam === 1 ? "Falta 1 questão" : `Faltam ${situacaoQuestoesDaMissao.faltam} questões`} para ela ficar disponível ao aventureiro.`}
+                                </Text>
+                            )}
                             {validacaoIdAtividade && (
                                 <Text
                                     textStyle="inputPlaceholder"
@@ -1477,7 +1463,7 @@ export default function CadastroQuestoes() {
                                                     onLoad={() => setLoadedAjuda(true)}
                                                 />
                                             </Skeleton>}
-                                        {tipoAtividade === TipoAtividade.TAREFA &&
+                                        {(tipoAtividade === TipoAtividade.TAREFA || tipoAtividade === TipoAtividade.TAREFA_FINAL) &&
                                             tipoAlternativa === SubtipoAlternativa.MULTIPLAS_CORRETAS &&
                                             <Skeleton
                                                 loading={!loadedAjuda}
@@ -1499,7 +1485,7 @@ export default function CadastroQuestoes() {
                                                     onLoad={() => setLoadedAjuda(true)}
                                                 />
                                             </Skeleton>}
-                                        {tipoAtividade === TipoAtividade.TAREFA &&
+                                        {(tipoAtividade === TipoAtividade.TAREFA || tipoAtividade === TipoAtividade.TAREFA_FINAL) &&
                                             tipoAlternativa !== SubtipoAlternativa.MULTIPLAS_CORRETAS &&
                                             <>
                                                 <Skeleton
@@ -1657,11 +1643,6 @@ function ExibirTipoAlternativa({
     function alterarRespostaAssociacao(colunasAssociadas: colunasAssociadas) {
         const indice = colunasAssociadas.index
 
-        /*
-         * Sem índice não há linha para alterar. A guarda existe porque
-         * um onChange sem índice fazia esta função ler colunaA[undefined]
-         * e estourar em itemA.id, derrubando a tela de cadastro.
-         */
         if (
             indice === undefined ||
             !Number.isInteger(indice) ||
@@ -1709,90 +1690,89 @@ function ExibirTipoAlternativa({
         setAlternativas(novasAlternativas)
     }
 
-    switch (tipoAtividade) {
-        case TipoAtividade.QUIZ:
-            switch (tipoAlternativa) {
-                case SubtipoAlternativa.MULTIPLAS_CORRETAS:
-                case SubtipoAlternativa.MULTIPLA_ESCOLHA:
-                case SubtipoAlternativa.VERDADEIRO_FALSO:
-                    return (
-                        <MultiplaEscolhaCadastroQuiz
-                            alternativas={alternativas}
-                            onClick={marcarAlternativaMultiplaEscolha}
-                        />
-                    )
-                case TipoAlternativa.ASSOCIACAO:
-                    return (
-                        < AssociacaoCadastroQuiz
-                            alternativas={alternativas}
-                            onChange={alterarRespostaAssociacao}
-                        />
-                    )
-                case TipoAlternativa.ORDENACAO:
-                    return (
-                        < OrdenacaoCadastroQuiz
-                            alternativas={alternativas}
-                            onChange={alterarRespostaOrdenacao}
-                        />
-                    )
-                default:
-                    return (
-                        <Text
-                            textAlign="justify"
-                            color="brand.secondaryRed"
-                            textStyle="bodyTextBold"
-                        >
-                            Tipo de questão desconhecido.
-                        </Text>
-                    )
-            }
-
-        case TipoAtividade.TAREFA:
-            switch (tipoAlternativa) {
-                case SubtipoAlternativa.MULTIPLAS_CORRETAS:
-                case SubtipoAlternativa.MULTIPLA_ESCOLHA:
-                case SubtipoAlternativa.VERDADEIRO_FALSO:
-                    return (
-                        <MultiplaEscolhaCadastroTarefa
-                            alternativas={alternativas}
-                            onClick={marcarAlternativaMultiplaEscolha}
-                        />
-                    )
-                case TipoAlternativa.ASSOCIACAO:
-                    return (
-                        < AssociacaoCadastroTarefa
-                            alternativas={alternativas}
-                            onChange={alterarRespostaAssociacao}
-                        />
-                    )
-                case TipoAlternativa.ORDENACAO:
-                    return (
-                        < OrdenacaoCadastroTarefa
-                            alternativas={alternativas}
-                            onChange={alterarRespostaOrdenacao}
-                        />
-                    )
-                default:
-                    return (
-                        <Text
-                            textAlign="justify"
-                            color="brand.secondaryRed"
-                            textStyle="bodyTextBold"
-                        >
-                            Tipo de questão desconhecido.
-                        </Text>
-                    )
-            }
-
-        default:
-            return (
-                <Text
-                    textAlign="justify"
-                    color="brand.secondaryRed"
-                    textStyle="bodyTextBold"
-                >
-                    Tipo de atividade desconhecido.
-                </Text>
-            )
+    if (tipoAtividade === TipoAtividade.QUIZ) {
+        switch (tipoAlternativa) {
+            case SubtipoAlternativa.MULTIPLAS_CORRETAS:
+            case SubtipoAlternativa.MULTIPLA_ESCOLHA:
+            case SubtipoAlternativa.VERDADEIRO_FALSO:
+                return (
+                    <MultiplaEscolhaCadastroQuiz
+                        alternativas={alternativas}
+                        onClick={marcarAlternativaMultiplaEscolha}
+                    />
+                )
+            case TipoAlternativa.ASSOCIACAO:
+                return (
+                    < AssociacaoCadastroQuiz
+                        alternativas={alternativas}
+                        onChange={alterarRespostaAssociacao}
+                    />
+                )
+            case TipoAlternativa.ORDENACAO:
+                return (
+                    < OrdenacaoCadastroQuiz
+                        alternativas={alternativas}
+                        onChange={alterarRespostaOrdenacao}
+                    />
+                )
+            default:
+                return (
+                    <Text
+                        textAlign="justify"
+                        color="brand.secondaryRed"
+                        textStyle="bodyTextBold"
+                    >
+                        Tipo de questão desconhecido.
+                    </Text>
+                )
+        }
     }
+    if (tipoAtividade === TipoAtividade.TAREFA || tipoAtividade === TipoAtividade.TAREFA_FINAL) {
+        switch (tipoAlternativa) {
+            case SubtipoAlternativa.MULTIPLAS_CORRETAS:
+            case SubtipoAlternativa.MULTIPLA_ESCOLHA:
+            case SubtipoAlternativa.VERDADEIRO_FALSO:
+                return (
+                    <MultiplaEscolhaCadastroTarefa
+                        alternativas={alternativas}
+                        onClick={marcarAlternativaMultiplaEscolha}
+                    />
+                )
+            case TipoAlternativa.ASSOCIACAO:
+                return (
+                    < AssociacaoCadastroTarefa
+                        alternativas={alternativas}
+                        onChange={alterarRespostaAssociacao}
+                    />
+                )
+            case TipoAlternativa.ORDENACAO:
+                return (
+                    < OrdenacaoCadastroTarefa
+                        alternativas={alternativas}
+                        onChange={alterarRespostaOrdenacao}
+                    />
+                )
+            default:
+                return (
+                    <Text
+                        textAlign="justify"
+                        color="brand.secondaryRed"
+                        textStyle="bodyTextBold"
+                    >
+                        Tipo de questão desconhecido.
+                    </Text>
+                )
+        }
+    } else {
+        return (
+            <Text
+                textAlign="justify"
+                color="brand.secondaryRed"
+                textStyle="bodyTextBold"
+            >
+                Tipo de atividade desconhecido.
+            </Text>
+        )
+    }
+
 }

@@ -1,14 +1,14 @@
 import { useNavigate } from "react-router-dom"
 import { useState } from "react"
 
-import { Box, Collapsible, Heading, Text, HStack, IconButton, List, Dialog, Portal, Stack, Button } from "@chakra-ui/react"
+import { Box, Collapsible, Heading, Text, HStack, IconButton, List, Dialog, Portal, Stack, Button, Badge } from "@chakra-ui/react"
 import { FaEdit, FaRegTrashAlt, FaCheckCircle, FaRegCircle } from "react-icons/fa"
 import CustomTooltip from "./commons/customTooltip.tsx"
 
 import { QuestaoAPI } from "../../api/questao.ts"
 import { QuestaoProp } from "@/types_consts/questao.ts"
 import { Alternativa, AlternativaAssociacao, AlternativaMultiplaEscolhaDTO, AlternativaOrdenacaoDTO, SubtipoAlternativaLabel, TipoAlternativa, TipoAlternativaLabel } from "@/types_consts/alternativa.ts"
-import { mensagensToastErro, mensagensToastSucesso } from "@/config/mensagensToaster.ts"
+import { mensagensToastErro, mensagensToastSucesso, toasterDaApiOuPadrao } from "@/config/mensagensToaster.ts"
 import { toaster } from "./commons/toaster.tsx"
 import { mensagensErroConsole } from "@/config/mensagensError.ts"
 
@@ -25,7 +25,7 @@ function popularAlternativas(alternativas: Alternativa[]) {
               <HStack>
                 <List.Indicator asChild color="brand.primaryDark">
                   {alternativa.correta ? (
-                    <FaCheckCircle color="green" />
+                    <FaCheckCircle color="var(--chakra-colors-brand-secondary)" />
                   ) : (
                     <FaRegCircle />
                   )}
@@ -130,24 +130,26 @@ function popularAlternativas(alternativas: Alternativa[]) {
   }
 }
 
-type ListagemQuestao = QuestaoProp & {
-  onExcluir: () => Promise<void>
+type ListagemQuestaoProps = QuestaoProp & {
+  missao?: string;
+  onExcluir: () => Promise<void>;
 }
+
 export default function ListagemQuestao({
   id,
   enunciado,
   mensagemCorrecao,
   alternativas,
   idMissao,
+  missao,
   onExcluir,
-}: ListagemQuestao) {
+}: ListagemQuestaoProps) {
   const navigate = useNavigate()
 
   const [open, setOpen] = useState(false)
   const [openModalExclusao, setOpenModalExclusao] = useState(false)
 
-  if (!alternativas) return
-  if (alternativas.length === 0) return
+  if (!alternativas || alternativas.length === 0) return null
 
   let tipoQuestao = "Tipo desconhecido";
   switch (alternativas[0].tipoAlternativa) {
@@ -170,12 +172,12 @@ export default function ListagemQuestao({
   async function excluir(idMissao: number, idQuestao: number) {
     try {
       if (!idMissao || !idQuestao) return
-      QuestaoAPI.deletar(idMissao, idQuestao)
+      await QuestaoAPI.deletar(idMissao, idQuestao)
       toaster.create(mensagensToastSucesso.excluirQuestao)
       await onExcluir();
 
     } catch (erro) {
-      toaster.create(mensagensToastErro.excluirQuestao)
+      toaster.create(toasterDaApiOuPadrao(erro, mensagensToastErro.excluirQuestao))
       console.error(mensagensErroConsole.excluirQuestao, erro)
     }
   }
@@ -191,20 +193,40 @@ export default function ListagemQuestao({
         borderColor="brand.primaryDark"
         rounded="sm"
         bg="brand.white"
-        open={open} onOpenChange={(e) => setOpen(e.open)}
+        open={open}
+        onOpenChange={(e) => setOpen(e.open)}
         onMouseLeave={() => setOpen(false)}
       >
         <Collapsible.Trigger
-          paddingY="2"
+          paddingY="3"
           w="100%"
           display="block"
           onDoubleClick={() => editar(idMissao, id)}
         >
           <HStack justify="space-between" align="center" w="100%">
             <HStack gap="4" minW="0">
-              <Heading textStyle="emphasis" color="brand.primaryDark">
-                {tipoQuestao}
-              </Heading>
+              <Stack gap="1" align="flex-start">
+                <Heading textStyle="emphasis" color="brand.primaryDark">
+                  {tipoQuestao}
+                </Heading>
+
+                {/* Badge da Missão usando as cores do tema Inovação */}
+                {missao && (
+                  <Badge
+                    bg="brand.primaryLight"
+                    color="brand.primaryDark"
+                    borderWidth="1px"
+                    borderColor="brand.primaryDark"
+                    textStyle="inputPlaceholder"
+                    px="2"
+                    py="0.5"
+                    rounded="sm"
+                  >
+                    Missão: {missao}
+                  </Badge>
+                )}
+              </Stack>
+
               <Text
                 textStyle="bodyText"
                 color="brand.neutral"
@@ -218,6 +240,7 @@ export default function ListagemQuestao({
                 {enunciado}
               </Text>
             </HStack>
+
             <HStack gap="2">
               <CustomTooltip content="Editar questão">
                 <IconButton
@@ -225,6 +248,7 @@ export default function ListagemQuestao({
                   variant="ghost"
                   size="md"
                   color="brand.primaryDark"
+                  _hover={{ bg: "brand.primaryLight" }}
                   onClick={(e) => {
                     e.stopPropagation();
                     editar(idMissao, id)
@@ -239,6 +263,7 @@ export default function ListagemQuestao({
                   variant="ghost"
                   size="md"
                   color="brand.secondaryRed"
+                  _hover={{ bg: "brand.primaryLight" }}
                   onClick={(e) => {
                     e.stopPropagation();
                     setOpenModalExclusao(true);
@@ -250,23 +275,16 @@ export default function ListagemQuestao({
             </HStack>
           </HStack>
         </Collapsible.Trigger>
-        <Collapsible.Content
-          onDoubleClick={() => editar(idMissao, id)}
-        >
-          <Box mb="4">
-            <Text
-              textStyle="bodyText"
-              color="brand.neutral"
-            >
+
+        <Collapsible.Content onDoubleClick={() => editar(idMissao, id)}>
+          <Box mb="4" pt="2" borderTopWidth="1px" borderColor="brand.primaryLight">
+            <Text textStyle="bodyText" color="brand.neutral">
               {enunciado}
             </Text>
             <br />
             {popularAlternativas(alternativas)}
             <br />
-            <Text
-              textStyle="bodyTextLong"
-              color="brand.neutral"
-            >
+            <Text textStyle="bodyTextLong" color="brand.neutral">
               {mensagemCorrecao}
             </Text>
           </Box>
@@ -283,12 +301,9 @@ export default function ListagemQuestao({
         <Portal>
           <Dialog.Backdrop />
           <Dialog.Positioner>
-            <Dialog.Content>
+            <Dialog.Content bg="brand.white">
               <Dialog.Header>
-                <Dialog.Title
-                  textStyle="headingMD"
-                  color="brand.secondaryRed"
-                >
+                <Dialog.Title textStyle="headingMD" color="brand.secondaryRed">
                   Excluir questão
                 </Dialog.Title>
               </Dialog.Header>
@@ -325,25 +340,24 @@ export default function ListagemQuestao({
                 </Stack>
               </Dialog.Body>
               <Dialog.Footer justifyContent="center">
-                <Stack
-                  direction={{ base: "column", md: "row" }}
-                  w="100%"
-                  gap="2"
-                >
+                <Stack direction={{ base: "column", md: "row" }} w="100%" gap="2">
                   <Button
                     flex={1}
                     w="100%"
                     variant="outline"
-                    onClick={() => {
-                      setOpenModalExclusao(false)
-                    }}
+                    borderColor="brand.neutral"
+                    color="brand.neutral"
+                    _hover={{ bg: "brand.primaryLight" }}
+                    onClick={() => setOpenModalExclusao(false)}
                   >
                     Voltar
                   </Button>
                   <Button
                     flex={1}
                     w="100%"
-                    variant="danger"
+                    bg="brand.secondaryRed"
+                    color="brand.white"
+                    _hover={{ opacity: 0.9 }}
                     onClick={() => {
                       excluir(idMissao, id)
                       setOpenModalExclusao(false)
@@ -353,8 +367,6 @@ export default function ListagemQuestao({
                   </Button>
                 </Stack>
               </Dialog.Footer>
-              <Dialog.CloseTrigger asChild>
-              </Dialog.CloseTrigger>
             </Dialog.Content>
           </Dialog.Positioner>
         </Portal>

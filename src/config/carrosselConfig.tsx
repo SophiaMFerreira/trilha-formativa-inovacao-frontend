@@ -14,8 +14,8 @@ export const carrosselConteudo: CardCarrossel[] = [
         icone: <FaRegFlag size={60} color="brand.primaryDark"/>
     }, {   
         id: 3,
-        titulo: "Jogos",
-        conteudo: "Aprenda enquanto se diverte com jogos interativos que tornam cada etapa mais dinâmica.",
+        titulo: "Quizzes",
+        conteudo: "Aprenda enquanto se diverte com quizzes interativos que tornam cada etapa mais dinâmica.",
         icone: <FaGamepad size={60} color="brand.primaryDark"/>
     }, {   
         id: 4,

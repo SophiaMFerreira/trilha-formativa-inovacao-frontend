@@ -10,7 +10,7 @@ import { Missao, MissaoConteudo, MissaoDTO, tipoMaterialLabel } from "@/types_co
 import { validarConteudo } from "@/utils/validations/missaoConteudo";
 import { avaliarCapacidadeDaTrilha } from "@/utils/limiteDeMissoes";
 import { toaster } from "@/components/commons/toaster";
-import { mensagemParaToaster, mensagensToastErro, mensagensToastSucesso } from "@/config/mensagensToaster";
+import { mensagemParaToaster, mensagensToastErro, mensagensToastSucesso, toasterDaApiOuPadrao } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
 
 export default function CadastroMateriais() {
@@ -50,7 +50,6 @@ export default function CadastroMateriais() {
     const [validacaoURL, setValidacaoURL] = useState(false)
     const [validacaoResumo, setValidacaoResumo] = useState(false)
     const [validacaoPontuacao, setValidacaoPontuacao] = useState(false)
-
 
     useEffect(() => {
         async function carregarDados() {
@@ -124,14 +123,9 @@ export default function CadastroMateriais() {
         carregarDados();
     }, [idMissao]);
 
-
     const tituloTrilhaSelecionada =
         tematicas.find(t => t.id === idTrilha)?.titulo ?? ""
 
-    /*
-     * Missões de conteúdo também ocupam posição no mapa da trilha, e
-     * por isso entram no mesmo limite das missões de atividade.
-     */
     const capacidade = avaliarCapacidadeDaTrilha(
         missoesExistentes,
         tituloTrilhaSelecionada,
@@ -214,7 +208,7 @@ export default function CadastroMateriais() {
             navigate("/banco-materiais")
 
         } catch (erro) {
-            toaster.create(mensagensToastErro.excluirConteudo)
+            toaster.create(toasterDaApiOuPadrao(erro, mensagensToastErro.excluirConteudo))
             console.error(mensagensErroConsole.excluirMissaoConteudo, erro)
         }
     }

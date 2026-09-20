@@ -30,18 +30,12 @@ type VerificacaoEmailDialogProps = {
     /** Código conferido. O comprovante autoriza a criação da conta. */
     onVerificado: (comprovante: string) => void
 }
-
 /**
- * Confirmação do e-mail antes da criação da conta.
- *
  * Vive dentro da tela de cadastro, e não em uma rota própria, por um
  * motivo concreto: entre pedir o código e criar a conta o formulário
  * inteiro precisa continuar preenchido — inclusive a senha. Levar o
  * usuário para outra rota exigiria guardar esses dados em algum lugar,
  * e senha em localStorage não é opção.
- *
- * O componente não conhece o formulário: recebe o endereço, devolve o
- * comprovante e deixa a criação da conta com quem o abriu.
  */
 export function VerificacaoEmailDialog({
     aberto,
@@ -55,12 +49,6 @@ export function VerificacaoEmailDialog({
     const [expiraEm, setExpiraEm] = useState<number | null>(null)
     const [liberaReenvioEm, setLiberaReenvioEm] = useState<number | null>(null)
     const [agora, setAgora] = useState(() => Date.now())
-
-    /*
-     * Guarda para qual endereço o código já foi pedido nesta abertura.
-     * Sem isso, a dupla execução de efeitos do StrictMode dispararia
-     * dois e-mails e consumiria metade da cota de envios logo de cara.
-     */
     const envioFeitoPara = useRef<string | null>(null)
 
     const codigoTexto = codigo.join("")
@@ -94,13 +82,6 @@ export function VerificacaoEmailDialog({
                 toaster.create(mensagensToastErro.enviarCodigoVerificacao)
                 return
             }
-
-            /*
-             * A API recusou o pedido. Os dois motivos previstos —
-             * e-mail já cadastrado e cota de envios esgotada — não se
-             * resolvem insistindo, então a tela passa a oferecer só a
-             * volta ao formulário.
-             */
             setSituacao("indisponivel")
 
             toaster.create(
@@ -155,14 +136,6 @@ export function VerificacaoEmailDialog({
 
     const codigoExpirado =
         situacao === "aguardandoCodigo" && expiraEm !== null && segundosRestantes <= 0
-
-    /*
-     * Recebe o código por parâmetro quando vem do preenchimento
-     * automático: onValueComplete dispara no mesmo evento do
-     * onValueChange, e nesse instante o estado ainda guarda os cinco
-     * dígitos anteriores. Ler de codigoTexto ali enviaria um código
-     * incompleto e gastaria uma das tentativas do usuário à toa.
-     */
     const onConfirmar = async (codigoInformado?: string) => {
         if (situacao === "confirmando") return
 
@@ -198,11 +171,6 @@ export function VerificacaoEmailDialog({
 
             toaster.create(mensagensToastSucesso.confirmarCodigoVerificacao)
 
-            /*
-             * Quem abriu o diálogo assume daqui: cria a conta com o
-             * comprovante em mãos. O estado de "confirmando" é mantido
-             * para que o botão continue travado durante o cadastro.
-             */
             onVerificado(comprovante)
         } catch (e) {
             const mensagemApi = mensagemDeErroDaApi(e)

@@ -8,7 +8,7 @@ import { useState } from "react";
 import { AppInput } from "@/components/commons/AppInput";
 import { useAuth } from "@/hooks/useAuth";
 import { validarLogin } from "@/utils/validations/login";
-import { mensagensToastErro } from "@/config/mensagensToaster";
+import { mensagensToastErro, toasterDaApiOuPadrao } from "@/config/mensagensToaster";
 import { toaster } from "@/components/commons/toaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
@@ -46,7 +46,9 @@ export function Login() {
                 navigate("/trilhaFormativaInovacao");
             }
         } catch (e) {
-            toaster.create(mensagensToastErro.falhaAoFazerLogin)
+            toaster.create(
+                toasterDaApiOuPadrao(e, mensagensToastErro.falhaAoFazerLogin)
+            )
             console.error(mensagensErroConsole.fazerLogin, e);
         }
     }
@@ -127,7 +129,7 @@ export function Login() {
                         opacity={0.25}
                     />
 
-                    <NavLink to="https://www.ifsudestemg.edu.br/juizdefora">
+                    <NavLink to="https://www.ifsudestemg.edu.br">
                         <Skeleton
                             loading={!loadedLogoIF}
                             h="64px"

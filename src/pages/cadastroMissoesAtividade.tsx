@@ -5,6 +5,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { obterNomeTematica, Tematica, TematicaDTO } from "@/types_consts/tematica";
 import { avaliarCapacidadeDaTrilha } from "@/utils/limiteDeMissoes";
+import { avaliarQuestoesDaMissao } from "@/utils/limiteDeQuestoes";
+import { avaliarTarefaDaTematica } from "@/utils/limiteDeTarefas";
+import { avaliarDistintivosDisponiveis } from "@/utils/distintivosDisponiveis";
 import { Missao, MissaoAtividade, MissaoDTO, MissaoTarefa, TipoAtividade, TipoAtividadeLabel } from "@/types_consts/missao";
 import { TematicaAPI } from "../../api/tematica";
 import { QuestaoProp } from "@/types_consts/questao";
@@ -15,7 +18,7 @@ import { DistintivoAPI } from "../../api/distintivos";
 import ListagemQuestao from "@/components/listagemQuestao";
 import { DadosAtuaisProps, validarAtividade } from "@/utils/validations/missaoAtividade";
 import { toaster } from "@/components/commons/toaster";
-import { mensagemParaToaster, mensagensToastErro, mensagensToastSucesso } from "@/config/mensagensToaster";
+import { mensagemParaToaster, mensagensToastErro, mensagensToastSucesso, toasterDaApiOuPadrao } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
 
 export default function CadastroMissoesAtividade() {
@@ -54,18 +57,29 @@ export default function CadastroMissoesAtividade() {
     });
 
     const [termoBusca, setTermoBusca] = useState("");
+
+    const situacaoDistintivos = useMemo(
+        () => avaliarDistintivosDisponiveis(
+            distintivos,
+            missoesExistentes,
+            tipoAtividade,
+            idMissao ? idMissaoAtividade : undefined
+        ),
+        [distintivos, missoesExistentes, tipoAtividade, idMissao, idMissaoAtividade]
+    );
+
     const distintivosFiltrados = useMemo(() => {
         if (!termoBusca.trim()) {
-            return distintivos;
+            return situacaoDistintivos.disponiveis;
         }
         const busca = termoBusca.toLowerCase();
 
-        return distintivos.filter(distintivo => {
+        return situacaoDistintivos.disponiveis.filter(distintivo =>
             distintivo.titulo.toLowerCase().includes(busca) ||
-                distintivo.nomeArquivo.toLowerCase().includes(busca) ||
-                String(distintivo.pontuacao).includes(busca)
-        })
-    }, [termoBusca, distintivos]);
+            distintivo.nomeArquivo.toLowerCase().includes(busca) ||
+            String(distintivo.pontuacao).includes(busca)
+        )
+    }, [termoBusca, situacaoDistintivos]);
     const distintivosFiltradosCollection = useMemo(() => {
         return createListCollection({
             items: distintivosFiltrados.map(d => ({
@@ -210,6 +224,24 @@ export default function CadastroMissoesAtividade() {
         idMissao ? idMissaoAtividade : undefined
     )
 
+    const situacaoQuestoes = avaliarQuestoesDaMissao(questoes)
+
+    useEffect(() => {
+        if (idDistintivo === -1) return;
+
+        const aindaDisponivel = situacaoDistintivos.disponiveis
+            .some(d => d.id === idDistintivo);
+
+        if (!aindaDisponivel) setIdDistintivo(-1);
+    }, [situacaoDistintivos, idDistintivo]);
+
+    const situacaoTarefa = avaliarTarefaDaTematica(
+        missoesExistentes,
+        tituloTrilhaSelecionada,
+        tipoAtividade,
+        idMissao ? idMissaoAtividade : undefined
+    )
+
     const onSubmit = async () => {
         const resultado = validarAtividade({
             titulo,
@@ -233,6 +265,16 @@ export default function CadastroMissoesAtividade() {
             setValidacaoDistintivo(!resultado.distintivo);
 
             toaster.create(mensagensToastErro.validarMissaoAtividade)
+            return;
+        }
+
+        if (situacaoTarefa.duplicaria) {
+            toaster.create(
+                mensagensToastErro.tarefaDuplicadaNaTematica(
+                    obterNomeTematica(tituloTrilhaSelecionada) || tituloTrilhaSelecionada,
+                    situacaoTarefa.tituloDaTarefa
+                )
+            )
             return;
         }
 
@@ -302,7 +344,7 @@ const onExclude = () => {
 
     } catch (erro) {
         console.error(mensagensErroConsole.excluirMissaoAtividade, erro)
-        toaster.create(mensagensToastErro.excluirMissao)
+        toaster.create(toasterDaApiOuPadrao(erro, mensagensToastErro.excluirMissao))
     }
 }
 return (
@@ -423,13 +465,6 @@ return (
                                     A temática não pode ser alterada durante a edição
                                 </Field.ErrorText>
                             )}
-                            {/*
-                                  * Ocupação do mapa da trilha, visível
-                                  * ANTES de o usuário preencher o resto
-                                  * do formulário: o limite é uma
-                                  * característica da imagem da trilha,
-                                  * não uma surpresa no momento de salvar.
-                                  */}
                             {capacidade.possuiLimite && (
                                 <Field.HelperText
                                     textStyle="inputPlaceholder"
@@ -564,6 +599,24 @@ return (
                                         Selecione um distintivo válido.
                                     </Text>
                                 )}
+                                {(situacaoDistintivos.emUso > 0
+                                    || situacaoDistintivos.trofeuReservado) && (
+                                        <Text
+                                            textStyle="inputPlaceholder"
+                                            color="brand.neutral"
+                                        >
+                                            {[
+                                                situacaoDistintivos.emUso === 1
+                                                    ? "1 distintivo está oculto por já pertencer a outra tarefa"
+                                                    : situacaoDistintivos.emUso > 1
+                                                        ? `${situacaoDistintivos.emUso} distintivos estão ocultos por já pertencerem a outras tarefas`
+                                                        : null,
+                                                situacaoDistintivos.trofeuReservado
+                                                    ? "o Troféu Final é exclusivo da tarefa final"
+                                                    : null,
+                                            ].filter(Boolean).join("; ")}.
+                                        </Text>
+                                    )}
                             </Stack>
                         </GridItem>
                     )}
@@ -667,6 +720,16 @@ return (
                                     O tipo de atividade não pode ser alterado durante a edição.
                                 </Field.ErrorText>
                             )}
+                            {situacaoTarefa.duplicaria && (
+                                <Field.HelperText
+                                    textStyle="inputPlaceholder"
+                                    color="brand.secondaryRed"
+                                >
+                                    {situacaoTarefa.tituloDaTarefa
+                                        ? `Esta temática já tem a tarefa "${situacaoTarefa.tituloDaTarefa}". Cada temática comporta uma única missão de tarefa.`
+                                        : "Esta temática já tem uma missão de tarefa, e cabe apenas uma."}
+                                </Field.HelperText>
+                            )}
                         </Field.Root>
                     </GridItem>
                     <GridItem>
@@ -726,7 +789,7 @@ return (
                         </Field.ErrorText>
                     )}
                 </Field.Root>
-                {questoes.length !== 0 &&
+                {idMissao &&
                     <>
                         <Text
                             textStyle="emphasis"
@@ -734,17 +797,32 @@ return (
                         >
                             Questões
                         </Text>
-                        <Stack
-                            gap="3"
+                        <Text
+                            textStyle="inputPlaceholder"
+                            color={
+                                situacaoQuestoes.atingiuMinimo
+                                    ? "brand.neutral"
+                                    : "brand.secondaryRed"
+                            }
+                            mt="-2"
                         >
-                            {questoes.map(questao => (
-                                <ListagemQuestao
-                                    key={questao.id}
-                                    {...questao}
-                                    onExcluir={carregarDadosMissao}
-                                />
-                            ))}
-                        </Stack>
+                            {situacaoQuestoes.atingiuMinimo
+                                ? `${situacaoQuestoes.quantidade} ${situacaoQuestoes.quantidade === 1 ? "questão cadastrada" : "questões cadastradas"} nesta missão (mínimo de ${situacaoQuestoes.minimo}, sem limite máximo).`
+                                : `${situacaoQuestoes.quantidade} de ${situacaoQuestoes.minimo} questões mínimas nesta missão. ${situacaoQuestoes.faltam === 1 ? "Falta 1 questão" : `Faltam ${situacaoQuestoes.faltam} questões`} para a missão ficar disponível ao aventureiro.`}
+                        </Text>
+                        {questoes.length !== 0 &&
+                            <Stack
+                                gap="3"
+                            >
+                                {questoes.map(questao => (
+                                    <ListagemQuestao
+                                        key={questao.id}
+                                        {...questao}
+                                        onExcluir={carregarDadosMissao}
+                                    />
+                                ))}
+                            </Stack>
+                        }
                     </>
                 }
                 <Stack

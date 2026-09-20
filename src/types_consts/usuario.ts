@@ -13,11 +13,6 @@ export type UsuarioDTO = SenhasDTO & {
     possuiConhecimento: boolean
     primeiroAcesso: boolean
     idOcupacao: number
-    /*
-     * Comprovante devolvido por /verificacao-email/confirmar. Só existe
-     * no cadastro: a API exige a prova de que o endereço foi verificado
-     * antes de criar a conta. Na edição o campo não se aplica.
-     */
     comprovanteVerificacao?: string
 }
 
@@ -44,11 +39,6 @@ export type Usuario = {
     dataNascimento: string
     possuiConhecimento: boolean
     primeiroAcesso: boolean
-    /*
-     * A coluna FotoPerfil é NOT NULL, então "sem foto" chega da API
-     * como string vazia; a remoção devolve null. Os três casos
-     * significam a mesma coisa e urlDaFotoDePerfil trata todos.
-     */
     fotoPerfil?: string | null
     ocupacao: OcupacaoDTO
 }

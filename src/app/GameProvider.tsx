@@ -15,39 +15,15 @@ import { mensagemDeErroDaApi } from "@/utils/erroApi";
 import { toaster } from "@/components/commons/toaster";
 import { mensagensToastErro } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
-
-/**
- * Estado de jogo compartilhado pelas telas.
- *
- * O que mudou aqui, e por quê:
- *
- *  - As três buscas de abertura (temáticas, distintivos e progressos)
- *    saem em PARALELO, em um único efeito preso ao id do usuário.
- *    Antes eram sequenciais e o efeito dependia de callbacks que
- *    mudavam de identidade quando as temáticas chegavam — cada
- *    carregamento disparava o ciclo inteiro outra vez.
- *
- *  - Pontuação, progresso por temática e progresso total passam a ser
- *    DERIVADOS com useMemo. Antes eram estado sincronizado por efeitos
- *    encadeados: cada resposta da API provocava três renderizações em
- *    sequência antes de a tela estabilizar.
- *
- *  - iniciarProgressos() reaproveita a lista de progressos já buscada,
- *    em vez de pedir a mesma lista uma segunda vez.
- */
+/** Estado de jogo compartilhado pelas telas. */
 export function GameProvider({
     children,
 }: {
     children: ReactNode;
 }) {
     const { user } = useAuth();
-    const idUsuario = user?.id;
 
-    /*
-     * "carregando" é derivado: sem usuário não há nada a carregar, e
-     * atribuir o valor dentro do efeito provocava renderização em
-     * cascata.
-     */
+    const idUsuario = user?.role === "admin" ? undefined : user?.id;
     const [carregandoDados, setCarregandoDados] = useState(true);
     const carregando = Boolean(idUsuario) && carregandoDados;
 
@@ -230,11 +206,6 @@ export function GameProvider({
                 setDistintivos(distintivosCarregados);
                 setProgressoMissoes(progressosCarregados);
 
-                /*
-                 * A criação dos progressos que faltam acontece depois
-                 * de a tela já ter dados para mostrar, e só uma vez
-                 * por usuário.
-                 */
                 if (progressosIniciados.current === idUsuario) return;
                 progressosIniciados.current = idUsuario ?? null;
 
@@ -273,6 +244,14 @@ export function GameProvider({
             ])
         );
 
+        /*
+         * Durante a carga inicial as temáticas chegam antes dos progressos
+         * do usuário, e uma temática sem progresso vale 100 pela regra
+         * abaixo. Publicar esse estado intermediário faria a trilha inteira
+         * aparecer concluída por alguns instantes no primeiro acesso.
+         */
+        if (carregando) return mapa;
+
         const quantidadePorTematica = new Map<string, number>();
 
         for (const progresso of progressoMissoes) {
@@ -298,14 +277,14 @@ export function GameProvider({
         for (const [titulo, tematica] of mapa) {
             const quantidade = quantidadePorTematica.get(titulo) ?? 0;
 
-            /* Sem missões na temática o progresso é 0, não uma divisão por zero. */
+            /* Temática sem missões conta como concluída, não como divisão por zero. */
             tematica.progresso = quantidade > 0
                 ? limitarPercentual(tematica.progresso / quantidade)
                 : 100;
         }
 
         return mapa;
-    }, [tematicas, progressoMissoes]);
+    }, [carregando, tematicas, progressoMissoes]);
 
     const pontuacao = useMemo(() => {
         let total = 0;
@@ -317,11 +296,6 @@ export function GameProvider({
         return total;
     }, [progressoPontosTematicas]);
 
-    /*
-     * Média dos progressos das temáticas. Dividir pela quantidade de
-     * temáticas sem checá-la produzia NaN enquanto a lista não havia
-     * carregado — e o NaN chegava às barras de progresso e ao ranking.
-     */
     const progressoTotal = useMemo(
         () => limitarPercentual(
             mediaSegura(
@@ -338,6 +312,7 @@ export function GameProvider({
         progressoPontosTematicas,
         distintivos,
         progressoMissoes,
+        tematicas,
 
         atualizar,
         atualizarDistintivos,
@@ -349,6 +324,7 @@ export function GameProvider({
         progressoPontosTematicas,
         distintivos,
         progressoMissoes,
+        tematicas,
         atualizar,
         atualizarDistintivos,
         atualizarProgresso,

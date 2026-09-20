@@ -4,18 +4,22 @@ import { useAuth } from "@/hooks/useAuth";
 import { Avatar, Box, Button, Carousel, Dialog, DialogFooter, Grid, Heading, HStack, IconButton, Image, Portal, Progress, SimpleGrid, Skeleton, Stack, Text } from "@chakra-ui/react";
 import CustomTooltip from "@/components/commons/customTooltip";
 import { Ranking } from "@/components/ranking";
-import { FaAngleLeft, FaAngleRight, FaAward } from "react-icons/fa";
+import { FaAngleLeft, FaAngleRight, FaAward, FaTrophy } from "react-icons/fa";
 
 import { useGame } from "@/hooks/useGame";
 import MapaPrincipal from "@/components/commons/mapaPrincipal";
 import { Usuario } from "@/types_consts/usuario";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { UsuarioAPI } from "../../api/usuario";
 import { toaster } from "@/components/commons/toaster";
 import { mensagensToastErro } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
 import { urlDaFotoDePerfil } from "@/utils/fotoPerfil";
 import { mensagemDeErroDaApi } from "@/utils/erroApi";
+import { limitarPercentual } from "@/utils/pontuacao";
+import { PROGRESSO_MINIMO_TAREFA_FINAL } from "@/utils/bloqueioTarefa";
+import { proporcaoMapaPrincipal } from "@/config/itensRegional";
+import { TITULO_TROFEU_FINAL, ehTrofeuFinal } from "@/utils/distintivosDisponiveis";
 import { carrosselIntroducao } from "@/config/carrosselIntro";
 
 import imagemMissoes from "@/assets/images/tutorial/ModalIntoducaoImagem1.png"
@@ -26,12 +30,23 @@ import imagemTarefaFinal from "@/assets/images/tutorial/ModalIntoducaoImagem4.pn
 export default function TelaPrincipal() {
     const navigate = useNavigate()
     const { user } = useAuth()
-    const { progressoTotal, progressoPontosTematicas, distintivos } = useGame()
+    const { carregando, progressoTotal, progressoPontosTematicas, distintivos } = useGame()
 
     const [usuario, setUsuario] = useState<Usuario>()
     const imagem = urlDaFotoDePerfil(usuario)
     const [open, setOpen] = useState(false)
     const [loaded, setLoaded] = useState(false)
+    const [carregandoUsuario, setCarregandoUsuario] = useState(true)
+
+    /*
+     * A tela só é montada com os dois lados prontos: o cadastro (que diz
+     * se é o primeiro acesso) e o progresso do usuário. Antes disso o
+     * mapa e a barra mostrariam números que ainda vão mudar.
+     */
+    const preparando = carregando || carregandoUsuario
+
+    const [dialogoTarefaFinal, setDialogoTarefaFinal] = useState(false)
+    const tarefaFinalAnunciada = useRef(false)
 
     const tutorial: Record<string, string> = {
             imagemMissoes: imagemMissoes,
@@ -58,10 +73,29 @@ export default function TelaPrincipal() {
                     mensagensErroConsole.buscarAventureiro,
                     mensagemDeErroDaApi(erro) ?? erro
                 );
+            } finally {
+                setCarregandoUsuario(false)
             }
         }
         carregarDados();
     }, [user?.id]);
+
+    useEffect(() => {
+        if (preparando) return;
+        if (open) return;
+        if (tarefaFinalAnunciada.current) return;
+        if (progressoTotal < PROGRESSO_MINIMO_TAREFA_FINAL) return;
+
+        const trofeu = distintivos.find(ehTrofeuFinal);
+
+        if (trofeu?.adquirido) {
+            tarefaFinalAnunciada.current = true;
+            return;
+        }
+
+        tarefaFinalAnunciada.current = true;
+        setDialogoTarefaFinal(true);
+    }, [preparando, open, progressoTotal, distintivos]);
 
     const onFecharModal = async () => {
         try {
@@ -81,21 +115,59 @@ export default function TelaPrincipal() {
         return <Navigate to="/login" replace />
     }
 
+    /* Mesma malha nos dois estados, para a tela não saltar ao sair do esqueleto. */
+    const malha = {
+        columns: {
+            base: 1,
+            lg: 12,
+        },
+        gap: { base: 6, lg: 10 },
+        bg: "gray.50",
+        h: { lg: "full" },
+        maxH: { lg: "calc(100vh - 88px)" },
+        py: { base: 6, lg: 10 },
+        px: { base: 4, md: 8, lg: 16, "2xl": "40" },
+        alignItems: "stretch",
+    } as const
+
     return (
         <>
-            <SimpleGrid
-                columns={{
-                    base: 1,
-                    lg: 12,
-                }}
-                gap={10}
-                bg="gray.50"
-                h="full"
-                maxH="calc(100vh - 88px)"
-                py={10}
-                px="40"
-                alignItems="stretch"
-            >
+            {preparando ? (
+                <SimpleGrid {...malha}>
+                    <Stack
+                        gap="5"
+                        gridColumn={{ lg: "span 9" }}
+                        h="100%"
+                    >
+                        <HStack gap="5">
+                            <Skeleton
+                                boxSize="12"
+                                rounded="full"
+                            />
+                            <Skeleton
+                                h="4"
+                                w="100%"
+                                rounded="full"
+                            />
+                        </HStack>
+                        <Skeleton
+                            rounded="xl"
+                            w="100%"
+                            maxW={`${Math.round(526 * proporcaoMapaPrincipal)}px`}
+                            mx="auto"
+                            aspectRatio={proporcaoMapaPrincipal}
+                        />
+                    </Stack>
+                    <Box gridColumn={{ lg: "span 3" }}>
+                        <Skeleton
+                            h="100%"
+                            minH="80"
+                            rounded="xl"
+                        />
+                    </Box>
+                </SimpleGrid>
+            ) : (
+            <SimpleGrid {...malha}>
                 <Stack
                     gap="5"
                     gridColumn={{ lg: "span 9" }}
@@ -141,28 +213,42 @@ export default function TelaPrincipal() {
                                     )
                             ))}
                         </HStack>
-                        <CustomTooltip
-                            content={`Progresso total: ${Math.round(progressoTotal)}%`}
+                        <HStack
+                            w="100%"
+                            ml="10"
+                            gap="3"
+                            align="center"
                         >
-                            <Progress.Root
-                                value={progressoTotal}
-                                min={0}
-                                max={100}
-                                rounded="full"
-                                w="100%"
-                                ml="10"
-                                size="lg"
+                            <CustomTooltip
+                                content={`Progresso total: ${Math.round(progressoTotal)}%`}
                             >
-                                <Progress.Track
-                                    bg="brand.primaryLight"
+                                <Progress.Root
+                                    value={limitarPercentual(progressoTotal)}
+                                    min={0}
+                                    max={100}
+                                    rounded="full"
+                                    w="100%"
+                                    size="lg"
                                 >
-                                    <Progress.Range
-                                        rounded="full"
-                                        bg="brand.primaryDark"
-                                    />
-                                </Progress.Track>
-                            </Progress.Root>
-                        </CustomTooltip>
+                                    <Progress.Track
+                                        bg="brand.primaryLight"
+                                    >
+                                        <Progress.Range
+                                            rounded="full"
+                                            bg="brand.primaryDark"
+                                        />
+                                    </Progress.Track>
+                                </Progress.Root>
+                            </CustomTooltip>
+                            <Heading
+                                textStyle="headingSM"
+                                color="brand.primaryDark"
+                                textAlign="right"
+                                whiteSpace="nowrap"
+                            >
+                                {limitarPercentual(progressoTotal).toFixed(2)}%
+                            </Heading>
+                        </HStack>
                     </HStack>
                     <   MapaPrincipal
                         navigate={navigate}
@@ -174,6 +260,7 @@ export default function TelaPrincipal() {
                     <Ranking />
                 </Box>
             </SimpleGrid >
+            )}
             {/*Modal de primeiro uso*/}
             {usuario?.primeiroAcesso && (
                 <Dialog.Root
@@ -334,6 +421,86 @@ export default function TelaPrincipal() {
                     </Portal>
                 </Dialog.Root>
             )}
+
+            <Dialog.Root
+                lazyMount
+                open={dialogoTarefaFinal}
+                onOpenChange={(e) => {
+                    if (!e.open) setDialogoTarefaFinal(false);
+                }}
+                placement="center"
+                size="lg"
+            >
+                <Portal>
+                    <Dialog.Backdrop />
+                    <Dialog.Positioner>
+                        <Dialog.Content p="4">
+                            <Dialog.Body justifyContent="center">
+                                <Stack gap="5" align="center" mt="4" w="100%">
+                                    <Box
+                                        w="100px"
+                                        h="100px"
+                                        borderRadius="full"
+                                        bg="brand.primaryDark"
+                                        color="white"
+                                        display="flex"
+                                        alignItems="center"
+                                        justifyContent="center"
+                                    >
+                                        <FaTrophy size={40} />
+                                    </Box>
+                                    <Heading
+                                        textStyle="headingMD"
+                                        color="brand.primaryDark"
+                                        textAlign="center"
+                                    >
+                                        A tarefa final está liberada!
+                                    </Heading>
+                                    <Text
+                                        textStyle="bodyTextLong"
+                                        color="brand.neutral"
+                                        textAlign="center"
+                                    >
+                                        Você percorreu {Math.round(progressoTotal)}% da Trilha Formativa
+                                        e destravou a última missão da jornada. Ela vale uma única
+                                        tentativa e concede o {TITULO_TROFEU_FINAL}: vá quando
+                                        estiver pronto.
+                                    </Text>
+                                </Stack>
+                            </Dialog.Body>
+                            <Dialog.Footer justifyContent="center">
+                                <Stack
+                                    direction={{ base: "column", md: "row" }}
+                                    w="100%"
+                                    gap="2"
+                                >
+                                    <Button
+                                        flex={1}
+                                        w="100%"
+                                        variant="outline"
+                                        onClick={() => setDialogoTarefaFinal(false)}
+                                    >
+                                        Agora não
+                                    </Button>
+                                    <Button
+                                        flex={1}
+                                        w="100%"
+                                        variant="solid"
+                                        onClick={() => {
+                                            setDialogoTarefaFinal(false);
+                                            requestAnimationFrame(() => {
+                                                navigate("/trilhaFormativaInovacao/tarefaFinal");
+                                            });
+                                        }}
+                                    >
+                                        Encarar a tarefa final
+                                    </Button>
+                                </Stack>
+                            </Dialog.Footer>
+                        </Dialog.Content>
+                    </Dialog.Positioner>
+                </Portal>
+            </Dialog.Root>
         </>
     );
 }

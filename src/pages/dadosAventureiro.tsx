@@ -17,15 +17,12 @@ export default function DadosAventureiro() {
     const navigate = useNavigate();
     const { user } = useAuth()
     const { pontuacao, distintivos } = useGame()
+    const ehAventureiro = user?.role !== "admin"
+    const rotaDeRetorno = ehAventureiro
+        ? "/trilhaFormativaInovacao"
+        : "/banco-materiais"
 
     const [usuario, setUsuario] = useState<Usuario>()
-
-    /*
-     * A URL da foto é derivada do usuário já carregado. Antes havia um
-     * segundo useEffect só para montar essa string: ele não fazia
-     * requisição alguma, mas provocava uma renderização extra e a
-     * imagem só aparecia no segundo passe.
-     */
     const imagem = urlDaFotoDePerfil(usuario);
 
     useEffect(() => {
@@ -110,17 +107,19 @@ export default function DadosAventureiro() {
                                     color="brand.neutral"
                                     textAlign="left"
                                 >
-                                    {usuario.nomeAventureiro}
+                                    {ehAventureiro
+                                        ? usuario.nomeAventureiro
+                                        : "Administrador"}
                                 </Heading>
                             </Stack>
                         </Stack>
-                        <Stack gap="2">
+                        {ehAventureiro && <Stack gap="2">
                             <Text
                                 textStyle="headingXL"
                                 color="brand.primaryDark"
                                 textAlign="right"
                             >
-                                {pontuacao}
+                                {pontuacao.toFixed(2)}
                             </Text>
                             <Text
                                 textStyle="headingSM"
@@ -129,7 +128,7 @@ export default function DadosAventureiro() {
                             >
                                 pontos
                             </Text>
-                        </Stack>
+                        </Stack>}
                     </Stack>
                 </Card.Header>
                 <Card.Body
@@ -186,7 +185,7 @@ export default function DadosAventureiro() {
                                 </Text>
                             </Stack>
                         </Stack>
-                        <Stack
+                        {ehAventureiro && <Stack
                             flex={1}
                             align="center"
                             justify="center"
@@ -218,7 +217,7 @@ export default function DadosAventureiro() {
                                     </Box>
                                 ))}
                             </Stack>
-                        </Stack>
+                        </Stack>}
                     </Stack>
                     <Stack
                         direction={{ base: "column", md: "row" }}
@@ -230,7 +229,7 @@ export default function DadosAventureiro() {
                             flex={1}
                             w="100%"
                             variant="outline"
-                            onClick={() => navigate("/trilhaFormativaInovacao")}
+                            onClick={() => navigate(rotaDeRetorno)}
                         >
                             Voltar
                         </Button>

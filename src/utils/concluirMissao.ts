@@ -9,9 +9,10 @@ import { DistintivoAdquiridoAPI } from "../../api/distintivoAdquirido";
 import { DistintivoAdquiridoDTO, DistintivoDTO } from "@/types_consts/distintivo";
 import { User } from "@/contexts/AuthContext";
 import { toaster } from "@/components/commons/toaster";
-import { mensagemToasterConquista, mensagensToastErro } from "@/config/mensagensToaster";
+import { mensagemToasterConquista, mensagensToastErro, toasterDaApiOuPadrao } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
 import { mensagemDeErroDaApi } from "./erroApi";
+import { esgotouTentativas } from "./tentativas";
 
 export type RetornoConclusao = {
   pontos: number
@@ -38,13 +39,7 @@ type ConcluirConteudoProps = BaseProps & {
 export type ConcluirAtividadeProps = BaseProps & {
   tipoMaterial: "atividade"
   tipoAtividade: TipoAtividade
-  /**
-   * Distintivo vinculado à missão do tipo tarefa.
-   *
-   * Antes só o id era recebido — e nem isso chegava, porque a tela de
-   * tarefa não o passava. Recebendo id e título juntos, o toaster pode
-   * nomear o distintivo conquistado, como a demanda pede.
-   */
+  /** Distintivo vinculado à missão do tipo tarefa. */
   distintivo?: DistintivoDTO
   /** Distintivos que o usuário já possui, para não conceder de novo. */
   distintivosAdquiridos?: number[]
@@ -135,7 +130,7 @@ export async function concluirMissao(props: ConcluirMissaoProps) {
         props.progressoAtual,
         "atividade")
 
-      if (props.tentativas < 3) {
+      if (!esgotouTentativas(props.tentativas, props.tipoAtividade)) {
         if (!melhorDesempenho) {
           const progressoAntigo = props.progressoAtual as ProgressoMissaoAtividade
           progressoMissao = {
@@ -144,13 +139,6 @@ export async function concluirMissao(props: ConcluirMissaoProps) {
             pontuacaoObtida: progressoAntigo?.pontuacaoObtida ?? 0
           } as ProgressoMissao
         }
-
-        /*
-         * O progresso é persistido ANTES de verificar a conquista: a
-         * demanda pede que a verificação aconteça depois de o
-         * progresso estar gravado, para que o distintivo nunca seja
-         * concedido com base em um progresso que não foi salvo.
-         */
         await ProgressoMissaoAPI.atualizar(
           props.user.id,
           props.idMissao,
@@ -163,12 +151,6 @@ export async function concluirMissao(props: ConcluirMissaoProps) {
           props,
           progressoPersistido
         )
-
-        /*
-         * Um único toaster, que nomeia o distintivo quando houve
-         * conquista. Antes o bloco de concessão estava comentado e o
-         * toaster nunca mencionava distintivo algum.
-         */
         toaster.create(
           mensagemToasterConquista(pontuacao, distintivoConquistado?.titulo)
         )
@@ -177,7 +159,9 @@ export async function concluirMissao(props: ConcluirMissaoProps) {
 
   } catch (e) {
     console.error(mensagensErroConsole.salvarConsumoConteudo, e)
-    toaster.create(mensagensToastErro.falhaAoEnviarRespostas)
+    toaster.create(
+      toasterDaApiOuPadrao(e, mensagensToastErro.falhaAoEnviarRespostas)
+    )
   }
 
   return {
@@ -215,10 +199,6 @@ async function concederDistintivoDaTarefa(
   props: ConcluirAtividadeProps,
   progressoPersistido: number
 ): Promise<DistintivoDTO | undefined> {
-  /*
-   * TAREFA_FINAL está comentado no enum do frontend; a comparação por
-   * string cobre os dois casos sem depender disso.
-   */
   const ehTarefa =
     props.tipoAtividade === TipoAtividade.TAREFA ||
     String(props.tipoAtividade).startsWith("tarefa")
@@ -239,11 +219,6 @@ async function concederDistintivoDaTarefa(
       idDistintivo: distintivo.id,
     } as DistintivoAdquiridoDTO)
 
-    /*
-     * O backend informa em "concedido" se a conquista é nova. Se o
-     * distintivo já pertencia ao usuário, a resposta é 200 com
-     * concedido = false e nenhum toaster de novo distintivo aparece.
-     */
     const concedido = (resposta.data as { concedido?: boolean } | undefined)?.concedido
 
     return concedido === false ? undefined : distintivo
@@ -253,30 +228,12 @@ async function concederDistintivoDaTarefa(
       mensagemDeErroDaApi(e) ?? e
     )
 
-    /*
-     * A tarefa foi concluída e o progresso está salvo. Falhar a
-     * concessão não invalida a conclusão: o erro é registrado e a
-     * verificação acontece de novo na próxima conclusão com 100%.
-     */
     return undefined
   }
 }
-
 /**
  * Registra as respostas da tentativa atual como a resposta vigente do
  * usuário para aquelas questões.
- *
- * Duas coisas precisam acontecer para que responder de novo funcione:
- *
- *  1. As marcações que o usuário havia feito nestas questões e que não
- *     fazem mais parte da resposta atual precisam sair. Sem isso a
- *     correção somaria a tentativa antiga junto com a nova — o usuário
- *     trocaria de alternativa e as duas continuariam marcadas.
- *
- *  2. As respostas atuais são gravadas. O POST agora substitui a
- *     marcação existente da mesma alternativa (antes ele recusava com
- *     "Esta alternativa já foi marcada por este usuário!", e era por
- *     isso que somente a primeira tentativa ficava salva).
  */
 async function registrarRespostasDaTentativa(
   idUsuario: number,
@@ -309,10 +266,6 @@ async function registrarRespostasDaTentativa(
       && !idsRespondidos.has(idAlternativa);
   });
 
-  /*
-   * Os dois conjuntos são disjuntos por construção, então remover e
-   * gravar em paralelo não disputa a mesma linha.
-   */
   await Promise.all(
     marcacoesObsoletas.map(marcacao =>
       AlternativaMarcadaAPI.deletar(idUsuario, marcacao.alternativa.id)

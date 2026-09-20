@@ -96,14 +96,14 @@ export const router = createBrowserRouter([
       }, {
         path: "/dadosAventureiro",
         element: (
-          <RoleRoute roles={["usuario"]}>
+          <RoleRoute roles={["usuario", "admin"]}>
             <DadosAventureiro />
           </RoleRoute>
         ),
       }, {
         path: "/editarDadosAventureiro",
         element: (
-          <RoleRoute roles={["usuario"]}>
+          <RoleRoute roles={["usuario", "admin"]}>
             <CadastroAventureiro />
           </RoleRoute>
         )
@@ -163,12 +163,6 @@ export const router = createBrowserRouter([
         path: "recuperarSenha",
         element: <SolicitarRecuperarSenha />
       }, {
-        /*
-         * Caminho que o link do e-mail usa. A API monta a URL a partir
-         * de APP_FRONTEND_URL + "/redefinir-senha?token=...", então é
-         * este path que precisa existir: sem ele o clique no e-mail
-         * caía no ErrorPage e a redefinição ficava inalcançável.
-         */
         path: "redefinir-senha",
         element: <RecuperarSenha />
       }, {
@@ -178,4 +172,4 @@ export const router = createBrowserRouter([
       },
     ],
   },
-])
+])

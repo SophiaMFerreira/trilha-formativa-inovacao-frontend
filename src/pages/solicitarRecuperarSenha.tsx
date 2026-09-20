@@ -2,7 +2,7 @@ import { Button, Field, InputGroup, Link, Stack, Text } from "@chakra-ui/react";
 
 import { useState } from "react";
 import { AppInput } from "@/components/commons/AppInput";
-import { mensagensToastErro, mensagensToastSucesso } from "@/config/mensagensToaster";
+import { mensagensToastErro, mensagensToastSucesso, toasterDaApiOuPadrao } from "@/config/mensagensToaster";
 import { toaster } from "@/components/commons/toaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
 import CardCustomizado from "@/components/commons/cardCustomizado";
@@ -11,11 +11,6 @@ import { validarCorreioEletronico } from "@/utils/validations/usuario";
 import { CHAVE_EMAIL_RECUPERACAO } from "@/types_consts/recuperarSenha";
 
 export default function SolicitarRecuperarSenha() {
-    /*
-     * Quem chega aqui a partir da tela de link expirado já informou o
-     * e-mail antes: aproveitamos o valor guardado para não obrigá-lo a
-     * digitar de novo.
-     */
     const [correioEletronico, setCorreioEletronico] = useState(
         () => localStorage.getItem(CHAVE_EMAIL_RECUPERACAO) ?? ""
     )
@@ -37,12 +32,6 @@ export default function SolicitarRecuperarSenha() {
 
         try {
             await RecuperarSenhaAPI.solicitar(correioEletronico)
-
-            /*
-             * Guardado antes de sinalizar sucesso: a tela de nova senha
-             * usa este valor para reenviar o link sem pedir o e-mail
-             * outra vez.
-             */
             localStorage.setItem(
                 CHAVE_EMAIL_RECUPERACAO,
                 correioEletronico.trim()
@@ -52,7 +41,9 @@ export default function SolicitarRecuperarSenha() {
             toaster.create(mensagensToastSucesso.emailRecuperarSenha);
         } catch (e) {
             console.error(mensagensErroConsole.enviarEmailRecuperacao, e);
-            toaster.create(mensagensToastErro.enviarEmailRecSenha);
+            toaster.create(
+                toasterDaApiOuPadrao(e, mensagensToastErro.enviarEmailRecSenha)
+            );
         } finally {
             setEnviando(false)
         }
@@ -85,7 +76,6 @@ export default function SolicitarRecuperarSenha() {
                             <AppInput
                                 name="correioEletronico"
                                 type="email"
-                                value={correioEletronico}
                                 placeholder="alunoInovacoes@gmail.com"
                                 size="md"
                                 onChange={(e) => {

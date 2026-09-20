@@ -32,11 +32,6 @@ export function AvatarUsuario({
     const preview = URL.createObjectURL(file);
 
     onChange(file, preview);
-
-    /*
-     * Limpa o input: sem isso, escolher o MESMO arquivo outra vez não
-     * dispara change e a troca parece não funcionar.
-     */
     e.target.value = "";
   };
 

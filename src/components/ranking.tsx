@@ -19,13 +19,6 @@ import { gerarRankingResumido, RankingUsuario } from "@/utils/ranking";
 export function Ranking() {
     const { user } = useAuth()
     const { pontuacao, progressoTotal } = useGame()
-
-    /*
-     * Todos os hooks vêm antes de qualquer retorno condicional. A
-     * versão anterior fazia o early return de <Navigate /> acima dos
-     * useState/useEffect: com isso a quantidade de hooks variava entre
-     * renderizações, o que quebra as regras de hooks do React.
-     */
     const [progressos, setProgressos] = useState<ProgressoMissao[] | null>(null);
     const [aberturaManual, setAberturaManual] = useState<boolean | null>(null);
 
@@ -56,12 +49,6 @@ export function Ranking() {
                 );
                 toaster.create(mensagensToastErro.falhaAoCarregarRanking);
 
-                /*
-                 * Lista vazia aqui significa "não foi possível carregar
-                 * o ranking dos outros", não "ninguém pontuou". O
-                 * usuário logado continua sendo exibido logo abaixo,
-                 * com a pontuação que o GameProvider já calculou.
-                 */
                 setProgressos([]);
             }
         }
@@ -70,11 +57,6 @@ export function Ranking() {
 
         return () => { ativo = false };
     }, [idUsuario]);
-
-    /*
-     * O ranking só é recalculado quando os progressos mudam. Antes,
-     * gerarRankingResumido() rodava a cada renderização do componente.
-     */
     const ranking = useMemo<RankingUsuario[]>(() => {
         if (!progressos) return [];
 
@@ -91,12 +73,6 @@ export function Ranking() {
                     indice: 0,
                     id: usuario.id,
                     nomeAventureiro: usuario.nomeAventureiro,
-                    /*
-                     * Usuário sem foto entra no ranking com o avatar
-                     * padrão. A versão anterior fazia "continue" nesse
-                     * caso e o usuário simplesmente desaparecia da
-                     * classificação.
-                     */
                     imagem: urlDaFotoDePerfil(usuario),
                     pontuacao: 0,
                 });
@@ -113,11 +89,6 @@ export function Ranking() {
             .map((usuario, posicao) => ({ ...usuario, indice: posicao + 1 }));
     }, [progressos]);
 
-    /*
-     * Garante a exigência de exibir integralmente os dados do usuário
-     * logado mesmo quando não há outros usuários — ou quando o
-     * carregamento do ranking falhou.
-     */
     const rankingCompleto = useMemo<RankingUsuario[]>(() => {
         if (!user) return ranking;
         if (ranking.some(u => u.id === user.id)) return ranking;
@@ -140,13 +111,6 @@ export function Ranking() {
     );
 
     const carregando = progressos === null;
-
-    /*
-     * Abre por padrão quando já existe progresso, mas respeita o
-     * clique do usuário a partir do momento em que ele interage. Antes
-     * isso era um setState dentro de efeito, que reabria o painel toda
-     * vez que a pontuação era recalculada.
-     */
     const aberto = aberturaManual ?? progressoTotal > 0;
 
     const alternarAbertura = useCallback(

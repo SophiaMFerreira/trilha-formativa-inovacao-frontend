@@ -1,7 +1,7 @@
 import { Box, Heading, HStack, IconButton, Image, Skeleton, } from "@chakra-ui/react";
 import { useState } from "react";
 import CustomTooltip from "./customTooltip";
-import { FaArrowLeft, FaBook, FaGamepad, FaPencilAlt, FaPlayCircle, } from "react-icons/fa";
+import { FaArrowLeft, FaBook, FaGamepad, FaLock, FaPencilAlt, FaPlayCircle, } from "react-icons/fa";
 import { obterNomeTematicaRota } from "@/types_consts/tematica";
 
 import mapaLegislacao from "@/assets/images/Mapas/legislacao.png";
@@ -10,15 +10,25 @@ import mapaPropriedadeIntelectual from "@/assets/images/Mapas/propriedadeIntelec
 import mapaAmbientesInovacao from "@/assets/images/Mapas/ambientesInovacao.png";
 
 import { MissaoAtividade, MissaoConteudo, ProgressoMissao, TipoAtividade } from "@/types_consts/missao";
-import { posicoesDaTrilha } from "@/config/itensRegional";
+import { posicoesDaTrilha, proporcaoDaTrilha } from "@/config/itensRegional";
 
 type mapaRegionalProps = {
     tematica: string
     navigate: Function
     missoes: ProgressoMissao[]
+    /** A tarefa da trilha ainda depende de conteúdos ou quizzes. */
+    tarefaBloqueada: boolean
+    /** Chamado quando o aventureiro clica na tarefa bloqueada. */
+    onTarefaBloqueada: () => void
 }
 
-export default function MapaRegional({ tematica, navigate, missoes }: mapaRegionalProps) {
+export default function MapaRegional({
+    tematica,
+    navigate,
+    missoes,
+    tarefaBloqueada,
+    onTarefaBloqueada,
+}: mapaRegionalProps) {
 
     const [loadedMapa, setLoadedMapa] = useState(false)
     const tematicaLabel = obterNomeTematicaRota(tematica)
@@ -30,42 +40,44 @@ export default function MapaRegional({ tematica, navigate, missoes }: mapaRegion
         ambientesInovacao: mapaAmbientesInovacao,
     };
 
-    const missoesOrdenadas = montarOrdemTrilha(missoes)   
+    const missoesOrdenadas = montarOrdemTrilha(missoes)
+    const proporcao = proporcaoDaTrilha(tematica)
 
     return (
         <Box
             gridColumn={{ lg: "span 9" }}
             position="relative"
+            w="100%"
+            alignSelf="start"
         >
             <Skeleton
                 loading={!loadedMapa}
                 rounded="xl"
-                h="100%"
-                minH="500px"
-                maxH="590px"
                 w="100%"
+                maxW={`${Math.round(590 * proporcao)}px`}
+                mx="auto"
+                aspectRatio={proporcao}
+                position="relative"
             >
                 <Image
                     src={mapas[tematica]}
-                    alt={`Mapa das trilha de  ${tematicaLabel}`}
-                    objectFit="cover"
+                    alt={`Mapa da trilha de ${tematicaLabel}`}
+                    objectFit="fill"
                     rounded="2xl"
                     overflow="hidden"
                     boxShadow="map"
                     loading="lazy"
                     h="100%"
-                    minH="500px"
-                    maxH="590px"
                     w="100%"
                     onLoad={() => setLoadedMapa(true)}
                 />
                 <HStack
                     position="absolute"
-                    top="5"
-                    left="5"
+                    top={{ base: "2", md: "5" }}
+                    left={{ base: "2", md: "5" }}
                     gap="2"
                     zIndex="2"
-                    maxH="15"
+                    maxW="calc(100% - 16px)"
                 >
                     <CustomTooltip
                         content="Voltar para o mapa geral"
@@ -88,13 +100,15 @@ export default function MapaRegional({ tematica, navigate, missoes }: mapaRegion
                     <Heading
                         bg="brand.primaryLight"
                         color="brand.primaryDark"
-                        px="4"
-                        py="2"
+                        px={{ base: "2", md: "4" }}
+                        py={{ base: "1", md: "2" }}
                         borderWidth="1px"
                         borderColor="brand.primaryDark"
                         rounded="sm"
-                        textStyle="headingSM"
+                        textStyle={{ base: "bodyTextBold", md: "headingSM" }}
                         textAlign="center"
+                        lineClamp={1}
+                        pointerEvents="none"
                     >
                         {tematicaLabel}
                     </Heading>
@@ -106,6 +120,12 @@ export default function MapaRegional({ tematica, navigate, missoes }: mapaRegion
                         missao={missao}
                         paramTrilha={tematica}
                         navigate={navigate}
+                        bloqueada={
+                            tarefaBloqueada
+                            && "tipoAtividade" in missao.missao
+                            && missao.missao.tipoAtividade === TipoAtividade.TAREFA
+                        }
+                        onBloqueada={onTarefaBloqueada}
                     />
                 ))}
             </Skeleton>
@@ -117,37 +137,21 @@ type IconeMissaoProps = {
     navigate: Function
     index: number
     paramTrilha: string
+    bloqueada: boolean
+    onBloqueada: () => void
 }
 
 function IconeMissao({
     missao,
     navigate,
     index,
-    paramTrilha
+    paramTrilha,
+    bloqueada,
+    onBloqueada,
 }: IconeMissaoProps) {
     const concluido = missao.progresso === 100
-
-    let tentativas = true
-    if ("tentativasRealizadas" in missao) {
-        tentativas = missao.tentativasRealizadas < 3
-        tentativas = false
-    }
-
-    /*
-     * A associação trilha -> posições virou uma única fonte em
-     * config/itensRegional (era um switch aqui dentro), usada também
-     * pelo cadastro para limitar quantas missões cabem na trilha.
-     */
     const posicoes = posicoesDaTrilha(paramTrilha)
     const posicao = posicoes[index]
-
-    /*
-     * Mais missões do que posições no mapa: o índice excedente
-     * devolvia undefined e a leitura de posicao.top derrubava a tela
-     * inteira. Enquanto o limite do cadastro não estiver aplicado nos
-     * dados já existentes, a missão sem posição deixa de ser
-     * desenhada em vez de quebrar o mapa.
-     */
     if (!posicao) return null
 
     let rota = `/trilhaFormativaInovacao/${paramTrilha}/material/${missao.missao.id}`
@@ -174,34 +178,50 @@ function IconeMissao({
             distintivo = <FaPencilAlt size={20} />
         }
     }
-
     return (
         <CustomTooltip
-            content={missao.missao.titulo}
+            content={
+                bloqueada
+                    ? `${missao.missao.titulo} — conclua os conteúdos e quizzes da trilha para liberar`
+                    : missao.missao.titulo
+            }
         >
             <IconButton
                 position="absolute"
                 top={posicao.top}
                 left={posicao.left}
                 transform="translate(-50%, -50%)"
-                onClick={() => navigate(rota)}
+                onClick={() => bloqueada ? onBloqueada() : navigate(rota)}
 
-                aria-label={missao.missao.titulo}
+                aria-label={
+                    bloqueada
+                        ? `${missao.missao.titulo} (bloqueada)`
+                        : missao.missao.titulo
+                }
                 variant="solid"
                 size="lg"
                 color="brand.primaryLight"
 
-                w="62px"
-                h="62px"
-                minW="62px"
+                w={{ base: "11%", md: "9%", xl: "7.5%" }}
+                h="auto"
+                minW="unset"
+                aspectRatio={1}
                 p="0"
                 borderRadius="full"
 
-                bg={concluido ? "brand.secondary" : "brand.primaryDark"}
-                borderColor={concluido ? "brand.secondary" : "brand.primaryDark"}
+                bg={
+                    bloqueada
+                        ? "gray.400"
+                        : concluido ? "brand.secondary" : "brand.primaryDark"
+                }
+                borderColor={
+                    bloqueada
+                        ? "gray.400"
+                        : concluido ? "brand.secondary" : "brand.primaryDark"
+                }
                 opacity="100%"
             >
-                {distintivo}
+                {bloqueada ? <FaLock size={20} /> : distintivo}
             </IconButton>
         </CustomTooltip >
     )

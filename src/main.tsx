@@ -9,8 +9,6 @@ import { systemInovacao } from "./styles/theme.ts"
 import { AuthProvider } from './app/AuthProvider.tsx'
 import { GameProvider } from './app/GameProvider.tsx'
 
-
-
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>

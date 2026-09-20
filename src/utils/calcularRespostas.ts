@@ -32,14 +32,6 @@ export async function corrigirRespostas(
   }
 
   const valorQuestao = valorAtividade / questoes.length
-
-  /*
-   * Somente as marcações DESTE usuário.
-   *
-   * A versão anterior chamava listar(), que traz as marcações de todos
-   * os usuários da plataforma, e filtrava no navegador. O custo cresce
-   * com a base inteira a cada correção de quiz.
-   */
   const alternativasResponse =
     await AlternativaMarcadaAPI.listarPorUsuario(userId);
 
@@ -79,11 +71,6 @@ export async function corrigirRespostas(
   questoes.forEach(questao => {
     const respostas =
       respostasPorQuestao.get(questao.id) ?? [];
-
-    /*
-     * Questão sem alternativas cadastradas: contabiliza como não
-     * respondida em vez de estourar em alternativas[0].
-     */
     if (!questao.alternativas?.length) {
       incorretas.push({ questao, alternativas: respostas });
       return;

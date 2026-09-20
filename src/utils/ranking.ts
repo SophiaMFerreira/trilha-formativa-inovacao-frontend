@@ -21,17 +21,6 @@ export type RankingResumido = {
 
 /** Quantidade máxima de linhas exibidas no ranking expandido. */
 export const LIMITE_LINHAS_RANKING = 8;
-
-/**
- * Monta a versão resumida: pódio, vizinhos do usuário logado e o que
- * couber até o limite de linhas.
- *
- * A versão anterior localizava o usuário pelo nome de aventureiro e
- * empilhava ranking[indice - 1] / ranking[indice + 1] sem checar os
- * limites do array. Com o ranking vazio ou com o usuário fora dele,
- * entravam posições undefined na lista e o filtro seguinte quebrava
- * ao ler .id de undefined — o componente inteiro deixava de renderizar.
- */
 export function gerarRankingResumido(
     ranking: RankingUsuario[],
     idUsuario: number | undefined
