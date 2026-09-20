@@ -11,11 +11,6 @@ import { validarCorreioEletronico } from "@/utils/validations/usuario";
 import { CHAVE_EMAIL_RECUPERACAO } from "@/types_consts/recuperarSenha";
 
 export default function SolicitarRecuperarSenha() {
-    /*
-     * Quem chega aqui a partir da tela de link expirado já informou o
-     * e-mail antes: aproveitamos o valor guardado para não obrigá-lo a
-     * digitar de novo.
-     */
     const [correioEletronico, setCorreioEletronico] = useState(
         () => localStorage.getItem(CHAVE_EMAIL_RECUPERACAO) ?? ""
     )
@@ -37,12 +32,6 @@ export default function SolicitarRecuperarSenha() {
 
         try {
             await RecuperarSenhaAPI.solicitar(correioEletronico)
-
-            /*
-             * Guardado antes de sinalizar sucesso: a tela de nova senha
-             * usa este valor para reenviar o link sem pedir o e-mail
-             * outra vez.
-             */
             localStorage.setItem(
                 CHAVE_EMAIL_RECUPERACAO,
                 correioEletronico.trim()
@@ -52,13 +41,6 @@ export default function SolicitarRecuperarSenha() {
             toaster.create(mensagensToastSucesso.emailRecuperarSenha);
         } catch (e) {
             console.error(mensagensErroConsole.enviarEmailRecuperacao, e);
-            /*
-             * A API responde de forma idêntica para e-mail existente e
-             * inexistente (anti-enumeração), então aqui não há risco
-             * de vazamento: o que chega com 4xx é limite de envios ou
-             * e-mail malformado, e o usuário precisa ler exatamente
-             * isso para saber que basta esperar.
-             */
             toaster.create(
                 toasterDaApiOuPadrao(e, mensagensToastErro.enviarEmailRecSenha)
             );

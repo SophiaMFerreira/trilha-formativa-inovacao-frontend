@@ -17,11 +17,6 @@ type HomeMissaoProps = {
 };
 export default function HomeMissao({ missao, titulo, tentativas, quantidadeQuestoes, trilha, parametroTrilha, navigate, setEtapa }: HomeMissaoProps) {
 
-    /*
-     * A contagem de perguntas vem da missão, e não de um "5" fixo: o
-     * cadastro exige um mínimo de cinco questões, mas não impõe teto,
-     * e o card anunciava cinco mesmo quando havia mais.
-     */
     const plural = quantidadeQuestoes === 1 ? "pergunta" : "perguntas"
 
     const mensagem = missao === "quiz" ?
@@ -78,11 +73,6 @@ export default function HomeMissao({ missao, titulo, tentativas, quantidadeQuest
                         <FaPencilAlt size={46} />
                         <Text>Perguntas: {quantidadeQuestoes}</Text>
                     </Stack>
-                    {/*
-                      * O limite sai de utils/tentativas: a tarefa final
-                      * vale uma tentativa, e não três como o número
-                      * fixo anterior permitia.
-                      */}
                     <Button
                         flex={1}
                         w="100%"

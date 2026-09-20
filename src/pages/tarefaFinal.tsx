@@ -22,7 +22,6 @@ import { mensagensToastErro } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
 import { MINIMO_QUESTOES_POR_MISSAO } from "@/utils/limiteDeQuestoes";
 
-
 export default function TarefaFinal() {
     const navigate = useNavigate()
     const { user } = useAuth()
@@ -114,12 +113,6 @@ export default function TarefaFinal() {
                 const questoesEmbaralhadas = shuffleArray(tarefaFinal.questoes);
 
                 setQuestoes(questoesEmbaralhadas);
-
-                /*
-                 * Respostas dimensionadas pela missão, e não pelo
-                 * cinco fixo: uma tarefa final com mais questões lia
-                 * respostas[5] indefinido e derrubava a tela.
-                 */
                 setRespostas(
                     Array.from({ length: questoesEmbaralhadas.length }, () => [
                         {
@@ -298,7 +291,6 @@ export default function TarefaFinal() {
     )
 }
 
-
 type FormatoQuestaoAleatorioProps = {
     exibicaoQuestoes: string[];
     questao: QuestaoProp;
@@ -334,7 +326,6 @@ export function FormatoQuestaoAleatorio({
         const [linhas, setLinhas] = useState(<></>)
         // gerar combinacoes
     }*/
-
     if (exibicaoQuestoes[index] === "radio") {
         return (
             <QuestaoRadio

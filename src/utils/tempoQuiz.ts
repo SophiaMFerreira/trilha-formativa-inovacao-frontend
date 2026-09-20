@@ -1,23 +1,4 @@
-/**
- * Cronômetro do quiz preservado entre navegações.
- *
- * O tempo restante ficava apenas em estado de componente: bastava o
- * aventureiro sair para a trilha e voltar para o relógio recomeçar do
- * zero em todas as perguntas. O estado passa a ser gravado no
- * sessionStorage, por usuário e por missão, e é lido de volta quando
- * a tela monta.
- *
- * Guardamos o tempo RESTANTE, não um horário de expiração: o relógio
- * congela enquanto o aventureiro está fora do quiz. A alternativa
- * (descontar o tempo de ausência) puniria quem abriu o conteúdo para
- * consultar algo, o que não é o comportamento pedido.
- *
- * sessionStorage e não localStorage: a sessão do navegador é o escopo
- * certo, fechar o navegador encerra a tentativa. E todo acesso vai
- * dentro de try/catch porque em navegação privativa ou com cookies
- * bloqueados a simples leitura da API lança.
- */
-
+/** Cronômetro do quiz preservado entre navegações. */
 export type TempoQuizSalvo = {
     /** Segundos restantes por questão, na ordem exibida. */
     restante: number[]
@@ -94,11 +75,6 @@ export function gravarTempoQuiz(
     try {
         window.sessionStorage.setItem(chave, JSON.stringify(valor));
     } catch {
-        /*
-         * Persistir é uma conveniência, não um requisito: se o
-         * navegador recusar a escrita o quiz continua funcionando com
-         * o cronômetro apenas em memória.
-         */
     }
 }
 

@@ -1,5 +1,5 @@
 import { Navigate, useNavigate, } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Box, Button, Card, CloseButton, Dialog, Grid, Heading, Portal, Stack, Text } from "@chakra-ui/react"
 import { useAuth } from "@/hooks/useAuth";
 import { useGame } from "@/hooks/useGame";
@@ -18,14 +18,27 @@ import DistintivoImagem from "@/components/commons/distintivo";
 export default function Distintivos() {
     const navigate = useNavigate();
     const { user } = useAuth();
-    const { distintivos, progressoTotal } = useGame()
+    const { carregando, distintivos, progressoTotal } = useGame()
 
-    const [open, setOpen] = useState(progressoTotal === 100)
+    const [open, setOpen] = useState(false)
     const [nomeUsuario, setNomeUsuario] = useState("")
 
-    if (!user) {
-        return <Navigate to="/login" replace />
-    }
+    /* Só vale como concluída depois que o progresso do usuário chega. */
+    const trilhaConcluida = !carregando && progressoTotal === 100
+    const parabensExibido = useRef(false)
+
+    /*
+     * O estado inicial do diálogo era lido na primeira renderização, quando
+     * o progresso ainda não tinha chegado, então o parabéns nunca abria
+     * sozinho para quem entrava direto nesta tela.
+     */
+    useEffect(() => {
+        if (!trilhaConcluida) return;
+        if (parabensExibido.current) return;
+
+        parabensExibido.current = true;
+        setOpen(true);
+    }, [trilhaConcluida]);
 
     const imagensDistintivos: Record<string, string> = {
         "Conector de Soluções": conectorSolucoes,
@@ -139,11 +152,11 @@ export default function Distintivos() {
                                 imagem={imagensDistintivos[
                                     distintivos.at(5)?.titulo ??
                                     "Troféu Final"]}
-                                adquirido={progressoTotal === 100}
+                                adquirido={trilhaConcluida}
                                 trofeu
                                 tamanho={180}
                                 onClick={() => {
-                                    if (progressoTotal === 100) {
+                                    if (trilhaConcluida) {
                                         setOpen(true);
                                     }
                                 }}
@@ -211,11 +224,11 @@ export default function Distintivos() {
                                             imagem={imagensDistintivos[
                                                 distintivos.at(5)?.titulo ??
                                                 "Troféu Final"]}
-                                            adquirido={progressoTotal === 100}
+                                            adquirido={trilhaConcluida}
                                             trofeu
                                             tamanho={160}
                                             onClick={() => {
-                                                if (progressoTotal === 100) {
+                                                if (trilhaConcluida) {
                                                     setOpen(true);
                                                 }
                                             }}

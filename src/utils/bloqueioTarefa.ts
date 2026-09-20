@@ -8,6 +8,9 @@ import {
 
 import { esgotouTentativas } from "@/utils/tentativas";
 
+/** Progresso total mínimo para a tarefa final ser liberada. */
+export const PROGRESSO_MINIMO_TAREFA_FINAL = 80;
+
 export type SituacaoTarefaDaTrilha = {
     /** A trilha possui uma missão do tipo tarefa. */
     possuiTarefa: boolean

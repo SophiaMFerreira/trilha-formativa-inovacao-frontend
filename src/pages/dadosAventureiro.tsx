@@ -17,26 +17,12 @@ export default function DadosAventureiro() {
     const navigate = useNavigate();
     const { user } = useAuth()
     const { pontuacao, distintivos } = useGame()
-
-    /*
-     * A tela passou a servir aos dois perfis. Pontuação, distintivos
-     * e o atalho para o mapa são do aventureiro: para o
-     * administrador ficariam sempre zerados e o "Voltar" o mandaria
-     * para uma rota que ele não pode abrir.
-     */
     const ehAventureiro = user?.role !== "admin"
     const rotaDeRetorno = ehAventureiro
         ? "/trilhaFormativaInovacao"
         : "/banco-materiais"
 
     const [usuario, setUsuario] = useState<Usuario>()
-
-    /*
-     * A URL da foto é derivada do usuário já carregado. Antes havia um
-     * segundo useEffect só para montar essa string: ele não fazia
-     * requisição alguma, mas provocava uma renderização extra e a
-     * imagem só aparecia no segundo passe.
-     */
     const imagem = urlDaFotoDePerfil(usuario);
 
     useEffect(() => {

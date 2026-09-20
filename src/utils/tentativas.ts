@@ -2,16 +2,7 @@ import { TipoAtividade } from "@/types_consts/missao";
 
 /** Tentativas permitidas em um quiz ou em uma tarefa de trilha. */
 export const TENTATIVAS_PADRAO = 3;
-
-/**
- * A tarefa final vale uma única tentativa.
- *
- * O card já anunciava "esta tarefa possui apenas uma tentativa" e o
- * contador já mostrava 01, mas o botão "Começar!" só travava em
- * `tentativas >= 3`: na prática o aventureiro refazia a tarefa final
- * três vezes. O limite passa a sair de um único lugar, usado tanto
- * pela tela quanto pela gravação do progresso.
- */
+/** A tarefa final vale uma única tentativa. */
 export const TENTATIVAS_TAREFA_FINAL = 1;
 
 export function limiteDeTentativas(
@@ -29,14 +20,7 @@ export function esgotouTentativas(
 ): boolean {
     return tentativasRealizadas >= limiteDeTentativas(tipoAtividade);
 }
-
-/**
- * Contador exibido no cabeçalho do card: "02/03".
- *
- * A versão anterior concatenava um "0" fixo, o que produziria
- * "010/03" em qualquer limite de dois dígitos. O zero à esquerda aqui
- * é formatação, não parte do número.
- */
+/** Contador exibido no cabeçalho do card: "02/03". */
 export function formatarTentativas(
     tentativasRealizadas: number,
     tipoAtividade: TipoAtividade | undefined

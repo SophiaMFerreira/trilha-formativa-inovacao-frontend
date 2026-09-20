@@ -23,7 +23,6 @@ import { mensagensErroConsole } from "@/config/mensagensError";
 import { MINIMO_QUESTOES_POR_MISSAO } from "@/utils/limiteDeQuestoes";
 import { avaliarLiberacaoDaTarefa } from "@/utils/bloqueioTarefa";
 
-
 export default function Tarefa() {
     const navigate = useNavigate()
     const { ParamTrilha, idMissao } = useParams()
@@ -55,11 +54,6 @@ export default function Tarefa() {
     const [trilha, setTrilha] = useState("");
 
     const [progressoTarefa, setProgressoTarefa] = useState<ProgressoMissaoAtividade>();
-    /*
-     * Distintivo vinculado à tarefa. A tela nunca repassava essa
-     * informação para a conclusão, então a concessão do distintivo não
-     * tinha como saber qual distintivo conceder.
-     */
     const [distintivoTarefa, setDistintivoTarefa] = useState<DistintivoDTO>();
     const [tituloTematica, setTituloTematica] = useState("")
     const [respostas, setRespostas] = useState<AlternativaMarcadaDTO[][]>(
@@ -78,11 +72,6 @@ export default function Tarefa() {
         Array(MINIMO_QUESTOES_POR_MISSAO).fill("radio")
     )
 
-    /*
-     * Missões da mesma temática, derivadas do progresso que o
-     * GameProvider já carregou: evita um segundo GET da lista inteira
-     * de missões só para conferir o bloqueio.
-     */
     const missoesDaTematica = useMemo(
         () => progressoMissoes
             .filter(p => p?.missao?.tematica?.titulo === tituloTematica)
@@ -137,10 +126,6 @@ export default function Tarefa() {
 
                 setQuestoes(questoesEmbaralhadas);
 
-                /*
-                 * As três estruturas paralelas acompanham o número
-                 * real de questões da missão, em vez do cinco fixo.
-                 */
                 setRespostas(
                     Array.from({ length: questoesEmbaralhadas.length }, () => [
                         {
@@ -183,15 +168,6 @@ export default function Tarefa() {
         carregarDados();
     }, [ParamTrilha, idMissao]);
 
-    /*
-     * Trava de rota: a tarefa é a última missão da temática e só abre
-     * depois dos conteúdos e quizzes. O bloqueio principal está no
-     * mapa da trilha; esta guarda cobre quem chega pela URL.
-     *
-     * Só roda depois de o GameProvider terminar de carregar: com a
-     * lista de progressos ainda vazia, qualquer tarefa pareceria
-     * bloqueada.
-     */
     useEffect(() => {
         if (carregandoJogo) return;
         if (!tituloTematica) return;
@@ -353,7 +329,6 @@ export default function Tarefa() {
     )
 }
 
-
 type FormatoQuestaoAleatorioProps = {
     exibicaoQuestoes: string[];
     questao: QuestaoProp;
@@ -389,7 +364,6 @@ export function FormatoQuestaoAleatorio({
         const [linhas, setLinhas] = useState(<></>)
         // gerar combinacoes
     }*/
-
     if (exibicaoQuestoes[index] === "radio") {
         return (
             <QuestaoRadio

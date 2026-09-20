@@ -6,6 +6,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { obterNomeTematica, Tematica, TematicaDTO } from "@/types_consts/tematica";
 import { avaliarCapacidadeDaTrilha } from "@/utils/limiteDeMissoes";
 import { avaliarQuestoesDaMissao } from "@/utils/limiteDeQuestoes";
+import { avaliarTarefaDaTematica } from "@/utils/limiteDeTarefas";
+import { avaliarDistintivosDisponiveis } from "@/utils/distintivosDisponiveis";
 import { Missao, MissaoAtividade, MissaoDTO, MissaoTarefa, TipoAtividade, TipoAtividadeLabel } from "@/types_consts/missao";
 import { TematicaAPI } from "../../api/tematica";
 import { QuestaoProp } from "@/types_consts/questao";
@@ -55,18 +57,29 @@ export default function CadastroMissoesAtividade() {
     });
 
     const [termoBusca, setTermoBusca] = useState("");
+
+    const situacaoDistintivos = useMemo(
+        () => avaliarDistintivosDisponiveis(
+            distintivos,
+            missoesExistentes,
+            tipoAtividade,
+            idMissao ? idMissaoAtividade : undefined
+        ),
+        [distintivos, missoesExistentes, tipoAtividade, idMissao, idMissaoAtividade]
+    );
+
     const distintivosFiltrados = useMemo(() => {
         if (!termoBusca.trim()) {
-            return distintivos;
+            return situacaoDistintivos.disponiveis;
         }
         const busca = termoBusca.toLowerCase();
 
-        return distintivos.filter(distintivo => {
+        return situacaoDistintivos.disponiveis.filter(distintivo =>
             distintivo.titulo.toLowerCase().includes(busca) ||
-                distintivo.nomeArquivo.toLowerCase().includes(busca) ||
-                String(distintivo.pontuacao).includes(busca)
-        })
-    }, [termoBusca, distintivos]);
+            distintivo.nomeArquivo.toLowerCase().includes(busca) ||
+            String(distintivo.pontuacao).includes(busca)
+        )
+    }, [termoBusca, situacaoDistintivos]);
     const distintivosFiltradosCollection = useMemo(() => {
         return createListCollection({
             items: distintivosFiltrados.map(d => ({
@@ -211,12 +224,23 @@ export default function CadastroMissoesAtividade() {
         idMissao ? idMissaoAtividade : undefined
     )
 
-    /*
-     * Contagem de questões da missão. Diferente do limite de posições
-     * do mapa, aqui o que existe é um piso (cinco) e nenhum teto: a
-     * missão pode receber quantas questões o administrador quiser.
-     */
     const situacaoQuestoes = avaliarQuestoesDaMissao(questoes)
+
+    useEffect(() => {
+        if (idDistintivo === -1) return;
+
+        const aindaDisponivel = situacaoDistintivos.disponiveis
+            .some(d => d.id === idDistintivo);
+
+        if (!aindaDisponivel) setIdDistintivo(-1);
+    }, [situacaoDistintivos, idDistintivo]);
+
+    const situacaoTarefa = avaliarTarefaDaTematica(
+        missoesExistentes,
+        tituloTrilhaSelecionada,
+        tipoAtividade,
+        idMissao ? idMissaoAtividade : undefined
+    )
 
     const onSubmit = async () => {
         const resultado = validarAtividade({
@@ -241,6 +265,16 @@ export default function CadastroMissoesAtividade() {
             setValidacaoDistintivo(!resultado.distintivo);
 
             toaster.create(mensagensToastErro.validarMissaoAtividade)
+            return;
+        }
+
+        if (situacaoTarefa.duplicaria) {
+            toaster.create(
+                mensagensToastErro.tarefaDuplicadaNaTematica(
+                    obterNomeTematica(tituloTrilhaSelecionada) || tituloTrilhaSelecionada,
+                    situacaoTarefa.tituloDaTarefa
+                )
+            )
             return;
         }
 
@@ -431,13 +465,6 @@ return (
                                     A temática não pode ser alterada durante a edição
                                 </Field.ErrorText>
                             )}
-                            {/*
-                                  * Ocupação do mapa da trilha, visível
-                                  * ANTES de o usuário preencher o resto
-                                  * do formulário: o limite é uma
-                                  * característica da imagem da trilha,
-                                  * não uma surpresa no momento de salvar.
-                                  */}
                             {capacidade.possuiLimite && (
                                 <Field.HelperText
                                     textStyle="inputPlaceholder"
@@ -572,6 +599,24 @@ return (
                                         Selecione um distintivo válido.
                                     </Text>
                                 )}
+                                {(situacaoDistintivos.emUso > 0
+                                    || situacaoDistintivos.trofeuReservado) && (
+                                        <Text
+                                            textStyle="inputPlaceholder"
+                                            color="brand.neutral"
+                                        >
+                                            {[
+                                                situacaoDistintivos.emUso === 1
+                                                    ? "1 distintivo está oculto por já pertencer a outra tarefa"
+                                                    : situacaoDistintivos.emUso > 1
+                                                        ? `${situacaoDistintivos.emUso} distintivos estão ocultos por já pertencerem a outras tarefas`
+                                                        : null,
+                                                situacaoDistintivos.trofeuReservado
+                                                    ? "o Troféu Final é exclusivo da tarefa final"
+                                                    : null,
+                                            ].filter(Boolean).join("; ")}.
+                                        </Text>
+                                    )}
                             </Stack>
                         </GridItem>
                     )}
@@ -675,6 +720,16 @@ return (
                                     O tipo de atividade não pode ser alterado durante a edição.
                                 </Field.ErrorText>
                             )}
+                            {situacaoTarefa.duplicaria && (
+                                <Field.HelperText
+                                    textStyle="inputPlaceholder"
+                                    color="brand.secondaryRed"
+                                >
+                                    {situacaoTarefa.tituloDaTarefa
+                                        ? `Esta temática já tem a tarefa "${situacaoTarefa.tituloDaTarefa}". Cada temática comporta uma única missão de tarefa.`
+                                        : "Esta temática já tem uma missão de tarefa, e cabe apenas uma."}
+                                </Field.HelperText>
+                            )}
                         </Field.Root>
                     </GridItem>
                     <GridItem>
@@ -734,13 +789,6 @@ return (
                         </Field.ErrorText>
                     )}
                 </Field.Root>
-                {/*
-                  * A contagem aparece também com zero questões, que é
-                  * justamente quando o administrador precisa vê-la: o
-                  * bloco inteiro ficava escondido nesse caso e a
-                  * missão era publicada sem questão nenhuma, para
-                  * quebrar depois, no jogo.
-                  */}
                 {idMissao &&
                     <>
                         <Text

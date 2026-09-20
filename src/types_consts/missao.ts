@@ -88,7 +88,6 @@ export type MissaoAtividade =
     | MissaoQuiz
     | MissaoTarefa
 
-
 type MissaoBase = {
     id: number
     titulo: string
@@ -129,7 +128,6 @@ export type ProgressoMissaoAtividade = ProgressoMissaoBase & {
     tentativasRealizadas: number
     pontuacaoObtida: number
 }
-
 
 //------------------------------------------------------------
 export type ProgressoPontuacaoTematica = {

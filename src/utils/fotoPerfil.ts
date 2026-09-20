@@ -42,11 +42,6 @@ export function urlDaFotoDePerfil(usuario: UsuarioComFoto | null | undefined): s
 
     if (!usuario || !caminho) return undefined;
 
-    /*
-     * Caminho já no formato público: usa como veio. É o que o backend
-     * grava desde a correção do UploadService, e evita remontar aqui
-     * uma regra de sanitização que pertence ao servidor.
-     */
     if (caminho.includes(PREFIXO_PUBLICO_PERFIL)) {
         const posicao = caminho.indexOf(PREFIXO_PUBLICO_PERFIL);
 

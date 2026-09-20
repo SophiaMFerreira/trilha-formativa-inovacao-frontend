@@ -32,7 +32,6 @@ export default function Material() {
     const [concluido, setCloncluido] = useState<boolean>(false)
     const conclusaoExecutada = useRef(false);
 
-
     async function concluirMaterial() {
         if (!clicouLink) {
             toaster.create(mensagensToastErro.conteudoNaoConsumido)

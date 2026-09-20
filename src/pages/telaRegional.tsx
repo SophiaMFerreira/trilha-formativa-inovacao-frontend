@@ -37,31 +37,10 @@ export function TelaRegional() {
     const { progressoMissoes, progressoPontosTematicas, distintivos } = useGame()
 
     const trilha = obterNomeTematicaBanco(ParamTrilha!)
-
-    /*
-     * Só as missões da trilha vêm da API. Tudo o que depende de
-     * progresso e distintivos é DERIVADO do GameProvider.
-     *
-     * A versão anterior calculava missoesTematica, missoesPendentes e
-     * distintivosTrilha dentro do efeito, que dependia de
-     * [ParamTrilha, distintivos] e lia progressoMissoes por closure
-     * SEM declará-lo. Duas consequências:
-     *
-     *  - na primeira execução progressoMissoes ainda estava vazio, e o
-     *    mapa e a lista de pendentes ficavam vazios sem nunca recalcular;
-     *  - "distintivos" é um array novo a cada recarga do provider, e
-     *    cada troca de identidade refazia o GET de todas as missões.
-     */
     const [missoesTrilha, setMissoesTrilha] = useState<Missao[] | null>(null)
     const [missaoEscolhida, setMissaoEscolhida] = useState<Missao | null>(null);
     const [open, setOpen] = useState(false);
 
-    /*
-     * Diálogo da última missão da trilha, em dois estados:
-     * "bloqueada" quando ainda faltam conteúdos ou quizzes, e
-     * "liberada" na chegada, para anunciar que aquela é a etapa final
-     * da temática.
-     */
     const [dialogoTarefa, setDialogoTarefa] =
         useState<"bloqueada" | "liberada" | null>(null)
 
@@ -79,7 +58,6 @@ export function TelaRegional() {
         "Mestre da Criatividade": mestreCriatividade,
         "Troféu Final": trofeuFinal,
     };
-
 
     useEffect(() => {
         let ativo = true;
@@ -141,10 +119,6 @@ export function TelaRegional() {
             .filter((p): p is ProgressoMissao => p !== undefined);
     }, [missoesTrilha, progressoMissoes]);
 
-    /*
-     * Situação da tarefa da trilha: ela é a última missão da temática
-     * e só abre depois dos conteúdos e quizzes.
-     */
     const situacaoTarefa = useMemo(
         () => avaliarLiberacaoDaTarefa(missoesTrilha, progressoMissoes),
         [missoesTrilha, progressoMissoes]
@@ -164,11 +138,6 @@ export function TelaRegional() {
         );
 
         return missoesTrilha.filter(missao => {
-            /*
-             * A tarefa bloqueada sai de "Missões a fazer": listar uma
-             * missão que o aventureiro ainda não pode abrir só gera o
-             * clique que leva ao aviso de bloqueio.
-             */
             if (
                 tarefaBloqueada
                 && "tipoAtividade" in missao
@@ -187,10 +156,6 @@ export function TelaRegional() {
 
     const missoesPendentes = useMemo(() => pendentes.slice(0, 3), [pendentes]);
 
-    /*
-     * A missão em foco é a escolhida pelo usuário; sem escolha, a
-     * primeira pendente; sem pendentes, a primeira da trilha.
-     */
     const missaoSelecionada = missaoEscolhida
         ?? pendentes[0]
         ?? missoesTrilha?.[0]
@@ -202,11 +167,6 @@ export function TelaRegional() {
         [missaoSelecionada, ParamTrilha]
     );
 
-    /*
-     * Chegada à última missão: assim que os pré-requisitos caem, a
-     * trilha anuncia a etapa final uma única vez. A tarefa já
-     * finalizada não dispara nada — não há mais nada a anunciar.
-     */
     useEffect(() => {
         if (!situacaoTarefa.possuiTarefa) return;
         if (!situacaoTarefa.liberada) return;
@@ -255,11 +215,11 @@ export function TelaRegional() {
                 base: 1,
                 lg: 12,
             }}
-            gap={10}
-            h="full"
-            maxH="calc(100vh - 88px)"
-            py={10}
-            px="40"
+            gap={{ base: 6, lg: 10 }}
+            h={{ lg: "full" }}
+            maxH={{ lg: "calc(100vh - 88px)" }}
+            py={{ base: 6, lg: 10 }}
+            px={{ base: 4, md: 8, lg: 16, "2xl": "40" }}
             alignItems="stretch"
         >
             <   MapaRegional
@@ -278,7 +238,8 @@ export function TelaRegional() {
                 <Box
                     p="4"
                     bg="brand.primaryLight"
-                    w="72"
+                    w={{ base: "100%", lg: "72" }}
+                    maxW="72"
                     rounded="xl"
                     shadow="card"
                 >
@@ -328,12 +289,6 @@ export function TelaRegional() {
                     w="100%"
                 >
                     <Progress.Root
-                        /*
-                         * "value", não "defaultValue": como componente
-                         * não controlado, a barra ficava presa no
-                         * primeiro valor (zero, antes de os progressos
-                         * chegarem) e nunca acompanhava a temática.
-                         */
                         value={limitarPercentual(progresso)}
                         min={0}
                         max={100}
@@ -478,12 +433,6 @@ export function TelaRegional() {
                                     >
                                         Voltar
                                     </Button>
-                                    {/*
-                                      * Mesma trava do mapa: se a missão
-                                      * em foco for a tarefa ainda
-                                      * bloqueada, o botão explica em vez
-                                      * de navegar.
-                                      */}
                                     <Button
                                         flex={1}
                                         w="100%"
@@ -517,11 +466,6 @@ export function TelaRegional() {
                 </Portal>
             </Dialog.Root>
 
-            {/*
-              * Diálogo da última missão da trilha. Fechado, quando
-              * dialogoTarefa é null; "liberada" comemora a chegada e
-              * "bloqueada" explica o que ainda falta.
-              */}
             <Dialog.Root
                 lazyMount
                 open={dialogoTarefa !== null}

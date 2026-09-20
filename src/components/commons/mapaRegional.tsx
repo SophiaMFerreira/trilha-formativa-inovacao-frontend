@@ -10,7 +10,7 @@ import mapaPropriedadeIntelectual from "@/assets/images/Mapas/propriedadeIntelec
 import mapaAmbientesInovacao from "@/assets/images/Mapas/ambientesInovacao.png";
 
 import { MissaoAtividade, MissaoConteudo, ProgressoMissao, TipoAtividade } from "@/types_consts/missao";
-import { posicoesDaTrilha } from "@/config/itensRegional";
+import { posicoesDaTrilha, proporcaoDaTrilha } from "@/config/itensRegional";
 
 type mapaRegionalProps = {
     tematica: string
@@ -40,42 +40,44 @@ export default function MapaRegional({
         ambientesInovacao: mapaAmbientesInovacao,
     };
 
-    const missoesOrdenadas = montarOrdemTrilha(missoes)   
+    const missoesOrdenadas = montarOrdemTrilha(missoes)
+    const proporcao = proporcaoDaTrilha(tematica)
 
     return (
         <Box
             gridColumn={{ lg: "span 9" }}
             position="relative"
+            w="100%"
+            alignSelf="start"
         >
             <Skeleton
                 loading={!loadedMapa}
                 rounded="xl"
-                h="100%"
-                minH="500px"
-                maxH="590px"
                 w="100%"
+                maxW={`${Math.round(590 * proporcao)}px`}
+                mx="auto"
+                aspectRatio={proporcao}
+                position="relative"
             >
                 <Image
                     src={mapas[tematica]}
-                    alt={`Mapa das trilha de  ${tematicaLabel}`}
-                    objectFit="cover"
+                    alt={`Mapa da trilha de ${tematicaLabel}`}
+                    objectFit="fill"
                     rounded="2xl"
                     overflow="hidden"
                     boxShadow="map"
                     loading="lazy"
                     h="100%"
-                    minH="500px"
-                    maxH="590px"
                     w="100%"
                     onLoad={() => setLoadedMapa(true)}
                 />
                 <HStack
                     position="absolute"
-                    top="5"
-                    left="5"
+                    top={{ base: "2", md: "5" }}
+                    left={{ base: "2", md: "5" }}
                     gap="2"
                     zIndex="2"
-                    maxH="15"
+                    maxW="calc(100% - 16px)"
                 >
                     <CustomTooltip
                         content="Voltar para o mapa geral"
@@ -98,13 +100,15 @@ export default function MapaRegional({
                     <Heading
                         bg="brand.primaryLight"
                         color="brand.primaryDark"
-                        px="4"
-                        py="2"
+                        px={{ base: "2", md: "4" }}
+                        py={{ base: "1", md: "2" }}
                         borderWidth="1px"
                         borderColor="brand.primaryDark"
                         rounded="sm"
-                        textStyle="headingSM"
+                        textStyle={{ base: "bodyTextBold", md: "headingSM" }}
                         textAlign="center"
+                        lineClamp={1}
+                        pointerEvents="none"
                     >
                         {tematicaLabel}
                     </Heading>
@@ -146,30 +150,8 @@ function IconeMissao({
     onBloqueada,
 }: IconeMissaoProps) {
     const concluido = missao.progresso === 100
-
-    /*
-     * O bloco que existia aqui calculava "tentativas" a partir de
-     * tentativasRealizadas < 3 e, na linha seguinte, sobrescrevia o
-     * resultado com false — a variável nunca chegava a ser lida. O
-     * bloqueio que faltava não era por tentativa e sim por
-     * pré-requisito, e agora chega pronto por props.
-     */
-
-    /*
-     * A associação trilha -> posições virou uma única fonte em
-     * config/itensRegional (era um switch aqui dentro), usada também
-     * pelo cadastro para limitar quantas missões cabem na trilha.
-     */
     const posicoes = posicoesDaTrilha(paramTrilha)
     const posicao = posicoes[index]
-
-    /*
-     * Mais missões do que posições no mapa: o índice excedente
-     * devolvia undefined e a leitura de posicao.top derrubava a tela
-     * inteira. Enquanto o limite do cadastro não estiver aplicado nos
-     * dados já existentes, a missão sem posição deixa de ser
-     * desenhada em vez de quebrar o mapa.
-     */
     if (!posicao) return null
 
     let rota = `/trilhaFormativaInovacao/${paramTrilha}/material/${missao.missao.id}`
@@ -196,12 +178,6 @@ function IconeMissao({
             distintivo = <FaPencilAlt size={20} />
         }
     }
-
-    /*
-     * A missão bloqueada continua visível e clicável: clicar abre a
-     * explicação em vez de navegar. Esconder o ícone tiraria do mapa
-     * a noção de que ainda há uma etapa pela frente.
-     */
     return (
         <CustomTooltip
             content={
@@ -226,9 +202,10 @@ function IconeMissao({
                 size="lg"
                 color="brand.primaryLight"
 
-                w="62px"
-                h="62px"
-                minW="62px"
+                w={{ base: "11%", md: "9%", xl: "7.5%" }}
+                h="auto"
+                minW="unset"
+                aspectRatio={1}
                 p="0"
                 borderRadius="full"
 

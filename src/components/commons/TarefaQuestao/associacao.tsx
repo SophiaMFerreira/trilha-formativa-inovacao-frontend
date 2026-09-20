@@ -69,10 +69,6 @@ function ordenarPelaResposta(
 /**
  * Emparelha as duas colunas pela posição, que é como o usuário lê a
  * tela: a linha 1 da coluna A responde a linha 1 da coluna B.
- *
- * As listas são truncadas ao menor comprimento. Uma questão de
- * associação gravada pela metade (alternativa sem par) deixava
- * `colunaB[i]` indefinido e o consumidor estourava ao ler `.id`.
  */
 function emparelhar(
     colunaA: Alternativa[],
@@ -98,19 +94,6 @@ export default function Associacao({ questao, value, onChange }: AssociacaoProps
             paresA.push(alternativa);
             paresB.push(alternativa.alternativaAssociada);
         }
-
-        /*
-         * No quiz cada pergunta é montada e desmontada conforme o
-         * aventureiro navega, e a chave é o id da questão: voltar para
-         * uma questão já respondida remontava o componente do zero e
-         * embaralhava tudo de novo, descartando a associação que ele
-         * tinha acabado de montar. Retomar a ordem da resposta já
-         * registrada resolve — o embaralhamento fica só para a
-         * primeira visita.
-         *
-         * O valor é lido apenas na montagem, de propósito: depois
-         * disso quem manda na ordem é o arraste.
-         */
         const ordemSalva = ordenarPelaResposta(paresA, paresB, value);
 
         if (ordemSalva) return ordemSalva;
@@ -124,25 +107,8 @@ export default function Associacao({ questao, value, onChange }: AssociacaoProps
     const [colA, setColA] = useState<Alternativa[]>(colunaA);
     const [colB, setColB] = useState<AlternativaAssocida[]>(colunaB);
 
-    /*
-     * O onChange chega como arrow nova a cada renderização do pai;
-     * guardá-lo em ref é o que permite reagir só à mudança das
-     * colunas, sem reemitir a cada render.
-     */
     const onChangeRef = useRef(onChange);
     onChangeRef.current = onChange;
-
-    /*
-     * A resposta sobe daqui, e não de um onChange no <Stack>.
-     *
-     * O <Stack> vira uma <div> e os itens arrastáveis não têm
-     * controle de formulário algum: o evento DOM "change" nunca
-     * borbulhava até ele, então a associação NUNCA era reportada ao
-     * quiz e o payload ia para a API com idAlternativa -1. Reagir à
-     * mudança das colunas cobre os dois caminhos — o arraste e o
-     * emparelhamento inicial, que é uma resposta válida por si só,
-     * já que as colunas chegam embaralhadas.
-     */
     useEffect(() => {
         onChangeRef.current(emparelhar(colA, colB));
     }, [colA, colB]);
@@ -160,22 +126,6 @@ export default function Associacao({ questao, value, onChange }: AssociacaoProps
             gap="6"
             w="100%"
         >
-            {/*
-              * Reordenação pelo helper move() do @dnd-kit, como já era
-              * feito em ordenacao.tsx.
-              *
-              * A versão anterior lia event.operation.source.data.index.
-              * "data" é o objeto arbitrário que o consumidor passa a
-              * useSortable e aqui ele nunca foi passado, então vinha
-              * {} e data.index era undefined: a guarda logo abaixo
-              * descartava todo arraste e a lista nunca mudava. O índice
-              * existe, mas direto no sortable (source.index), e não
-              * dentro de data — e move() já resolve isso sozinho.
-              *
-              * onDragOver, e não onDragEnd: é o que reordena durante o
-              * arraste, em vez de o item voltar ao lugar e só então
-              * saltar para a posição nova.
-              */}
             <DragDropProvider
                 onDragOver={(event) => {
                     setColA((items) => move(items, event));
@@ -309,13 +259,6 @@ export function AssociacaoCadastroQuiz({ alternativas, onChange }: AssociacaoCad
                     </Box>
                 ))}
             </Stack>
-            {/*
-              * Sem onChange no Stack: o evento change do input interno
-              * borbulhava até aqui e chamava onChange SEM o índice da
-              * linha, fazendo o consumidor ler colunaA[undefined] e
-              * estourar ao acessar .id. Quem notifica a alteração é o
-              * Editable.Root de cada célula, que sabe o índice.
-              */}
             <Stack gap="5">
                 {colunaB.map((alternativa, index) => (
                     <Box
@@ -369,7 +312,6 @@ export function AssociacaoCadastroQuiz({ alternativas, onChange }: AssociacaoCad
         </SimpleGrid >
     )
 }
-
 
 export function AssociacaoCadastroTarefa({ alternativas, onChange }: AssociacaoCadastroProps) {
     const colunaA: Alternativa[] = [];

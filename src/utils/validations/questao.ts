@@ -134,11 +134,6 @@ export function validarQuestao({
     return {
         valido,
 
-        /*
-         * As demais chaves indicam "está inválido"; esta devolvia o
-         * contrário, então a tela marcava o campo de ID como errado
-         * justamente quando ele estava correto.
-         */
         idQuestao: !idQuestaoValido,
         enunciado: !enunciadoValido,
         mensagemCorrecao: !mensagemCorrecaoValida,

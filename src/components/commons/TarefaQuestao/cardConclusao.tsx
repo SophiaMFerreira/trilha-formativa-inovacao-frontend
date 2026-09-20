@@ -177,12 +177,6 @@ export default function ConclusaoMissao({
                                 questao: respostaQuestao.questao,
                                 index: index,
                             });
-                            /*
-                             * A correção só é revelada quando não há
-                             * mais o que tentar: tentativas esgotadas
-                             * (limite que agora depende do tipo de
-                             * atividade) ou pontuação máxima atingida.
-                             */
                             setOpen(
                                 esgotouTentativas(tentativas, tipoAtividade)
                                 || valorMissao === retornoConclusao.pontos

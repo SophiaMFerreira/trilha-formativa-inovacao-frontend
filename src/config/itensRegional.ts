@@ -3,317 +3,322 @@ import { obterRotaTematica, Tematica, TematicaRota } from "@/types_consts/temati
 export const posicoesItensLegislacao = [
   {
     id: 1,
-    top: "17.5%",
-    left: "25%",
+    top: "20.51%",
+    left: "24.84%",
   },
   {
     id: 2,
-    top: "35.2%",
-    left: "10.28%",
+    top: "39.06%",
+    left: "10.32%",
   },
   {
     id: 3,
-    top: "55%",
-    left: "19.4%",
+    top: "58.74%",
+    left: "19.34%",
   },
   {
     id: 4,
-    top: "41.5%",
-    left: "34.7%",
+    top: "44.68%",
+    left: "35.12%",
   },
   {
     id: 5,
-    top: "75.5%",
-    left: "34.4%",
+    top: "79.54%",
+    left: "34.44%",
   },
   {
     id: 6,
-    top: "62.9%",
-    left: "55%",
+    top: "67.19%",
+    left: "55.05%",
   },
   {
     id: 7,
-    top: "42.15%",
-    left: "60%",
+    top: "45.17%",
+    left: "60.06%",
   },
   {
     id: 8,
-    top: "58.3%",
-    left: "75.9%",
+    top: "61.38%",
+    left: "75.49%",
   },
-
   {
     id: 9,
-    top: "72%",
-    left: "89.5%",
+    top: "75.24%",
+    left: "89.32%",
   },
-
   {
     id: 10,
-    top: "42.2%",
-    left: "92.4%",
+    top: "45.65%",
+    left: "92.29%",
   },
   {
     id: 11,
-    top: "29.5%",
-    left: "80.9%",
+    top: "33.25%",
+    left: "80.92%",
   },
   {
     id: 12,
-    top: "15.5%",
-    left: "68.2%",
+    top: "19.97%",
+    left: "68.49%",
   },
 ]
 
 export const posicoesItensTransferenciaTecnologica = [
   {
     id: 1,
-    top: "52%",
-    left: "87.7%",
+    top: "50.94%",
+    left: "87.99%",
   },
   {
     id: 2,
-    top: "28.5%",
-    left: "86.5%",
+    top: "29.28%",
+    left: "86.04%",
   },
   {
     id: 3,
-    top: "39%",
-    left: "75%",
+    top: "39.61%",
+    left: "75.49%",
   },
   {
     id: 4,
-    top: "62%",
-    left: "70.8%",
+    top: "60.88%",
+    left: "70.67%",
   },
   {
     id: 5,
-    top: "50%",
-    left: "54.5%",
+    top: "50.39%",
+    left: "54.82%",
   },
   {
     id: 6,
-    top: "26%",
-    left: "64.5%",
+    top: "25.80%",
+    left: "64.23%",
   },
   {
     id: 7,
-    top: "23.7%",
-    left: "49.2%",
+    top: "22.93%",
+    left: "49.28%",
   },
   {
     id: 8,
-    top: "25%",
-    left: "33.9%",
+    top: "24.48%",
+    left: "33.56%",
   },
   {
     id: 9,
-    top: "25%",
-    left: "17%",
+    top: "24.48%",
+    left: "16.86%",
   },
   {
     id: 10,
-    top: "53%",
-    left: "37.7%",
+    top: "52.82%",
+    left: "37.57%",
   },
   {
     id: 11,
-    top: "53%",
-    left: "24.7%",
+    top: "52.60%",
+    left: "24.67%",
   },
   {
     id: 12,
-    top: "62.1%",
-    left: "13.7%",
+    top: "63.04%",
+    left: "13.83%",
   },
   {
     id: 13,
-    top: "89%",
-    left: "18.1%",
+    top: "89.34%",
+    left: "18.33%",
   },
   {
     id: 14,
-    top: "80%",
-    left: "29%",
+    top: "80.66%",
+    left: "29.52%",
   },
   {
     id: 15,
-    top: "80.3%",
-    left: "46.1%",
+    top: "81.16%",
+    left: "46.16%",
   },
   {
     id: 16,
-    top: "86.7%",
-    left: "64%",
+    top: "85.69%",
+    left: "63.83%",
   },
   {
     id: 17,
-    top: "82.6%",
-    left: "82.5%",
+    top: "83.48%",
+    left: "82.29%",
   },
 ]
 
 export const posicoesItensPropriedadeIntelectual = [
   {
     id: 1,
-    top: "52.4%",
-    left: "60%",
+    top: "53.03%",
+    left: "60.03%",
   },
   {
     id: 2,
-    top: "76.7%",
-    left: "53.7%",
+    top: "75.49%",
+    left: "53.48%",
   },
   {
     id: 3,
-    top: "85%",
-    left: "33.4%",
+    top: "82.47%",
+    left: "32.94%",
   },
   {
     id: 4,
-    top: "78.2%",
-    left: "14%",
+    top: "76.61%",
+    left: "14.10%",
   },
   {
     id: 5,
-    top: "53%",
-    left: "11.5%",
+    top: "52.25%",
+    left: "11.49%",
   },
   {
     id: 6,
-    top: "25.5%",
-    left: "14%",
+    top: "28.03%",
+    left: "14.42%",
   },
   {
     id: 7,
-    top: "63.5%",
-    left: "29.7%",
+    top: "62.50%",
+    left: "30.21%",
   },
   {
     id: 8,
-    top: "37%",
-    left: "41%",
+    top: "38.43%",
+    left: "41.21%",
   },
   {
     id: 9,
-    top: "23%",
-    left: "58.3%",
+    top: "25.05%",
+    left: "58.04%",
   },
   {
     id: 10,
-    top: "28.9%",
-    left: "79%",
+    top: "29.79%",
+    left: "79.26%",
   },
   {
     id: 11,
-    top: "47%",
-    left: "91%",
+    top: "46.73%",
+    left: "90.56%",
   },
   {
     id: 12,
-    top: "72%",
-    left: "80%",
+    top: "70.26%",
+    left: "79.95%",
   },
   {
     id: 13,
-    top: "86%",
-    left: "87.2%",
+    top: "83.01%",
+    left: "87.14%",
   },
 ]
 
 export const posicoesItensAmbientesInovacao = [
   {
     id: 1,
-    top: "73%",
-    left: "81%",
+    top: "70.03%",
+    left: "80.77%",
   },
   {
     id: 2,
-    top: "46.6%",
-    left: "89.5%",
+    top: "47.12%",
+    left: "89.38%",
   },
   {
     id: 3,
-    top: "27%",
-    left: "79%",
+    top: "30.07%",
+    left: "79.50%",
   },
   {
     id: 4,
-    top: "26%",
-    left: "61%",
+    top: "29.00%",
+    left: "61.45%",
   },
   {
     id: 5,
-    top: "38%",
-    left: "45%",
+    top: "39.67%",
+    left: "44.57%",
   },
   {
     id: 6,
-    top: "19%",
-    left: "31%",
+    top: "22.17%",
+    left: "31.02%",
   },
   {
     id: 7,
-    top: "25.5%",
-    left: "16%",
+    top: "29.19%",
+    left: "16.46%",
   },
   {
     id: 8,
-    top: "54.9%",
-    left: "12.2%",
+    top: "53.61%",
+    left: "12.41%",
   },
   {
     id: 9,
-    top: "82.8%",
-    left: "15.5%",
+    top: "78.31%",
+    left: "15.15%",
   },
   {
     id: 10,
-    top: "92%",
-    left: "34%",
+    top: "87.38%",
+    left: "33.82%",
   },
   {
     id: 11,
-    top: "79.9%",
-    left: "55%",
+    top: "75.73%",
+    left: "55.46%",
   },
 ]
-
-export const posicoesTematicas = [
-  {
+/** Centro de cada laço tracejado na arte do mapa principal. */
+export const posicaoPorTematica: Record<TematicaRota, { id: number; top: string; left: string }> = {
+  /* Documento com selo, laço de baixo à esquerda. */
+  [TematicaRota.LEGISLACAO]: {
     id: 1,
-    top: "77%",
-    left: "55%",
-    //B-E
-    //AMBIENTES INOVACAO
+    top: "73.6%",
+    left: "24.8%",
   },
-  {
+  /* Engrenagem com setas de ciclo, laço de cima à direita. */
+  [TematicaRota.TRANFERENCIA_TECNOLOGICA]: {
     id: 2,
-    top: "76%",
-    left: "25%",
-    //B-D
-    //LEGISLACAO
+    top: "31.1%",
+    left: "76.7%",
   },
-  {
+  /* Lâmpada, laço de cima à esquerda. */
+  [TematicaRota.PROPRIEDADE_INTELECTUAL]: {
     id: 3,
-    top: "43%",
+    top: "30.4%",
     left: "25%",
-    //C-E
-    //PROPRIEDADE INTELECTIAL
   },
-  {
+  /* Pessoas em volta da lâmpada, laço de baixo à direita. */
+  [TematicaRota.AMBIENTES_INOVACAO]: {
     id: 4,
-    top: "44%",
-    left: "56%",
-    //C-D
-    //TRANSAFERENCIA TECNOLOGICA
+    top: "73.6%",
+    left: "75.8%",
   },
-]
+};
+/** Posição da temática no mapa principal, pelo título. */
+export function posicaoDaTematica(
+  titulo: string
+): { id: number; top: string; left: string } | undefined {
+  const rota = obterRotaTematica(titulo);
 
+  if (!rota) return undefined;
+
+  return posicaoPorTematica[rota];
+}
+
+/** Cadeado no centro do mapa. */
 export const posicaoTarefaFinal = {
   id: 5,
-  top: "60.4%",
-  left: "40.25%",
+  top: "52.2%",
+  left: "50.9%",
 };
 // ---------------------------------------------------------------
 // Capacidade visual de cada trilha
@@ -357,6 +362,36 @@ export function posicoesDaTrilha(trilha: string): PosicaoItemMapa[] {
  * não existe limite conhecido, e quem chama deve tratar 0 como
  * "sem limite a aplicar" — nunca como "não cabe nenhuma missão".
  */
+/**
+ * Proporção largura/altura de cada imagem de mapa.
+ *
+ * As posições dos ícones são percentuais do CONTÊINER, não da imagem.
+ * Enquanto o contêiner tinha altura fixa (minH/maxH) e a imagem usava
+ * objectFit "cover", qualquer largura de tela em que a proporção do
+ * contêiner divergisse da proporção da arte recortava o desenho — e
+ * os ícones, ancorados em porcentagem, descolavam dos pontos do mapa.
+ * Em telas estreitas o recorte passava de 40% da largura.
+ *
+ * Fixando o contêiner na proporção da própria arte, a porcentagem
+ * volta a valer para o desenho inteiro em qualquer largura.
+ */
+export const proporcaoMapaPrincipal = 1568 / 1003;
+
+export const proporcaoMapaPorTrilha: Record<TematicaRota, number> = {
+  [TematicaRota.LEGISLACAO]: 1536 / 1024,
+  [TematicaRota.TRANFERENCIA_TECNOLOGICA]: 1536 / 905,
+  [TematicaRota.PROPRIEDADE_INTELECTUAL]: 1536 / 1024,
+  [TematicaRota.AMBIENTES_INOVACAO]: 1446 / 1026,
+};
+
+export function proporcaoDaTrilha(trilha: string): number {
+  const rota = obterRotaTematica(trilha);
+
+  if (!rota) return proporcaoMapaPrincipal;
+
+  return proporcaoMapaPorTrilha[rota] ?? proporcaoMapaPrincipal;
+}
+
 export function capacidadeDaTrilha(trilha: string): number {
   if(trilha === Tematica.TAREFA_FINAL){
     return 1

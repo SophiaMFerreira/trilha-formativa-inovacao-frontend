@@ -20,15 +20,9 @@ type OrdenacaoProps = {
     value?: AlternativaMarcadaDTO[]
     onChange: (value: number[]) => void
 };
-
 /**
  * Estado inicial das duas linhas: o que já foi respondido volta para a
  * linha de resposta, na ordem gravada, e o restante fica na origem.
- *
- * Sem isso, voltar para uma questão de ordenação já respondida no quiz
- * mostrava a linha de resposta vazia — o componente é remontado a cada
- * troca de pergunta e começava sempre do zero, enquanto a resposta
- * antiga seguia registrada. A tela dizia uma coisa e o envio, outra.
  */
 function montarLinhas(
     alternativas: AlternativaOrdenacaoDTO[],
@@ -69,11 +63,6 @@ export default function Ordenacao({ questao, value, onChange }: OrdenacaoProps) 
     const mapaLista = new Map(
         alternativas.map(a => [a.texto, a.id])
     );
-
-    /*
-     * O valor é lido apenas na montagem, de propósito: a partir daí
-     * quem manda na ordem é o arraste.
-     */
     const [listas, setListas] = useState(
         () => montarLinhas(alternativas, value)
     );
@@ -162,7 +151,6 @@ function Sortable({ id, index, alternativa, estilo, row }: sortableProps) {
         type: 'item',
         accept: ['item'],
     });
-
 
     return (
         <Box

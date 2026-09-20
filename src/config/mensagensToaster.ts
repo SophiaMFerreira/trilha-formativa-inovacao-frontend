@@ -88,6 +88,19 @@ export const mensagemLimiteMissoesTrilha = (
     closable: true,
     duration: 9000,
 });
+/** Segunda tarefa na mesma temática. */
+export const mensagemTarefaDuplicadaNaTematica = (
+    nomeTematica: string,
+    tituloDaTarefa: string | undefined
+) => ({
+    title: "Esta temática já tem uma tarefa",
+    description: tituloDaTarefa
+        ? `A temática ${nomeTematica} já tem a tarefa "${tituloDaTarefa}". Cada temática comporta uma única missão de tarefa, que é a etapa final da trilha. Exclua a existente antes de cadastrar outra.`
+        : `A temática ${nomeTematica} já tem uma missão de tarefa. Cada temática comporta uma única missão de tarefa, que é a etapa final da trilha.`,
+    type: "warning",
+    closable: true,
+    duration: 9000,
+});
 
 export const mensagensToastErro = {
     // =========================
@@ -229,7 +242,6 @@ export const mensagensToastErro = {
         duration: 7000,
     },
 
-
     // =========================
     // AUSÊNCIA DE CONTEÚDO
     // =========================
@@ -278,7 +290,6 @@ export const mensagensToastErro = {
         closable: true,
         duration: 7000,
     },
-
 
     // =========================
     // SALVAR CONTEÚDO
@@ -432,7 +443,6 @@ export const mensagensToastErro = {
         duration: 7000,
     },
 
-
     // =========================
     // EXCLUSÃO
     // =========================
@@ -504,6 +514,8 @@ export const mensagensToastErro = {
     },
 
     limiteMissoesTrilha: mensagemLimiteMissoesTrilha,
+
+    tarefaDuplicadaNaTematica: mensagemTarefaDuplicadaNaTematica,
 
     validarMissaoAtividade: {
         title: "Não foi possível salvar a missão atividade",
@@ -610,7 +622,6 @@ export const mensagensToastErro = {
         closable: true,
         duration: 9000,
     },
-
 
     validarCodigoVerificacao: {
         title: "Código incompleto",
@@ -793,7 +804,6 @@ export const mensagensToastSucesso = {
         closable: true,
         duration: 7000,
     },
-
 
     // =========================
     // EXCLUSÃO

@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
-import { Box, Button, HStack, InputGroup, Stack, Heading, Flex } from "@chakra-ui/react";
+import { Box, Button, HStack, InputGroup, Stack, Heading, Flex, Separator } from "@chakra-ui/react";
+import { Fragment } from "react";
 import CardCustomizado from "@/components/commons/cardCustomizado";
 import ListagemQuestao from "@/components/listagemQuestao";
 import { toaster } from "@/components/commons/toaster";
@@ -182,13 +183,29 @@ export default function BancoQuestoes() {
                                 {grupoTematica.tematica}
                             </Heading>
                             <Stack gap={2}>
-                                {grupoTematica.questoes.map(questao => (
-                                    <ListagemQuestao
-                                        key={questao.id}
-                                        {...questao}
-                                        onExcluir={carregarDados}
-                                    />
-                                ))}
+                                {grupoTematica.questoes.map((questao, indice) => {
+                                    const missaoAnterior =
+                                        grupoTematica.questoes[indice - 1]?.missao;
+
+                                    const trocouDeMissao =
+                                        indice > 0 && questao.missao !== missaoAnterior;
+
+                                    return (
+                                        <Fragment key={questao.id}>
+                                            {trocouDeMissao && (
+                                                <Separator
+                                                    my="3"
+                                                    borderColor="brand.primaryDark"
+                                                    opacity={0.35}
+                                                />
+                                            )}
+                                            <ListagemQuestao
+                                                {...questao}
+                                                onExcluir={carregarDados}
+                                            />
+                                        </Fragment>
+                                    );
+                                })}
                             </Stack>
                         </Box>
                     ))}

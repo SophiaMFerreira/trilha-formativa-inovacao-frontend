@@ -36,12 +36,14 @@ export function CadastroAventureiro() {
     const prosseguir = () => {
         if (aceiteTermos) {
             onSubmit();
-        } else {
-            window.open(
-                "https://padlet.com/ceov/trilha-formativa-para-inovacao-z8blynsyevyi7z4z",
-                "_blank"
-            );
+            return;
         }
+
+        setOpen(false);
+        window.open(
+            "https://padlet.com/ceov/trilha-formativa-para-inovacao-z8blynsyevyi7z4z",
+            "_blank"
+        );
     };
 
     const dataAtual = new Intl.DateTimeFormat('en-CA').format(new Date())
@@ -318,13 +320,6 @@ export function CadastroAventureiro() {
             setOpen(false);
             return;
         }
-
-        /*
-         * Cadastro novo não grava nada antes de o e-mail ser
-         * confirmado: o formulário fica em memória e o diálogo de
-         * verificação assume. A conta só nasce em cadastrarUsuario,
-         * com o comprovante em mãos.
-         */
         if (!user?.id) {
             setOpen(false);
             setOpenVerificacao(true);
@@ -359,13 +354,6 @@ export function CadastroAventureiro() {
                 return
             }
 
-            /*
-             * O papel é preservado.
-             *
-             * O literal "usuario" rebaixava o administrador que
-             * editasse os próprios dados: ele perdia o acesso às
-             * telas administrativas até sair e entrar de novo.
-             */
             const novoUser: User = {
                 id: idUsuario,
                 nomeAventureiro: nomeAventureiro,
@@ -456,12 +444,6 @@ export function CadastroAventureiro() {
                 mensagemDeErroDaApi(erro) ?? erro
             );
 
-            /*
-             * Fecha o diálogo: o comprovante é de uso único e já foi
-             * consumido pela API, então insistir no mesmo código não
-             * levaria a nada. O usuário corrige o formulário e uma nova
-             * tentativa dispara um código novo.
-             */
             setOpenVerificacao(false);
 
             const toasterMensagemApi = mensagemParaToaster(erro);
@@ -573,13 +555,6 @@ export function CadastroAventureiro() {
                                 imagem={imagem}
                                 onChange={(file, preview) => {
                                     setArquivoImagem(file);
-
-                                    /*
-                                     * Libera a URL da pré-visualização
-                                     * anterior: cada createObjectURL
-                                     * segura o arquivo em memória até
-                                     * ser revogado.
-                                     */
                                     setPreviewImagem(anterior => {
                                         if (anterior?.startsWith("blob:")) {
                                             URL.revokeObjectURL(anterior);
@@ -1496,11 +1471,6 @@ export function CadastroAventureiro() {
                 </Portal>
             </Dialog.Root>
 
-            {/*
-              * Confirmação do e-mail, exibida só no cadastro. O
-              * formulário permanece montado atrás do diálogo, então
-              * cancelar devolve o usuário aos dados que ele já digitou.
-              */}
             {!editando && (
                 <VerificacaoEmailDialog
                     aberto={openVerificacao}

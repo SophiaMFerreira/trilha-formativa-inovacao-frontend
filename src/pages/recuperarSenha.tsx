@@ -32,13 +32,6 @@ export default function RecuperarSenha() {
     const [validarConfirmarSenha, setValidarConfirmarSenha] = useState(false)
 
     const [salvando, setSalvando] = useState(false)
-
-    /*
-     * A situação do link é guardada junto com o token que a produziu.
-     * Assim, se o token da URL mudar, a tela volta sozinha para
-     * "verificando" durante a renderização, sem precisar de um
-     * setState dentro do efeito para desfazer o estado anterior.
-     */
     const [resultadoToken, setResultadoToken] = useState<{
         token: string | null
         situacao: SituacaoTokenRecuperacao
@@ -51,13 +44,6 @@ export default function RecuperarSenha() {
         resultadoToken.token === token ? resultadoToken.situacao : "verificando"
 
     const expiraEm = resultadoToken.token === token ? resultadoToken.expiraEm : null
-
-    /*
-     * A validade do link é a que o backend informa (DataExpiracao do
-     * registro em recuperacao_senha), não uma contagem de 30 minutos
-     * iniciada quando a tela abre: o link pode ter sido emitido muito
-     * antes de o usuário clicar nele.
-     */
     const tempo = expiraEm === null
         ? 0
         : Math.max(Math.ceil((expiraEm - agora) / 1000), 0);
@@ -165,11 +151,6 @@ export default function RecuperarSenha() {
         setSalvando(true)
 
         try {
-            /*
-             * O próprio /redefinir revalida e consome o token. Chamar
-             * /validar antes seria uma requisição a mais sem ganho, e
-             * abriria uma janela entre a checagem e o uso.
-             */
             await RecuperarSenhaAPI.redefinir({
                 token,
                 novaSenha: senha,
@@ -188,11 +169,6 @@ export default function RecuperarSenha() {
                 return;
             }
 
-            /*
-             * A API recusou. Se o motivo foi o token, a tela precisa
-             * mudar de estado — insistir no formulário não levaria a
-             * nada.
-             */
             if (mensagemApi?.toLowerCase().includes("token")) {
                 setResultadoToken({ token, situacao: "invalido", expiraEm: null });
                 toaster.create(mensagensToastErro.linkRecSenhaInvalido);
@@ -354,13 +330,6 @@ export default function RecuperarSenha() {
                             Solicitar novo link
                         </Button>
                     </Stack>
-                    {/*
-                      * Esta tela é sempre anônima: quem chega aqui veio
-                      * pelo link do e-mail, sem sessão. O código anterior
-                      * consultava uma variável "user" que não existe neste
-                      * arquivo, o que derrubava a renderização assim que o
-                      * token era aceito e quebrava o build no tsc.
-                      */}
                     <Field.Root required invalid={validarConfirmarSenha}>
                         <Field.Label
                             textStyle="emphasis"

@@ -79,10 +79,6 @@ export default function Quiz() {
 
     const TEMPO_POR_QUESTAO = 5 * 60
 
-    /*
-     * A chave do cronômetro é por aventureiro e por missão: dois
-     * quizzes abertos na mesma sessão não disputam o mesmo registro.
-     */
     const chaveTempo = useMemo(
         () => chaveTempoQuiz(user?.id, idMissao),
         [user?.id, idMissao]
@@ -91,13 +87,6 @@ export default function Quiz() {
     const [tempo, setTempo] = useState<number[]>(
         Array(MINIMO_QUESTOES_POR_MISSAO).fill(TEMPO_POR_QUESTAO)
     );
-
-    /*
-     * O relógio só passa a contar depois que a missão carregou e o
-     * tempo salvo foi restaurado. Sem essa trava o intervalo
-     * descontava segundos do array provisório e a restauração
-     * sobrescrevia a contagem logo em seguida.
-     */
     const [tempoRestaurado, setTempoRestaurado] = useState(false)
 
     const restanteDaQuestao = tempo[idQuestao] ?? TEMPO_POR_QUESTAO
@@ -142,13 +131,6 @@ export default function Quiz() {
                 const questoesDoQuiz = shuffleArray(quiz.questoes) as QuestaoProp[]
 
                 setQuestoes(questoesDoQuiz)
-
-                /*
-                 * As três estruturas paralelas (questões, respostas e
-                 * cronômetro) passam a ter o tamanho real da missão.
-                 * Estavam fixas em cinco: uma missão com seis questões
-                 * lia respostas[5] indefinido e derrubava a tela.
-                 */
                 setRespostas(
                     Array.from({ length: questoesDoQuiz.length }, () => [
                         {
@@ -186,9 +168,9 @@ export default function Quiz() {
 
         carregarDados();
     }, [ParamTrilha, idMissao]);
-
     useEffect(() => {
         if (!tempoRestaurado) return;
+        if (etapa !== "quiz") return;
 
         const intervalo = setInterval(() => {
             setTempo((anterior) => {
@@ -203,33 +185,22 @@ export default function Quiz() {
         }, 1000);
 
         return () => clearInterval(intervalo);
-    }, [idQuestao, tempoRestaurado]);
-
-    /*
-     * Cada segundo descontado é gravado junto com a questão atual.
-     * É o que faz o cronômetro sobreviver à troca de página: ao
-     * voltar, a tela retoma exatamente de onde parou.
-     */
+    }, [idQuestao, tempoRestaurado, etapa]);
     useEffect(() => {
         if (!tempoRestaurado) return;
+        if (etapa !== "quiz") return;
 
         gravarTempoQuiz(chaveTempo, { restante: tempo, idQuestao });
-    }, [chaveTempo, tempo, idQuestao, tempoRestaurado]);
+    }, [chaveTempo, tempo, idQuestao, tempoRestaurado, etapa]);
 
     useEffect(() => {
         if (!tempoRestaurado) return;
+        if (etapa !== "quiz") return;
 
         if (tempo[idQuestao] === 0) {
             proximaQuestao();
         }
-    }, [tempo, idQuestao, tempoRestaurado]);
-
-    /*
-     * Nova tentativa começa com o cronômetro cheio. A conclusão já
-     * apaga o registro salvo; aqui o estado em memória também volta ao
-     * início, senão o quiz reabriria com o tempo zerado da tentativa
-     * anterior.
-     */
+    }, [tempo, idQuestao, tempoRestaurado, etapa]);
     function reiniciarCronometro() {
         limparTempoQuiz(chaveTempo)
         setTempo(Array(questoes.length).fill(TEMPO_POR_QUESTAO))
@@ -244,11 +215,6 @@ export default function Quiz() {
     }
     function proximaQuestao() {
         if (idQuestao >= questoes.length - 1) {
-            /*
-             * Tentativa encerrada: o cronômetro salvo não vale mais.
-             * Mantê-lo faria a próxima tentativa começar com o tempo
-             * zerado da anterior.
-             */
             limparTempoQuiz(chaveTempo)
             setEtapa("resultado")
         } else {
@@ -450,12 +416,6 @@ function ExibirQuestao({
     function alterarRespostaAssociacao(alternativasAssociadasresposta: colunasAssociadas) {
         const novasRespostas = [...respostas];
         const idUsuario = respostas[idQuestao]?.[0]?.idUsuario ?? user!.id;
-
-        /*
-         * O par é posicional: a linha i da coluna A responde a linha i
-         * da coluna B. Linhas sem par são descartadas em vez de
-         * derrubarem a tela ao ler `.id` de um índice inexistente.
-         */
         novasRespostas[idQuestao] = alternativasAssociadasresposta.colunaA
             .flatMap((alternativaA, i) => {
                 const associada = alternativasAssociadasresposta.colunaB[i];

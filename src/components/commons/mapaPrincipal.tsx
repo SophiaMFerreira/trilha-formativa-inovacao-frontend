@@ -1,16 +1,14 @@
 import { Button, Image, Skeleton, } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import CustomTooltip from "./customTooltip";
-import { obterNomeTematica, obterRotaTematica, Tematica, TematicaDTO, TematicaRota } from "@/types_consts/tematica";
+import { obterNomeTematica, obterRotaTematica, Tematica, TematicaRota } from "@/types_consts/tematica";
 
 import mapaPrincipal from "@/assets/images/Mapas/trilhaFormativaInovacao.png";
 
 import { ProgressoPontosTematicaMap } from "@/types_consts/missao";
-import { posicaoTarefaFinal, posicoesTematicas } from "@/config/itensRegional";
-import { TematicaAPI } from "../../../api/tematica";
-import { toaster } from "./toaster";
-import { mensagensToastErro } from "@/config/mensagensToaster";
-import { mensagensErroConsole } from "@/config/mensagensError";
+import { posicaoDaTematica, posicaoTarefaFinal, proporcaoMapaPrincipal } from "@/config/itensRegional";
+import { PROGRESSO_MINIMO_TAREFA_FINAL } from "@/utils/bloqueioTarefa";
+import { useGame } from "@/hooks/useGame";
 
 type mapaPrincipalProps = {
     navigate: Function
@@ -20,63 +18,43 @@ type mapaPrincipalProps = {
 
 export default function MapaPrincipal({ navigate, progressoPontosTematicas, progressoTotal }: mapaPrincipalProps) {
     const [loadedMapa, setLoadedMapa] = useState(false)
-    const [tematicas, setTematicas] = useState<TematicaDTO[]>([])
 
-    useEffect(() => {
-        async function carregarDados() {
-            try {
-                const tematicaResponse = await TematicaAPI.listar()
-
-                if (!tematicaResponse.data) {
-                    toaster.create(mensagensToastErro.carregarTematicas)
-                    return
-                }
-
-                const tematicas = tematicaResponse.data as TematicaDTO[]
-                setTematicas(tematicas)
-            } catch (erro) {
-                console.error(mensagensErroConsole.buscarTematica, erro);
-                navigate("/");
-            }
-        }
-        carregarDados();
-    }, []);
+    /*
+     * As temáticas vêm do GameProvider, que já as carregou para calcular
+     * o progresso. Buscá-las de novo aqui repetia a requisição e criava
+     * duas listas que podiam divergir, e o progresso de cada ícone é
+     * procurado justamente pelo título de uma na outra.
+     */
+    const { tematicas } = useGame()
 
     return (
         <Skeleton
             loading={!loadedMapa}
             rounded="xl"
-            h="100%"
-            minH="500px"
-            maxH="590px"
             w="100%"
+            maxW={`${Math.round(526 * proporcaoMapaPrincipal)}px`}
+            mx="auto"
+            aspectRatio={proporcaoMapaPrincipal}
+            position="relative"
         >
             <Image
                 src={mapaPrincipal}
-                alt={`Mapa da trilha de Trilha Formativa para Inovação`}
-                objectFit="cover"
+                alt="Mapa da Trilha Formativa para Inovação"
+                objectFit="fill"
                 rounded="2xl"
                 overflow="hidden"
                 boxShadow="map"
                 loading="lazy"
                 h="100%"
-                minH="500px"
-                maxH="526px"
                 w="100%"
                 onLoad={() => setLoadedMapa(true)}
             />
-            {tematicas.map((tematica, index) => {
+            {tematicas.map((tematica) => {
                 const tarefaFinal = tematica.titulo === Tematica.TAREFA_FINAL;
-
-                const indiceTematica = tematicas
-                    .slice(0, index)
-                    .filter(t => t.titulo !== Tematica.TAREFA_FINAL)
-                    .length;
 
                 return (
                     <IconeTrilha
                         key={tematica.id}
-                        index={indiceTematica}
                         tematica={tematica.titulo}
                         navigate={navigate}
                         progresso={
@@ -98,28 +76,28 @@ type IconeTrilhaProps = {
     progressoTotal: number
     tematica: string
     navigate: Function
-    index: number
     progresso?: number
 }
 
 function IconeTrilha({
     tematica,
     navigate,
-    index,
     progresso,
     tarefaFinal,
     progressoTotal
 }: IconeTrilhaProps) {
 
     const concluido = progresso === 100
+
+    /* Cada temática tem seu laço; nada depende da ordem da API. */
     const posicao = tarefaFinal
         ? posicaoTarefaFinal
-        : posicoesTematicas[index];
+        : posicaoDaTematica(tematica);
 
     if (!posicao) {
         return null;
     }
-    const disabled = progressoTotal < 80 && tarefaFinal
+    const disabled = progressoTotal < PROGRESSO_MINIMO_TAREFA_FINAL && tarefaFinal
 
     return (
         <CustomTooltip
@@ -137,9 +115,10 @@ function IconeTrilha({
                 aria-label={obterNomeTematica(tematica) || tematica}
                 size="lg"
 
-                w="52"
-                h="52"
-                minW="52"
+                w={{ base: "26%", md: "24%" }}
+                h="auto"
+                minW="unset"
+                aspectRatio={1}
                 p="0"
                 borderRadius="full"
 

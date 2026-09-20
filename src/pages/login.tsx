@@ -46,13 +46,6 @@ export function Login() {
                 navigate("/trilhaFormativaInovacao");
             }
         } catch (e) {
-            /*
-             * "E-mail ou senha inválidos." vem da própria API
-             * (UsuarioService::login). Substituí-la por "não foi
-             * possível fazer login no momento" fazia o aventureiro
-             * achar que o sistema estava fora do ar quando só tinha
-             * errado a senha.
-             */
             toaster.create(
                 toasterDaApiOuPadrao(e, mensagensToastErro.falhaAoFazerLogin)
             )

@@ -51,7 +51,6 @@ export default function CadastroMateriais() {
     const [validacaoResumo, setValidacaoResumo] = useState(false)
     const [validacaoPontuacao, setValidacaoPontuacao] = useState(false)
 
-
     useEffect(() => {
         async function carregarDados() {
             try {
@@ -124,14 +123,9 @@ export default function CadastroMateriais() {
         carregarDados();
     }, [idMissao]);
 
-
     const tituloTrilhaSelecionada =
         tematicas.find(t => t.id === idTrilha)?.titulo ?? ""
 
-    /*
-     * Missões de conteúdo também ocupam posição no mapa da trilha, e
-     * por isso entram no mesmo limite das missões de atividade.
-     */
     const capacidade = avaliarCapacidadeDaTrilha(
         missoesExistentes,
         tituloTrilhaSelecionada,
