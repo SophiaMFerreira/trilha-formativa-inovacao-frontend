@@ -6,9 +6,10 @@ import { shuffleArray } from "@/utils/shuffle"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import { DragDropProvider } from '@dnd-kit/react';
+import { move } from '@dnd-kit/helpers';
 import { useSortable } from '@dnd-kit/react/sortable';
 import { QuestaoProp } from "@/types_consts/questao"
-import { Alternativa, AlternativaAssociacao, AlternativaAssocida } from "@/types_consts/alternativa"
+import { Alternativa, AlternativaAssociacao, AlternativaAssocida, AlternativaMarcadaAssociacaoDTO, AlternativaMarcadaDTO } from "@/types_consts/alternativa"
 
 export type colunasAssociadas = {
     colunaA: Alternativa[]
@@ -17,8 +18,54 @@ export type colunasAssociadas = {
 }
 type AssociacaoProps = {
     questao: QuestaoProp;
+    /**
+     * Resposta já registrada para esta questão, usada para remontar a
+     * ordem das colunas quando a tela volta a exibi-la.
+     */
+    value?: AlternativaMarcadaDTO[];
     onChange: (alternativasAssociadasresposta: colunasAssociadas) => void;
 };
+
+/**
+ * Reconstrói a ordem das colunas a partir da resposta já registrada.
+ *
+ * Devolve null quando não há resposta utilizável — primeira visita à
+ * questão, resposta de outra questão, ou questão editada depois de
+ * respondida. Nesses casos o componente embaralha, que é o
+ * comportamento de quem está vendo a questão pela primeira vez.
+ */
+function ordenarPelaResposta(
+    paresA: AlternativaAssociacao[],
+    paresB: AlternativaAssocida[],
+    value: AlternativaMarcadaDTO[] | undefined
+): { colunaA: Alternativa[]; colunaB: AlternativaAssocida[] } | null {
+    if (!value || value.length !== paresA.length) return null;
+
+    const porIdA = new Map(paresA.map(a => [a.id, a]));
+    const porIdB = new Map(paresB.map(b => [b.id, b]));
+
+    const colunaA: Alternativa[] = [];
+    const colunaB: AlternativaAssocida[] = [];
+
+    for (const marcada of value) {
+        const alternativa = porIdA.get(marcada.idAlternativa);
+
+        const idAssociada =
+            (marcada as AlternativaMarcadaAssociacaoDTO)
+                .idAlternativaAssociadaRespondida;
+
+        const associada = idAssociada === undefined
+            ? undefined
+            : porIdB.get(idAssociada);
+
+        if (!alternativa || !associada) return null;
+
+        colunaA.push(alternativa);
+        colunaB.push(associada);
+    }
+
+    return { colunaA, colunaB };
+}
 /**
  * Emparelha as duas colunas pela posição, que é como o usuário lê a
  * tela: a linha 1 da coluna A responde a linha 1 da coluna B.
@@ -39,22 +86,38 @@ function emparelhar(
     };
 }
 
-export default function Associacao({ questao, onChange }: AssociacaoProps) {
+export default function Associacao({ questao, value, onChange }: AssociacaoProps) {
     const { colunaA, colunaB } = useMemo(() => {
         const alternativas = questao.alternativas as AlternativaAssociacao[]
-        const colunaA: AlternativaAssociacao[] = [];
-        const colunaB: AlternativaAssocida[] = [];
+        const paresA: AlternativaAssociacao[] = [];
+        const paresB: AlternativaAssocida[] = [];
 
         for (const alternativa of alternativas) {
             if (!alternativa?.alternativaAssociada) continue;
 
-            colunaA.push(alternativa);
-            colunaB.push(alternativa.alternativaAssociada);
+            paresA.push(alternativa);
+            paresB.push(alternativa.alternativaAssociada);
         }
 
+        /*
+         * No quiz cada pergunta é montada e desmontada conforme o
+         * aventureiro navega, e a chave é o id da questão: voltar para
+         * uma questão já respondida remontava o componente do zero e
+         * embaralhava tudo de novo, descartando a associação que ele
+         * tinha acabado de montar. Retomar a ordem da resposta já
+         * registrada resolve — o embaralhamento fica só para a
+         * primeira visita.
+         *
+         * O valor é lido apenas na montagem, de propósito: depois
+         * disso quem manda na ordem é o arraste.
+         */
+        const ordemSalva = ordenarPelaResposta(paresA, paresB, value);
+
+        if (ordemSalva) return ordemSalva;
+
         return {
-            colunaA: shuffleArray(colunaA) as Alternativa[],
-            colunaB: shuffleArray(colunaB) as AlternativaAssocida[],
+            colunaA: shuffleArray(paresA) as Alternativa[],
+            colunaB: shuffleArray(paresB) as AlternativaAssocida[],
         };
     }, [questao.id]);
 
@@ -97,19 +160,25 @@ export default function Associacao({ questao, onChange }: AssociacaoProps) {
             gap="6"
             w="100%"
         >
+            {/*
+              * Reordenação pelo helper move() do @dnd-kit, como já era
+              * feito em ordenacao.tsx.
+              *
+              * A versão anterior lia event.operation.source.data.index.
+              * "data" é o objeto arbitrário que o consumidor passa a
+              * useSortable e aqui ele nunca foi passado, então vinha
+              * {} e data.index era undefined: a guarda logo abaixo
+              * descartava todo arraste e a lista nunca mudava. O índice
+              * existe, mas direto no sortable (source.index), e não
+              * dentro de data — e move() já resolve isso sozinho.
+              *
+              * onDragOver, e não onDragEnd: é o que reordena durante o
+              * arraste, em vez de o item voltar ao lugar e só então
+              * saltar para a posição nova.
+              */}
             <DragDropProvider
-                onDragEnd={(event) => {
-                    const from = event.operation.source?.data.index;
-                    const to = event.operation.target?.data.index;
-
-                    if (from == null || to == null) return;
-
-                    setColA((items) => {
-                        const novo = [...items];
-                        const [item] = novo.splice(from, 1);
-                        novo.splice(to, 0, item);
-                        return novo;
-                    });
+                onDragOver={(event) => {
+                    setColA((items) => move(items, event));
                 }}
             >
                 <Stack gap="5">
@@ -125,18 +194,8 @@ export default function Associacao({ questao, onChange }: AssociacaoProps) {
                 </Stack>
             </DragDropProvider>
             <DragDropProvider
-                onDragEnd={(event) => {
-                    const from = event.operation.source?.data.index;
-                    const to = event.operation.target?.data.index;
-
-                    if (from == null || to == null) return;
-
-                    setColB((items) => {
-                        const novo = [...items];
-                        const [item] = novo.splice(from, 1);
-                        novo.splice(to, 0, item);
-                        return novo;
-                    });
+                onDragOver={(event) => {
+                    setColB((items) => move(items, event));
                 }}
             >
                 <Stack gap="5">

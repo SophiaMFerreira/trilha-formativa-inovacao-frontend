@@ -501,20 +501,16 @@ function ExibirQuestao({
                 <Associacao
                     key={questao.id}
                     questao={questao}
-                    //value={respostas[iQuestao]}
+                    value={respostas[idQuestao]}
                     onChange={alterarRespostaAssociacao}
                 />
             )
         case TipoAlternativa.ORDENACAO:
-            const respostasIds = respostas[idQuestao].map(r => {
-                r.idAlternativa !== -1
-                return r.idAlternativa
-            })
             return (
                 <Ordenacao
                     key={questao.id}
                     questao={questao}
-                    //value={respostasIds ?? []}
+                    value={respostas[idQuestao]}
                     onChange={alterarRespostaOrdenacao}
                 />
             )

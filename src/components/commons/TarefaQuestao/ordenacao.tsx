@@ -9,15 +9,57 @@ import { ReactNode, useMemo, useState } from "react"
 import { DragDropProvider, useDroppable } from '@dnd-kit/react';
 import { move } from '@dnd-kit/helpers';
 import { useSortable } from "@dnd-kit/react/sortable"
-import { Alternativa, AlternativaOrdenacaoDTO } from "@/types_consts/alternativa"
+import { Alternativa, AlternativaMarcadaDTO, AlternativaMarcadaOrdenacaoDTO, AlternativaOrdenacaoDTO } from "@/types_consts/alternativa"
 
 type OrdenacaoProps = {
     questao: QuestaoProp
-    //value: number[]
+    /**
+     * Sequência já registrada para esta questão, usada para remontar a
+     * linha de resposta quando a tela volta a exibi-la.
+     */
+    value?: AlternativaMarcadaDTO[]
     onChange: (value: number[]) => void
 };
 
-export default function Ordenacao({ questao, onChange }: OrdenacaoProps) {
+/**
+ * Estado inicial das duas linhas: o que já foi respondido volta para a
+ * linha de resposta, na ordem gravada, e o restante fica na origem.
+ *
+ * Sem isso, voltar para uma questão de ordenação já respondida no quiz
+ * mostrava a linha de resposta vazia — o componente é remontado a cada
+ * troca de pergunta e começava sempre do zero, enquanto a resposta
+ * antiga seguia registrada. A tela dizia uma coisa e o envio, outra.
+ */
+function montarLinhas(
+    alternativas: AlternativaOrdenacaoDTO[],
+    value: AlternativaMarcadaDTO[] | undefined
+): { origem: string[]; resposta: string[] } {
+    const textoPorId = new Map(
+        alternativas
+            .filter(a => a.id !== undefined)
+            .map(a => [a.id as number, a.texto])
+    );
+
+    const resposta = (value ?? [])
+        .filter((marcada): marcada is AlternativaMarcadaOrdenacaoDTO =>
+            "sequenciaRespondida" in marcada
+            && textoPorId.has(marcada.idAlternativa)
+        )
+        .slice()
+        .sort((a, b) => a.sequenciaRespondida - b.sequenciaRespondida)
+        .map(marcada => textoPorId.get(marcada.idAlternativa) as string);
+
+    const jaRespondidos = new Set(resposta);
+
+    return {
+        origem: alternativas
+            .map(alternativa => alternativa.texto)
+            .filter(texto => !jaRespondidos.has(texto)),
+        resposta,
+    };
+}
+
+export default function Ordenacao({ questao, value, onChange }: OrdenacaoProps) {
     const alternativas = useMemo(
         () => shuffleArray([...questao.alternativas]) as AlternativaOrdenacaoDTO[],
 
@@ -28,10 +70,13 @@ export default function Ordenacao({ questao, onChange }: OrdenacaoProps) {
         alternativas.map(a => [a.texto, a.id])
     );
 
-    const [listas, setListas] = useState({
-        origem: alternativas.map(alternativa => alternativa.texto) as string[],
-        resposta: [] as string[],
-    });
+    /*
+     * O valor é lido apenas na montagem, de propósito: a partir daí
+     * quem manda na ordem é o arraste.
+     */
+    const [listas, setListas] = useState(
+        () => montarLinhas(alternativas, value)
+    );
 
     function handleDragOver(event: any) {
     const novaLista = move(listas, event);
