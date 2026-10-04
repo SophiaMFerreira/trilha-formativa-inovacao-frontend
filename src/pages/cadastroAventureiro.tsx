@@ -326,10 +326,35 @@ export function CadastroAventureiro() {
             return;
         }
 
+        /*
+         * Na edição, trocar o e-mail passa pela mesma verificação do
+         * cadastro: o código vai para o endereço NOVO e o comprovante
+         * segue no PUT. Manter o e-mail salva direto.
+         */
+        if (alterouCorreioEletronico()) {
+            setOpen(false);
+            setOpenVerificacao(true);
+            return;
+        }
+
         await atualizarUsuario();
     }
 
-    const atualizarUsuario = async () => {
+    /** Mesma normalização da API: ignora caixa e espaços nas pontas. */
+    const alterouCorreioEletronico = () => {
+        if (!usuarioCarregado) return false;
+
+        return usuarioCarregado.correioEletronico.trim().toLowerCase()
+            !== correioEletronico.trim().toLowerCase();
+    }
+
+    /**
+     * Recebe o comprovante apenas quando o e-mail foi alterado. Como no
+     * cadastro, ele é de uso único: se a API o consumir e a gravação
+     * falhar, o usuário precisa pedir um código novo, por isso o
+     * diálogo fecha também no erro.
+     */
+    const atualizarUsuario = async (comprovanteVerificacao?: string) => {
         const alterarSenha = informouNovaSenha(senha, confirmarSenha)
 
         try {
@@ -346,13 +371,17 @@ export function CadastroAventureiro() {
                 }),
                 senhaAtual: confirmarSenhaAtual,
                 idOcupacao: idOcupacao,
+                ...(comprovanteVerificacao && { comprovanteVerificacao }),
             } as UsuarioDTO
 
             const responseEdicao = await UsuarioAPI.atualizar(idUsuario, usuarioPayload);
             if (!responseEdicao.data) {
+                setOpenVerificacao(false);
                 toaster.create(mensagensToastErro.editarAventureiro)
                 return
             }
+
+            setOpenVerificacao(false);
 
             const novoUser: User = {
                 id: idUsuario,
@@ -379,6 +408,8 @@ export function CadastroAventureiro() {
                 mensagensErroConsole.editarAventureiro,
                 mensagemDeErroDaApi(erro) ?? erro
             );
+
+            setOpenVerificacao(false);
 
             const toasterMensagemApi = mensagemParaToaster(erro);
             if (toasterMensagemApi) {
@@ -1471,14 +1502,13 @@ export function CadastroAventureiro() {
                 </Portal>
             </Dialog.Root>
 
-            {!editando && (
-                <VerificacaoEmailDialog
-                    aberto={openVerificacao}
-                    correioEletronico={correioEletronico}
-                    onCancelar={() => setOpenVerificacao(false)}
-                    onVerificado={cadastrarUsuario}
-                />
-            )}
+            <VerificacaoEmailDialog
+                aberto={openVerificacao}
+                correioEletronico={correioEletronico}
+                finalidade={editando ? "alteracao" : "cadastro"}
+                onCancelar={() => setOpenVerificacao(false)}
+                onVerificado={editando ? atualizarUsuario : cadastrarUsuario}
+            />
         </CardSimples >
     );
 }

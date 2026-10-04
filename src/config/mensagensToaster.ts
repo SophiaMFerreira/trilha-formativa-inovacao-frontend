@@ -644,7 +644,7 @@ export const mensagensToastErro = {
     codigoVerificacaoExpirado: {
         title: "Código expirado",
         description:
-            "Este código não vale mais. Solicite um novo para concluir seu cadastro.",
+            "Este código não vale mais. Solicite um novo para continuar.",
         type: "warning",
         closable: true,
         duration: 9000,
@@ -857,7 +857,7 @@ export const mensagensToastSucesso = {
     enviarCodigoVerificacao: {
         title: "Código enviado!",
         description:
-            "Enviamos um código de 6 dígitos para o seu e-mail. Informe-o para concluir o cadastro.",
+            "Enviamos um código de 6 dígitos para o seu e-mail. Informe-o para continuar.",
         type: "success",
         closable: true,
         duration: 7000,
@@ -875,7 +875,7 @@ export const mensagensToastSucesso = {
     confirmarCodigoVerificacao: {
         title: "E-mail confirmado!",
         description:
-            "Seu e-mail foi verificado. Estamos finalizando o seu cadastro.",
+            "Seu e-mail foi verificado. Estamos salvando os seus dados.",
         type: "success",
         closable: true,
         duration: 7000,

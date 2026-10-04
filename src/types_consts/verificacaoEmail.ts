@@ -12,6 +12,12 @@ export const TAMANHO_CODIGO_VERIFICACAO = 6
  */
 export const ESPERA_REENVIO_SEGUNDOS = 60
 
+/**
+ * Para que o código é pedido. A API usa só para escolher o texto do
+ * e-mail; o código e o comprovante funcionam igual nos dois casos.
+ */
+export type FinalidadeVerificacaoEmail = "cadastro" | "alteracao"
+
 export type RetornoSolicitarVerificacao = {
     mensagem: string
     expiraEmMinutos: number

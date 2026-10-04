@@ -19,20 +19,27 @@ import { validarCodigoVerificacao } from "@/utils/validations/verificacaoEmail"
 import {
     ESPERA_REENVIO_SEGUNDOS,
     TAMANHO_CODIGO_VERIFICACAO,
+    type FinalidadeVerificacaoEmail,
     type SituacaoVerificacaoEmail,
 } from "@/types_consts/verificacaoEmail"
 
 type VerificacaoEmailDialogProps = {
     aberto: boolean
     correioEletronico: string
+    /**
+     * "cadastro" (padrão) na criação da conta; "alteracao" quando o
+     * usuário troca o e-mail na edição do perfil. Muda os textos e o
+     * e-mail enviado, não o fluxo.
+     */
+    finalidade?: FinalidadeVerificacaoEmail
     /** Fechamento sem concluir: o usuário volta ao formulário intacto. */
     onCancelar: () => void
-    /** Código conferido. O comprovante autoriza a criação da conta. */
+    /** Código conferido. O comprovante autoriza gravar o e-mail. */
     onVerificado: (comprovante: string) => void
 }
 /**
- * Vive dentro da tela de cadastro, e não em uma rota própria, por um
- * motivo concreto: entre pedir o código e criar a conta o formulário
+ * Vive dentro da tela de cadastro/edição, e não em uma rota própria,
+ * por um motivo concreto: entre pedir o código e salvar o formulário
  * inteiro precisa continuar preenchido — inclusive a senha. Levar o
  * usuário para outra rota exigiria guardar esses dados em algum lugar,
  * e senha em localStorage não é opção.
@@ -40,9 +47,11 @@ type VerificacaoEmailDialogProps = {
 export function VerificacaoEmailDialog({
     aberto,
     correioEletronico,
+    finalidade = "cadastro",
     onCancelar,
     onVerificado,
 }: VerificacaoEmailDialogProps) {
+    const alteracao = finalidade === "alteracao"
     const [codigo, setCodigo] = useState<string[]>([])
     const [situacao, setSituacao] = useState<SituacaoVerificacaoEmail>("enviando")
     const [codigoInvalido, setCodigoInvalido] = useState(false)
@@ -59,7 +68,7 @@ export function VerificacaoEmailDialog({
         setCodigoInvalido(false)
 
         try {
-            const resposta = await VerificacaoEmailAPI.solicitar(correioEletronico)
+            const resposta = await VerificacaoEmailAPI.solicitar(correioEletronico, finalidade)
 
             const minutos = resposta.data?.expiraEmMinutos ?? 0
 
@@ -96,7 +105,7 @@ export function VerificacaoEmailDialog({
                     : mensagensToastErro.enviarCodigoVerificacao
             )
         }
-    }, [correioEletronico])
+    }, [correioEletronico, finalidade])
 
     /* Pede o código uma única vez por abertura do diálogo. */
     useEffect(() => {
@@ -228,7 +237,9 @@ export function VerificacaoEmailDialog({
                     Enviamos um código de {TAMANHO_CODIGO_VERIFICACAO} dígitos
                     para <Text as="span" color="brand.primaryDark" fontWeight="bold">
                         {correioEletronico}
-                    </Text>. Digite-o abaixo para concluir seu cadastro.
+                    </Text>. Digite-o abaixo para {alteracao
+                        ? "confirmar a alteração do seu e-mail"
+                        : "concluir seu cadastro"}.
                     Verifique também a caixa de spam.
                 </Text>
 
@@ -386,7 +397,7 @@ export function VerificacaoEmailDialog({
                                     }
                                     onClick={() => onConfirmar()}
                                 >
-                                    Confirmar e cadastrar
+                                    {alteracao ? "Confirmar e salvar" : "Confirmar e cadastrar"}
                                 </Button>
                             </Stack>
                         </Dialog.Footer>

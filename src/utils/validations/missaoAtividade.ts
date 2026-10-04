@@ -14,7 +14,9 @@ type ValidarAtividadeParams = {
 
 export type DadosAtuaisProps = {
     idTrilha: number;
-    tipoAtividade: TipoAtividade
+    tipoAtividade: TipoAtividade;
+    /** Distintivo gravado no cadastro da tarefa. Ausente para quiz. */
+    idDistintivo?: number;
 };
 
 type ResultadoValidacaoAtividade = {
@@ -25,6 +27,7 @@ type ResultadoValidacaoAtividade = {
     trilhaMantida: boolean;
     tipoAtividade: boolean;
     tipoAtividadeMantido: boolean;
+    distintivoMantido: boolean;
     titulo: boolean;
     pontuacao: boolean;
     distintivo: boolean;
@@ -90,6 +93,13 @@ export function validarAtividade({
     const tipoAtividadeMantido =
         !edicao || tipoAtividade === dadosAtuais.tipoAtividade
 
+    // INALTERACAO DE DISTINTIVO (definido no cadastro da tarefa)
+    const distintivoMantido =
+        !edicao ||
+        tipoAtividade === TipoAtividade.QUIZ ||
+        dadosAtuais.idDistintivo === undefined ||
+        idDistintivo === dadosAtuais.idDistintivo
+
     // RESULTADO FINAL
     const valido = !(
         idMissaoAtividadeValido &&
@@ -99,7 +109,8 @@ export function validarAtividade({
         pontuacaoValida &&
         idDistintivoValido &&
         tematicaMantida &&
-        tipoAtividadeMantido);
+        tipoAtividadeMantido &&
+        distintivoMantido);
 
     return {
         valido,
@@ -109,6 +120,7 @@ export function validarAtividade({
         trilhaMantida: tematicaMantida,
         tipoAtividade: tipoAtividadeValido,
         tipoAtividadeMantido: tipoAtividadeMantido,
+        distintivoMantido: distintivoMantido,
         titulo: tituloValido,
         pontuacao: pontuacaoValida,
         distintivo: idDistintivoValido

@@ -57,6 +57,10 @@ export default function CadastroMissoesAtividade() {
     });
 
     const [termoBusca, setTermoBusca] = useState("");
+    const [dadosAtuais, setDadosAtuais] = useState<DadosAtuaisProps>({
+        idTrilha: -1,
+        tipoAtividade: TipoAtividade.QUIZ
+    });
 
     const situacaoDistintivos = useMemo(
         () => avaliarDistintivosDisponiveis(
@@ -68,7 +72,17 @@ export default function CadastroMissoesAtividade() {
         [distintivos, missoesExistentes, tipoAtividade, idMissao, idMissaoAtividade]
     );
 
+    /*
+     * O distintivo é escolhido no cadastro da tarefa e não muda mais:
+     * na edição a lista mostra apenas o distintivo gravado, sem seleção.
+     */
+    const distintivoTravado = idMissao !== undefined
+        && dadosAtuais.idDistintivo !== undefined;
+
     const distintivosFiltrados = useMemo(() => {
+        if (distintivoTravado) {
+            return distintivos.filter(d => d.id === dadosAtuais.idDistintivo);
+        }
         if (!termoBusca.trim()) {
             return situacaoDistintivos.disponiveis;
         }
@@ -79,7 +93,7 @@ export default function CadastroMissoesAtividade() {
             distintivo.nomeArquivo.toLowerCase().includes(busca) ||
             String(distintivo.pontuacao).includes(busca)
         )
-    }, [termoBusca, situacaoDistintivos]);
+    }, [termoBusca, situacaoDistintivos, distintivoTravado, distintivos, dadosAtuais.idDistintivo]);
     const distintivosFiltradosCollection = useMemo(() => {
         return createListCollection({
             items: distintivosFiltrados.map(d => ({
@@ -92,10 +106,6 @@ export default function CadastroMissoesAtividade() {
     const [openModalConfirmacaoMissao, setOpenModalConfirmacaoMissao] = useState(false)
     const [openModalConfirmacaoQuestao, setOpenModalConfirmacaoQuestao] = useState(false)
 
-    const [dadosAtuais, setDadosAtuais] = useState<DadosAtuaisProps>({
-        idTrilha: -1,
-        tipoAtividade: TipoAtividade.QUIZ
-    });
     const [validacaoIdMissaoAtividade, setValidacaoIdMissaoAtividade] = useState(false);
     const [validacaoIdTrilha, setValidacaoIdTrilha] = useState(false);
     const [validacaoIdTrilhaMantida, setValidacaoIdTrilhaMantida] = useState(false);
@@ -104,6 +114,7 @@ export default function CadastroMissoesAtividade() {
     const [validacaoTitulo, setValidacaoTitulo] = useState(false);
     const [validacaoPontuacao, setValidacaoPontuacao] = useState(false);
     const [validacaoDistintivo, setValidacaoDistintivo] = useState(false);
+    const [validacaoDistintivoMantido, setValidacaoDistintivoMantido] = useState(false);
 
     async function carregarDadosMissao() {
         try {
@@ -139,9 +150,14 @@ export default function CadastroMissoesAtividade() {
                     setIdDistintivo(tarefa.distintivo.id)
                 }
 
+                const idDistintivoAtual = (atividade as MissaoTarefa).distintivo?.id
+
                 setDadosAtuais({
                     idTrilha: Number(atividade.tematica.id),
-                    tipoAtividade: atividade.tipoAtividade
+                    tipoAtividade: atividade.tipoAtividade,
+                    ...(atividade.tipoAtividade !== TipoAtividade.QUIZ
+                        && idDistintivoAtual !== undefined
+                        && { idDistintivo: Number(idDistintivoAtual) })
                 })
             }
         } catch (erro) {
@@ -228,12 +244,13 @@ export default function CadastroMissoesAtividade() {
 
     useEffect(() => {
         if (idDistintivo === -1) return;
+        if (distintivoTravado) return;
 
         const aindaDisponivel = situacaoDistintivos.disponiveis
             .some(d => d.id === idDistintivo);
 
         if (!aindaDisponivel) setIdDistintivo(-1);
-    }, [situacaoDistintivos, idDistintivo]);
+    }, [situacaoDistintivos, idDistintivo, distintivoTravado]);
 
     const situacaoTarefa = avaliarTarefaDaTematica(
         missoesExistentes,
@@ -263,6 +280,7 @@ export default function CadastroMissoesAtividade() {
             setValidacaoTipoAtividadeMantido(!resultado.tipoAtividadeMantido);
             setValidacaoPontuacao(!resultado.pontuacao);
             setValidacaoDistintivo(!resultado.distintivo);
+            setValidacaoDistintivoMantido(!resultado.distintivoMantido);
 
             toaster.create(mensagensToastErro.validarMissaoAtividade)
             return;
@@ -507,7 +525,8 @@ return (
                                     <Box h="100%">
                                         <Listbox.Root
                                             collection={distintivosFiltradosCollection}
-                                            defaultValue={idDistintivo !== -1 ? [String(idDistintivo)] : [""]}
+                                            value={idDistintivo !== -1 ? [String(idDistintivo)] : []}
+                                            disabled={distintivoTravado}
                                         >
                                             <InputGroup
                                                 endElement={
@@ -535,6 +554,7 @@ return (
 
                                                     placeholder="Pesquisar missão"
                                                     appVariant="outline"
+                                                    disabled={distintivoTravado}
                                                     value={termoBusca}
                                                     onChange={(e) => setTermoBusca(e.target.value)}
                                                 />
@@ -547,9 +567,10 @@ return (
                                                     <Listbox.Item
                                                         item={distintivo}
                                                         key={distintivo.value}
-                                                        onClick={() =>
+                                                        onClick={() => {
+                                                            if (distintivoTravado) return;
                                                             setIdDistintivo(Number(distintivo.value))
-                                                        }
+                                                        }}
 
                                                         _hover={{
                                                             bg: "#2f9e411f",
@@ -599,7 +620,24 @@ return (
                                         Selecione um distintivo válido.
                                     </Text>
                                 )}
-                                {(situacaoDistintivos.emUso > 0
+                                {validacaoDistintivoMantido && (
+                                    <Text
+                                        textStyle="inputPlaceholder"
+                                        color="brand.secondaryRed"
+                                        textAlign="end"
+                                    >
+                                        O distintivo não pode ser alterado durante a edição
+                                    </Text>
+                                )}
+                                {distintivoTravado && (
+                                    <Text
+                                        textStyle="inputPlaceholder"
+                                        color="brand.neutral"
+                                    >
+                                        O distintivo é definido no cadastro da tarefa e não pode ser alterado.
+                                    </Text>
+                                )}
+                                {!distintivoTravado && (situacaoDistintivos.emUso > 0
                                     || situacaoDistintivos.trofeuReservado) && (
                                         <Text
                                             textStyle="inputPlaceholder"
