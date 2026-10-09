@@ -8,7 +8,7 @@ import { FaAngleLeft, FaAngleRight, FaAward, FaTrophy } from "react-icons/fa";
 
 import { useGame } from "@/hooks/useGame";
 import MapaPrincipal from "@/components/commons/mapaPrincipal";
-import { Usuario } from "@/types_consts/usuario";
+import { Usuario, UsuarioDTO } from "@/types_consts/usuario";
 import { useEffect, useRef, useState } from "react";
 import { UsuarioAPI } from "../../api/usuario";
 import { toaster } from "@/components/commons/toaster";
@@ -101,7 +101,17 @@ export default function TelaPrincipal() {
         try {
             if (!usuario) return
 
-            await UsuarioAPI.alterarPrimeiroAcesso(usuario.id);
+            //await UsuarioAPI.alterarPrimeiroAcesso(usuario.id);
+            let novoUsuario = {
+                nomeUsuario: usuario.nomeUsuario,
+                nomeAventureiro: usuario.nomeAventureiro,
+                correioEletronico: usuario.correioEletronico,
+                dataNascimento: usuario.dataNascimento,
+                possuiConhecimento: usuario.possuiConhecimento,
+                primeiroAcesso: true,
+                idOcupacao: usuario.ocupacao.id
+            } as UsuarioDTO;
+            await UsuarioAPI.atualizar(usuario.id, novoUsuario );
 
             setOpen(false)
         } catch (erro) {
