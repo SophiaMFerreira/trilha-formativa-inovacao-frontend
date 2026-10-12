@@ -64,11 +64,11 @@ export const posicoesItensLegislacao = [
 ]
 
 export const posicoesItensTransferenciaTecnologica = [
-  {
+  /*{
     id: 1,
     top: "50.94%",
     left: "87.99%",
-  },
+  },*/
   {
     id: 2,
     top: "29.28%",
@@ -138,7 +138,7 @@ export const posicoesItensTransferenciaTecnologica = [
     id: 15,
     top: "81.16%",
     left: "46.16%",
-  },
+  }/*,
   {
     id: 16,
     top: "85.69%",
@@ -148,7 +148,7 @@ export const posicoesItensTransferenciaTecnologica = [
     id: 17,
     top: "83.48%",
     left: "82.29%",
-  },
+  },*/
 ]
 
 export const posicoesItensPropriedadeIntelectual = [
@@ -211,12 +211,12 @@ export const posicoesItensPropriedadeIntelectual = [
     id: 12,
     top: "70.26%",
     left: "79.95%",
-  },
+  }/*,
   {
     id: 13,
     top: "83.01%",
     left: "87.14%",
-  },
+  },*/
 ]
 
 export const posicoesItensAmbientesInovacao = [
