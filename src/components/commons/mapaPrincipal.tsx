@@ -4,6 +4,7 @@ import CustomTooltip from "./customTooltip";
 import { obterNomeTematica, obterRotaTematica, Tematica, TematicaRota } from "@/types_consts/tematica";
 
 import mapaPrincipal from "@/assets/images/Mapas/trilhaFormativaInovacao.png";
+import mapaPrincipalFinalLiberado from "@/assets/images/Mapas/trilhaFormativaInovacaoTarefaFinalLiberada.png";
 
 import { ProgressoPontosTematicaMap } from "@/types_consts/missao";
 import { posicaoDaTematica, posicaoTarefaFinal, proporcaoMapaPrincipal } from "@/config/itensRegional";
@@ -18,6 +19,7 @@ type mapaPrincipalProps = {
 
 export default function MapaPrincipal({ navigate, progressoPontosTematicas, progressoTotal }: mapaPrincipalProps) {
     const [loadedMapa, setLoadedMapa] = useState(false)
+    const liberarMapaFinal = progressoTotal >= PROGRESSO_MINIMO_TAREFA_FINAL
 
     /*
      * As temáticas vêm do GameProvider, que já as carregou para calcular
@@ -38,7 +40,7 @@ export default function MapaPrincipal({ navigate, progressoPontosTematicas, prog
             position="relative"
         >
             <Image
-                src={mapaPrincipal}
+                src={liberarMapaFinal ? mapaPrincipalFinalLiberado : mapaPrincipal}
                 alt="Mapa da Trilha Formativa para Inovação"
                 objectFit="fill"
                 rounded="2xl"
