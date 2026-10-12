@@ -7,7 +7,7 @@ import { AppInput } from "@/components/commons/AppInput";
 import { toaster } from "@/components/commons/toaster";
 import { FaSearch } from "react-icons/fa";
 import { Missao, MissaoConteudo } from "@/types_consts/missao";
-import { obterNomeTematica, Tematica, TematicaDTO } from "@/types_consts/tematica";
+import { obterNomeTematica, Tematica, TematicaDTO, tematicaLabel } from "@/types_consts/tematica";
 import { MissaoAPI } from "../../api/missao";
 import { TematicaAPI } from "../../api/tematica";
 import { mensagensErroConsole } from "@/config/mensagensError";
@@ -58,17 +58,22 @@ export default function BancoMateriais() {
                 return;
             }
             const tematicas = tematicasResponse.data as TematicaDTO[];
+            const tematicasOficiais = tematicas.filter(t => t.titulo !== Tematica.TAREFA_FINAL);
 
             if (!missoesResponse.data) {
                 toaster.create(mensagensToastErro.carregarMissoesConteudo);
                 return;
             }
             const missoes = missoesResponse.data as Missao[];
-            const missoesMateriais = missoes.filter((m): m is MissaoConteudo => "tipoMaterial" in m);
+            const missoesMateriais = missoes.filter(
+                (m): m is MissaoConteudo => 
+                    "tipoMaterial" in m &&
+                    m.tematica.titulo !== Tematica.TAREFA_FINAL
+            );
 
             if (!missoesMateriais) return;
 
-            const missoesFiltradas = tematicas
+            const missoesFiltradas = tematicasOficiais
                 .map(tematica => ({
                     tematica: obterNomeTematica(tematica.titulo) || tematica.titulo,
                     materiais: missoesMateriais.filter(

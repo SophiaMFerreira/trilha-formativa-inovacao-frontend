@@ -5,7 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import CardCustomizado from "@/components/commons/cardCustomizado";
 import { MissaoAPI } from "../../api/missao";
 import { TematicaAPI } from "../../api/tematica";
-import { obterNomeTematica, TematicaDTO } from "@/types_consts/tematica";
+import { obterNomeTematica, Tematica, TematicaDTO } from "@/types_consts/tematica";
 import { Missao, MissaoConteudo, MissaoDTO, tipoMaterialLabel } from "@/types_consts/missao";
 import { validarConteudo } from "@/utils/validations/missaoConteudo";
 import { avaliarCapacidadeDaTrilha } from "@/utils/limiteDeMissoes";
@@ -80,9 +80,11 @@ export default function CadastroMateriais() {
                                     value: "-1",
                                 },
                             ]
-                            : tematicas.map(item => ({
-                                label: obterNomeTematica(item.titulo) || item.titulo,
-                                value: String(item.id),
+                            : tematicas
+                                .filter(item => item.titulo !== Tematica.TAREFA_FINAL)
+                                .map(item => ({
+                                    label: obterNomeTematica(item.titulo) || item.titulo,
+                                    value: String(item.id),
                             })),
                 })
                 setTematicas(tematicas)
