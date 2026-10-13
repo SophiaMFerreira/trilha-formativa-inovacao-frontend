@@ -117,14 +117,21 @@ export default function ListagemMissaoAtividade(
             px="5"
             direction={{ base: "column", md: "row" }}
           >
-            <Stack>
+            <Stack
+              flex="1"
+              minW="0"
+            >
               {questoes.map((q, index) =>
                 <HStack
                   gap="4"
-                  minW="0"
+                  minW="100"
                   key={q.id}
+                  align="flex-start"
                 >
-                  <Heading textStyle="bodyTextBold" color="brand.primaryDark">
+                  <Heading 
+                    textStyle="bodyTextBold"
+                    color="brand.primaryDark"
+                  >
                     Questão 0{index + 1}
                   </Heading>
                   <Text
@@ -133,9 +140,10 @@ export default function ListagemMissaoAtividade(
                     flex="1"
                     overflow="hidden"
                     textOverflow="ellipsis"
-                    whiteSpace="nowrap"
+                    whiteSpace="normal"
                     maxW="md"
                     boxSizing="border-box"
+                    textAlign="justify"
                   >
                     {q.enunciado}
                   </Text>
@@ -144,8 +152,10 @@ export default function ListagemMissaoAtividade(
             </Stack>
             <br />
             <Stack  
-              w="100%"
+              w="72px"
               gap="-0.5"
+              minW="0"
+              flexShrink={0}
             >
               <Text
                 w="100%"

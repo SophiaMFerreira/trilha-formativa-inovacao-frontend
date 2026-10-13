@@ -212,18 +212,27 @@ export default function ListagemQuestao({
 
                 {/* Badge da Missão usando as cores do tema Inovação */}
                 {missao && (
-                  <Badge
-                    bg="brand.primaryLight"
-                    color="brand.primaryDark"
-                    borderWidth="1px"
-                    borderColor="brand.primaryDark"
-                    textStyle="inputPlaceholder"
-                    px="2"
-                    py="0.5"
-                    rounded="sm"
-                  >
-                    Missão: {missao}
-                  </Badge>
+                  <CustomTooltip content={` Missão: ${missao}`}>
+                    <Badge
+                      bg="brand.primaryLight"
+                      color="brand.neutral"
+                      borderWidth="1px"
+                      borderColor="brand.neutral"
+                      textStyle="inputPlaceholder"
+                      display="flex"
+                      justifyContent="center"
+                      alignItems="center"
+                      overflow="hidden"
+                      textOverflow="ellipsis"
+                      whiteSpace="nowrap"
+                      px="2"
+                      py="1"
+                      w="100%"
+                      rounded="sm"
+                    >
+                      Missão: {missao}
+                    </Badge>
+                  </CustomTooltip>
                 )}
               </Stack>
 
@@ -236,11 +245,11 @@ export default function ListagemQuestao({
                 whiteSpace="nowrap"
                 maxW="md"
                 boxSizing="border-box"
+                textAlign="justify"
               >
                 {enunciado}
               </Text>
             </HStack>
-
             <HStack gap="2">
               <CustomTooltip content="Editar questão">
                 <IconButton
@@ -248,7 +257,6 @@ export default function ListagemQuestao({
                   variant="ghost"
                   size="md"
                   color="brand.primaryDark"
-                  _hover={{ bg: "brand.primaryLight" }}
                   onClick={(e) => {
                     e.stopPropagation();
                     editar(idMissao, id)
@@ -263,7 +271,6 @@ export default function ListagemQuestao({
                   variant="ghost"
                   size="md"
                   color="brand.secondaryRed"
-                  _hover={{ bg: "brand.primaryLight" }}
                   onClick={(e) => {
                     e.stopPropagation();
                     setOpenModalExclusao(true);
@@ -277,14 +284,18 @@ export default function ListagemQuestao({
         </Collapsible.Trigger>
 
         <Collapsible.Content onDoubleClick={() => editar(idMissao, id)}>
-          <Box mb="4" pt="2" borderTopWidth="1px" borderColor="brand.primaryLight">
-            <Text textStyle="bodyText" color="brand.neutral">
+          <Box mb="4" pt="2" borderTopWidth="1px" borderColor="brand.primaryDark">
+            <Text textStyle="bodyText" color="brand.neutral" textAlign="justify">
               {enunciado}
             </Text>
             <br />
             {popularAlternativas(alternativas)}
             <br />
-            <Text textStyle="bodyTextLong" color="brand.neutral">
+            <Text 
+              textStyle="bodyTextLong"
+              color="brand.neutral"
+              textAlign="justify"
+            >
               {mensagemCorrecao}
             </Text>
           </Box>
