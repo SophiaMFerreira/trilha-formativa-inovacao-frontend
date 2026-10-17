@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { Box, Button, createListCollection, DatePicker, DateValue, Dialog, DialogFooter, Em, Field, Fieldset, Flex, Grid, InputGroup, Link, List, ListCollection, parseDate, Portal, RadioGroup, ScrollArea, Select, Stack, Text } from "@chakra-ui/react";
+import { Box, Button, createListCollection, Dialog, DialogFooter, Em, Field, Fieldset, Flex, Grid, InputGroup, Link, List, ListCollection, Portal, RadioGroup, ScrollArea, Select, Stack, Text } from "@chakra-ui/react";
 import { AvatarUsuario } from "@/components/AvatarUsuario";
 import { AppInput } from "@/components/commons/AppInput";
 import CardSimples from "@/components/commons/cardCustomizado";
@@ -46,13 +46,17 @@ export function CadastroAventureiro() {
         );
     };
 
-    const dataAtual = new Intl.DateTimeFormat('en-CA').format(new Date())
-    const format = (data: DateValue) => {
-        const dia = data.day.toString().padStart(2, "0")
-        const mes = data.month.toString().padStart(2, "0")
-        const ano = (data.year).toString().padStart(4, "0")
-        return `${dia}/${mes}/${ano}`
-    }
+    const formatarDataDigitada = (valor: string) => {
+        const numeros = valor.replace(/\D/g, "").slice(0, 8);
+
+        if (numeros.length <= 2) return numeros;
+        if (numeros.length <= 4) {
+            return `${numeros.slice(0, 2)}/${numeros.slice(2)}`;
+        }
+
+        return `${numeros.slice(0, 2)}/${numeros.slice(2, 4)}/${numeros.slice(4)}`;
+    };
+    
 
     const [ocupacoes, setOcupacoes] = useState<OcupacaoDTO[]>([]);
     const [ocupacaoCollection, setOcupacaoCollection] = useState<ListCollection>(createListCollection({
@@ -72,7 +76,7 @@ export function CadastroAventureiro() {
     const [nomeUsuario, setNomeUsuario] = useState("")
     const [nomeAventureiro, setNomeAventureiro] = useState("")
     const [correioEletronico, setCorreioEletronico] = useState("")
-    const [dataNascimento, setDataNascimento] = useState<DateValue[]>()
+    const [dataNascimento, setDataNascimento] = useState<string | undefined>()
     const [possuiConhecimento, setPossuiConhecimento] = useState(false)
     const [idOcupacao, setIdOcupacao] = useState<number>(-1)
     const [senha, setSenha] = useState("")
@@ -180,8 +184,9 @@ export function CadastroAventureiro() {
                 setNomeAventureiro(usuario.nomeAventureiro)
                 setCorreioEletronico(usuario.correioEletronico)
 
-                if (usuario.dataNascimento) {
-                    setDataNascimento([parseDate(usuario.dataNascimento)])
+                if(usuario.dataNascimento){
+                    let dataNascimentoFormatada = `${usuario.dataNascimento.slice(8,10)}/${usuario.dataNascimento.slice(5,7)}/${usuario.dataNascimento.slice(0,4)}`;
+                    setDataNascimento(dataNascimentoFormatada);
                 }
 
                 setPossuiConhecimento(usuario.possuiConhecimento)
@@ -249,7 +254,6 @@ export function CadastroAventureiro() {
             nomeAventureiro,
             correioEletronico,
             dataNascimento,
-            dataAtual,
             possuiConhecimento,
             ocupacao: idOcupacao,
             listaOcupacoes: ocupacoes,
@@ -290,7 +294,6 @@ export function CadastroAventureiro() {
             nomeAventureiro,
             correioEletronico,
             dataNascimento,
-            dataAtual,
             possuiConhecimento,
             ocupacao: idOcupacao,
             listaOcupacoes: ocupacoes,
@@ -362,7 +365,7 @@ export function CadastroAventureiro() {
                 nomeUsuario: nomeUsuario,
                 nomeAventureiro: nomeAventureiro,
                 correioEletronico: correioEletronico,
-                ...(dataNascimento && { dataNascimento: `${dataNascimento[0].year}-${String(dataNascimento[0].month).padStart(2, "0")}-${String(dataNascimento[0].day).padStart(2, "0")}` }),
+                ...(dataNascimento && { dataNascimento: `${dataNascimento.slice(6,10)}-${dataNascimento.slice(3,5)}-${dataNascimento.slice(0,2)}` }),
                 possuiConhecimento: possuiConhecimento,
                 primeiroAcesso: !editando,
                 ...(alterarSenha && {
@@ -434,7 +437,7 @@ export function CadastroAventureiro() {
                 nomeUsuario: nomeUsuario,
                 nomeAventureiro: nomeAventureiro,
                 correioEletronico: correioEletronico,
-                ...(dataNascimento && { dataNascimento: `${dataNascimento[0].year}-${String(dataNascimento[0].month).padStart(2, "0")}-${String(dataNascimento[0].day).padStart(2, "0")}` }),
+                ...(dataNascimento && { dataNascimento: `${dataNascimento.slice(6,10)}-${dataNascimento.slice(3,5)}-${dataNascimento.slice(0,2)}` }),
                 possuiConhecimento: possuiConhecimento,
                 primeiroAcesso: !editando,
                 senha: senha,
@@ -598,104 +601,32 @@ export function CadastroAventureiro() {
                             />
                         </Flex>
                     </Grid>
-                    <Field.Root invalid={validarDataNascimento}>
-                        <DatePicker.Root
-                            value={dataNascimento}
-                            onValueChange={(e) => setDataNascimento(e.value)}
-                            format={format}
-                            locale="pt-BR"
-                            min={parseDate("1826-01-01")}
-                            max={parseDate(dataAtual.toString())}
-                            placeholder="dd/mm/aaaa"
+                    <Field.Root required invalid={validarDataNascimento}>
+                        <Field.Label
+                            textStyle="emphasis"
+                            color="brand.primaryDark"
                         >
-                            <DatePicker.Label
-                                textStyle="emphasis"
-                                color="brand.primaryDark"
-                            >
-                                Data de Nascimento
-                            </DatePicker.Label>
-                            <DatePicker.Control
-                                textStyle="bodyText"
-                                borderRadius="sm"
-                                borderWidth="1px"
-                                bg="transparent"
-                                color="brand.neutral"
-                                borderColor="brand.neutral"
-
-                                _hover={{
-                                    borderColor: "brand.primaryDark",
-                                    color: "brand.primaryDark",
-                                    bg: "#2f9e411f",
+                            Data de nascimento
+                            <Field.RequiredIndicator color="brand.secondaryRed" />
+                        </Field.Label>
+                        <InputGroup>
+                            <AppInput
+                                name="dataNascimento"
+                                value={dataNascimento}
+                                placeholder="dd/mm/aaaa"
+                                size="md"
+                                maxLength={10}
+                                onChange={(e) => {
+                                    setDataNascimento(formatarDataDigitada(e.target.value));
                                 }}
-                                _focusVisible={{
-                                    borderColor: "brand.primaryDark",
-                                    boxShadow: "0 0 0 1px var(--chakra-colors-brand-primaryDark)",
-                                }}
-                            >
-                                <DatePicker.Trigger asChild unstyled>
-                                    <Button
-                                        variant="ghost"
-                                        width="full"
-                                        justifyContent="flex-start"
-                                        color="brand.neutral"
-                                    >
-                                        <DatePicker.ValueText
-                                            placeholder="dd/mm/aaaa"
-                                            color="brand.neutral"
-                                        />
-                                    </Button>
-                                </DatePicker.Trigger>
-                                <DatePicker.IndicatorGroup>
-                                    <DatePicker.Trigger
-                                        color="brand.primaryDark"
-                                    >
-                                        <FaRegCalendarAlt color="brand.primaryDark" />
-                                    </DatePicker.Trigger>
-                                </DatePicker.IndicatorGroup>
-                            </DatePicker.Control>
-                            <Portal>
-                                <DatePicker.Positioner>
-                                    <DatePicker.Content
-                                        color="brand.neutral"
-                                        textStyle="bodyText"
-                                    >
-                                        <DatePicker.View view="day">
-                                            <DatePicker.Header
-                                                color="brand.primaryDark"
-                                                textStyle="bodyTextBold"
-                                            />
-                                            <DatePicker.DayTable
-                                                _selected={{
-                                                    color: "brand.white",
-                                                    bg: "brand.primaryDark",
-                                                }}
-                                            />
-                                        </DatePicker.View>
-                                        <DatePicker.View view="month">
-                                            <DatePicker.Header
-                                                color="brand.primaryDark"
-                                                textStyle="bodyTextBold"
-                                            />
-                                            <DatePicker.MonthTable />
-                                        </DatePicker.View>
-                                        <DatePicker.View view="year">
-                                            <DatePicker.Header
-                                                color="brand.primaryDark"
-                                                textStyle="bodyTextBold"
-                                            />
-                                            <DatePicker.YearTable />
-                                        </DatePicker.View>
-                                    </DatePicker.Content>
-                                </DatePicker.Positioner>
-                            </Portal>
-                        </DatePicker.Root>
+                            />
+                        </InputGroup>
                         {validarDataNascimento && (
                             <Field.ErrorText
                                 textStyle="inputPlaceholder"
                                 color="brand.secondaryRed"
                             >
                                 A data não pode ser igual ou posterior a data de hoje. Informe uma data de nascimento válida.
-                                {validarDataNascimento}
                             </Field.ErrorText>
                         )}
                     </Field.Root>

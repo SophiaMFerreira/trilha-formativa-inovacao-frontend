@@ -9,7 +9,6 @@ type ValidarUsuarioParams = {
     nomeAventureiro: unknown
     correioEletronico: unknown
     dataNascimento?: unknown
-    dataAtual: string
     possuiConhecimento: unknown
     ocupacao: unknown
     listaOcupacoes: OcupacaoDTO[]
@@ -56,7 +55,6 @@ export function validarUsuario({
     nomeAventureiro,
     correioEletronico,
     dataNascimento,
-    dataAtual,
     possuiConhecimento,
     ocupacao,
     listaOcupacoes,
@@ -92,7 +90,7 @@ export function validarUsuario({
     const emailValido = validarCorreioEletronico(correioEletronico)
 
     // DATA NASCIMENTO
-    const dataNascimentoValida = validacaoData(dataNascimento, dataAtual)
+    const dataNascimentoValida = validacaoData(dataNascimento)
 
     // POSSUI CONHECIMENTO
     const possuiConhecimentoValido =
@@ -147,76 +145,49 @@ export function validarUsuario({
     };
 }
 
-function validacaoData(dataNascimento: unknown, dataAtual: string): boolean {
+function validacaoData(dataNascimento: unknown): boolean {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    
     //DATA NÃO PREENCHIDA
     if (
         dataNascimento === undefined ||
-        dataNascimento === null ||
-        (Array.isArray(dataNascimento) &&
-        dataNascimento.length === 0)) {
+        dataNascimento === null ) {
         return true
     }
 
-    // Deve ser um array
-    if (!Array.isArray(dataNascimento)) {
+    // Deve ser uma string de tamanho 10
+    if (!(typeof dataNascimento === "string" &&
+        dataNascimento.length === 10)) {
         return false;
     }
 
-    // Deve conter exatamente uma data
-    if (dataNascimento.length !== 1) {
-        return false;
-    }
-
-    const data = dataNascimento[0];
-
-    // Verifica estrutura básica de DateValue
-    if (
-        typeof data !== "object" ||
-        data === null ||
-
-        !("day" in data) ||
-        typeof data.day !== "number" ||
-        !Number.isInteger(data.day) ||
-
-        !("month" in data) ||
-        typeof data.month !== "number" ||
-        !Number.isInteger(data.month) ||
-
-        !("year" in data) ||
-        typeof data.year !== "number" ||
-        !Number.isInteger(data.year)
-    ) {
-        return false;
-    }
+    let dia = parseInt(dataNascimento.slice(0,2));
+    let mes = parseInt(dataNascimento.slice(3,5));
+    let ano = parseInt(dataNascimento.slice(6,10));
 
     // Verifica limites básicos
     if (
-        data.year < 1 ||
-        data.month < 1 ||
-        data.month > 12 ||
-        data.day < 1 ||
-        data.day > 31
+        ano < 1 ||
+        mes < 1 ||
+        mes > 12 ||
+        dia < 1 ||
+        dia > 31
     ) {
         return false;
     }
 
-    const dataInformada = parseDate(
-        new Date(
-            data.year,
-            data.month - 1,
-            data.day
-        ))
+    const dataInformada = new Date(ano, mes - 1, dia);
 
     // Evita datas inexistentes, como 31/02
     if (
-        dataInformada.year !== data.year ||
-        dataInformada.month !== data.month ||
-        dataInformada.day !== data.day
+        dataInformada.getFullYear() !== ano ||
+        dataInformada.getMonth() !== mes - 1 ||
+        dataInformada.getDate() !== dia
     ) {
         return false;
     }
 
-    const hoje = parseDate(dataAtual)
     if (dataInformada > hoje) {
         return false;
     }
