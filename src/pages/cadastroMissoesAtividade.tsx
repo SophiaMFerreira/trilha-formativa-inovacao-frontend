@@ -871,15 +871,14 @@ return (
                     w="100%"
                     gap="4"
                 >
-                    {idMissao &&
-                        <Button
-                            flex={1}
-                            w="100%"
-                            variant="outline"
-                            onClick={() => navigate("/banco-missoes-atividade")}
-                        >
-                            Voltar
-                        </Button>}
+                    <Button
+                        flex={1}
+                        w="100%"
+                        variant="outline"
+                        onClick={() => navigate("/banco-missoes-atividade")}
+                    >
+                        Voltar
+                    </Button>
                     {idMissao &&
                         <Button
                             flex={1}

@@ -1270,15 +1270,14 @@ export default function CadastroQuestoes() {
                         w="100%"
                         gap="4"
                     >
-                        {idQuestao &&
-                            <Button
-                                flex={1}
-                                w="100%"
-                                variant="outline"
-                                onClick={() => navigate("/banco-questoes")}
-                            >
-                                Voltar
-                            </Button>}
+                        <Button
+                            flex={1}
+                            w="100%"
+                            variant="outline"
+                            onClick={() => navigate("/banco-questoes")}
+                        >
+                            Voltar
+                        </Button>
                         {idQuestao &&
                             <Button
                                 flex={1}
