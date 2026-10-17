@@ -15,7 +15,7 @@ import { urlDaFotoDePerfil } from "@/utils/fotoPerfil";
 import { mensagemDeErroDaApi } from "@/utils/erroApi";
 import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/contexts/AuthContext";
-import { FaEye, FaEyeSlash, FaRegCalendarAlt } from "react-icons/fa";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { validarUsuario } from "@/utils/validations/usuario";
 import { informouNovaSenha } from "@/utils/validations/senha";
 import { toaster } from "@/components/commons/toaster";

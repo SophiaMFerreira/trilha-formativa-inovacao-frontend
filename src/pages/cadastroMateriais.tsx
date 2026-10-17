@@ -458,14 +458,17 @@ export default function CadastroMateriais() {
                             </Field.Label>
                             <AppInput
                                 name="pontuacao"
-                                value={pontuacao}
+                                value={pontuacao === 0 ? "" : pontuacao}
                                 placeholder="100"
                                 size="sm"
                                 type="number"
                                 min="0"
                                 max="9999"
                                 maxW="170px"
-                                onChange={(e) => setPontuacao(Number(e.target.value))}
+                                onChange={(e) => {
+                                    const valor = e.target.value;
+                                    setPontuacao(valor === "" ? 0 : Number(valor));
+                                }}
                             />
                             {validacaoPontuacao && (
                                 <Field.ErrorText
