@@ -21,6 +21,7 @@ import { informouNovaSenha } from "@/utils/validations/senha";
 import { toaster } from "@/components/commons/toaster";
 import { mensagemParaToaster, mensagensToastErro, mensagensToastSucesso, toasterDaApiOuPadrao } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
+import { mensagensTooltipCaracteres } from "@/config/mensagemCaracteresTooltip";
 
 export function CadastroAventureiro() {
     const navigate = useNavigate();
@@ -510,6 +511,7 @@ export function CadastroAventureiro() {
         <CardSimples
             titulo={acao}
             mensagem={mensagem}
+            formWarning={mensagensTooltipCaracteres.cadastroUsuario}
         >
             <form onSubmit={(e) => {
                 e.preventDefault();

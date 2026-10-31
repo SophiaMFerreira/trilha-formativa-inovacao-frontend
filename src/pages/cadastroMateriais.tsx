@@ -1,7 +1,8 @@
 import { AppInput } from "@/components/commons/AppInput";
-import { Button, createListCollection, Dialog, Em, Field, Fieldset, Heading, InputGroup, ListCollection, Portal, RadioGroup, Select, Stack, Text, Textarea } from "@chakra-ui/react";
+import { Button, createListCollection, Dialog, Em, Field, Fieldset, Heading, IconButton, InputGroup, ListCollection, Popover, Portal, RadioGroup, Select, Stack, Text, Textarea } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { FaExclamationCircle } from "react-icons/fa";
 import CardCustomizado from "@/components/commons/cardCustomizado";
 import { MissaoAPI } from "../../api/missao";
 import { TematicaAPI } from "../../api/tematica";
@@ -12,6 +13,7 @@ import { avaliarCapacidadeDaTrilha } from "@/utils/limiteDeMissoes";
 import { toaster } from "@/components/commons/toaster";
 import { mensagemParaToaster, mensagensToastErro, mensagensToastSucesso, toasterDaApiOuPadrao } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
+import { mensagensTooltipCaracteres } from "@/config/mensagemCaracteresTooltip";
 
 export default function CadastroMateriais() {
     const { idMissao } = useParams();
@@ -219,6 +221,7 @@ export default function CadastroMateriais() {
         <CardCustomizado
             titulo={`${acao} de materiais de estudo`}
             mensagem={`Faça ${mensagem} de materiais de estudo para a trilha formativa.`}
+            formWarning={mensagensTooltipCaracteres.cadastroMissao}
         >
             <form onSubmit={(e) => {
                 e.preventDefault();
@@ -479,6 +482,34 @@ export default function CadastroMateriais() {
                                 </Field.ErrorText>
                             )}
                         </Field.Root>
+                        <Popover.Root>
+                            <Popover.Trigger asChild>
+                                <IconButton
+                                    aria-label="Ajuda de preenchimento"
+                                    variant="ghost"
+                                    size="md"
+                                    color="brand.primaryDark"
+                                    p="3"
+                                >
+                                    <FaExclamationCircle />
+                                </IconButton>
+                            </Popover.Trigger>
+                            <Portal>
+                                <Popover.Positioner>
+                                    <Popover.Content>
+                                        <Popover.Arrow />
+                                        <Popover.Body>
+                                            <Text
+                                                textAlign="justify"
+                                                textStyle="bodyText"
+                                                color="brand.neutral"
+                                            >         
+                                            </Text>
+                                        </Popover.Body>
+                                    </Popover.Content>
+                                </Popover.Positioner>
+                            </Portal>
+                        </Popover.Root>
                     </Stack>
                     <Field.Root required invalid={validacaoURL}>
                         <Field.Label

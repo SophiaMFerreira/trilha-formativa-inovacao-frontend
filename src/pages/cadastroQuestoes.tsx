@@ -33,6 +33,7 @@ import ajudaAssociacao from "@/assets/images/exemploQuestao/ajudaAlternativaAsso
 import ajudaMultiplaEscolhaSelect from "@/assets/images/exemploQuestao/ajudaAlternativaMultiplaEscolhaSelect.png";
 import ajudaMultiplaEscolharRadio from "@/assets/images/exemploQuestao/ajudaAlternativaMultiplaEscolhaRadio.png";
 import ajudaMultiplaEscolhaVariasCheckbox from "@/assets/images/exemploQuestao/ajudaAlternativaMultiplaEscolhaVariasCheckbox.png";
+import { mensagensTooltipCaracteres } from "@/config/mensagemCaracteresTooltip";
 
 export default function CadastroQuestoes() {
     const { idQuestao, idMissao } = useParams();
@@ -695,6 +696,7 @@ export default function CadastroQuestoes() {
         <CardCustomizado
             titulo={`${acao} de questões`}
             mensagem={`Faça ${mensagem} de questões para a trilha formativa.`}
+            formWarning={mensagensTooltipCaracteres.cadastroQuestao}
         >
             <form onSubmit={(e) => {
                 e.preventDefault();

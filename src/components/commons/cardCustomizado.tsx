@@ -1,13 +1,20 @@
-import { Box, Card, Grid, Heading, Text } from "@chakra-ui/react"
+import { Box, Card, Grid, Heading, IconButton, Text } from "@chakra-ui/react"
+import CustomTooltip from "./customTooltip"
+import { FaExclamationCircle } from "react-icons/fa"
+import { useState } from "react"
 
 type CardCustomizadoProps = {
     titulo: string
     mensagem: string
     info?: string
+    formWarning?: string
     children: React.ReactNode
 }
 
-export default function CardCustomizado({ titulo, mensagem, children, info }: CardCustomizadoProps) {
+
+export default function CardCustomizado({ titulo, mensagem, children, info, formWarning }: CardCustomizadoProps) {
+    const [tooltipIsOpen, setTooltipIsOpen] = useState(true);
+
     return (
         <Card.Root size="lg"
             w="100%"
@@ -39,15 +46,39 @@ export default function CardCustomizado({ titulo, mensagem, children, info }: Ca
                         {titulo}
                     </Heading>
 
-                    <Box alignSelf="start">
-                        <Text
-                            textStyle="headingMD"
-                            textAlign="end"
-                            wordBreak="break-word"
-                        >
-                            {info}
-                        </Text>
-                    </Box>
+                    {info &&
+                        <Box alignSelf="start">
+                            <Text
+                                textStyle="headingMD"
+                                textAlign="end"
+                                wordBreak="break-word"
+                            >
+                                {info}
+                            </Text>
+                        </Box>
+                    }
+                    {formWarning &&
+                        <Box alignSelf="start">
+                            <CustomTooltip
+                                content={formWarning}
+                                open={tooltipIsOpen}
+                            >
+                                <IconButton
+                                    aria-label={formWarning}
+                                    variant="ghost"
+                                    size="md"
+                                    color="brand.primaryDark"
+                                    textStyle="inputPlaceholder"
+                                    textAlign="justify"
+                                    wordBreak="break-word"
+                                    p="3"
+                                    onClick={() => setTooltipIsOpen(!tooltipIsOpen)}
+                                >
+                                    <FaExclamationCircle />
+                                </IconButton>
+                            </CustomTooltip>
+                        </Box>
+                    }
                 </Grid>
             </Card.Header>
             <Card.Body

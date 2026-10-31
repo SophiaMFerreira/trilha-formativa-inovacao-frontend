@@ -20,6 +20,7 @@ import { DadosAtuaisProps, validarAtividade } from "@/utils/validations/missaoAt
 import { toaster } from "@/components/commons/toaster";
 import { mensagemParaToaster, mensagensToastErro, mensagensToastSucesso, toasterDaApiOuPadrao } from "@/config/mensagensToaster";
 import { mensagensErroConsole } from "@/config/mensagensError";
+import { mensagensTooltipCaracteres } from "@/config/mensagemCaracteresTooltip";
 
 export default function CadastroMissoesAtividade() {
     const { idMissao } = useParams();
@@ -369,6 +370,7 @@ return (
     <CardCustomizado
         titulo={`${acao} de missões atividade`}
         mensagem={`Faça ${mensagem} missões atividade para a trilha formativa.`}
+        formWarning={mensagensTooltipCaracteres.cadastroMissaoAtividade}
     >
         <form onSubmit={(e) => {
             e.preventDefault();

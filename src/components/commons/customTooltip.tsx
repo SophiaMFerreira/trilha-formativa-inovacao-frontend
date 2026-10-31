@@ -4,11 +4,15 @@ import type { ReactNode } from "react"
 type CustomTooltipProps = {
   content: string
   children: ReactNode
+  open?: boolean
 }
 
-export default function CustomTooltip({ content,  children }: CustomTooltipProps) {
+export default function CustomTooltip({ content,  children, open }: CustomTooltipProps) {
   return (
-    <Tooltip.Root openDelay={800}>
+    <Tooltip.Root 
+      openDelay={800}
+      open={open}
+    >
       <Tooltip.Trigger asChild>
         {children}
       </Tooltip.Trigger>
