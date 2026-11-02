@@ -53,8 +53,9 @@ export const UsuarioAPI = {
         return api.delete(`api/v1/usuarios/${idUsauario}`);
     },
 
-    alterarPrimeiroAcesso(idUsauario: number){
-        return api.patch(`api/v1/usuarios/${idUsauario}/primeiro-acesso`);
+    alterarPrimeiroAcesso(idUsuario: number) {
+        return api.post(
+            `api/v1/usuarios/${idUsuario}/primeiro-acesso`
+        );
     }
-
 }
