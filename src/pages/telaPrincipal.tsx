@@ -27,6 +27,29 @@ import imagemConteudos from "@/assets/images/tutorial/ModalIntoducaoImagem2.png"
 import imagemQuiz from "@/assets/images/tutorial/ModalIntroducaoImagem3.png"
 import imagemTarefaFinal from "@/assets/images/tutorial/ModalIntoducaoImagem4.png"
 
+/*
+ * TODO (provisório): marca local de "tutorial visto", por usuário.
+ * Ver comentário em onFecharModal. O try/catch cobre navegadores
+ * que bloqueiam o localStorage (aba anônima, por exemplo).
+ */
+const chaveTutorial = (idUsuario: number) => `tutorialVisto:${idUsuario}`
+
+function tutorialJaVisto(idUsuario: number): boolean {
+    try {
+        return localStorage.getItem(chaveTutorial(idUsuario)) === "1"
+    } catch {
+        return false
+    }
+}
+
+function marcarTutorialVisto(idUsuario: number): void {
+    try {
+        localStorage.setItem(chaveTutorial(idUsuario), "1")
+    } catch {
+        /* Sem localStorage: o tutorial volta a aparecer no próximo acesso. */
+    }
+}
+
 export default function TelaPrincipal() {
     const navigate = useNavigate()
     const { user } = useAuth()
@@ -66,7 +89,7 @@ export default function TelaPrincipal() {
                 if (!usuario) return;
 
                 setUsuario(usuario)
-                setOpen(usuario.primeiroAcesso)
+                setOpen(usuario.primeiroAcesso && !tutorialJaVisto(usuario.id))
             } catch (erro) {
                 toaster.create(mensagensToastErro.carregarUsuario)
                 console.error(
@@ -98,12 +121,19 @@ export default function TelaPrincipal() {
     }, [preparando, open, progressoTotal, distintivos]);
 
     const onFecharModal = async () => {
+        if (!usuario) return
+
+        /*
+         * TODO (provisório): a API publicada responde 405 em
+         * POST /usuarios/{id}/primeiro-acesso (nginx devolve página estática).
+         * Enquanto isso, a marca local evita que o tutorial reabra neste navegador.
+         * Remover a marca local quando a rota estiver funcionando em produção.
+         */
+        marcarTutorialVisto(usuario.id)
+        setOpen(false)
+
         try {
-            if (!usuario) return
-
             await UsuarioAPI.alterarPrimeiroAcesso(usuario.id);
-
-            setOpen(false)
         } catch (erro) {
             console.error( mensagensErroConsole.primeiroAcesso,
                 mensagemDeErroDaApi(erro) ?? erro
